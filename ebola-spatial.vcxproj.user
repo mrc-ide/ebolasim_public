@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>/P:G:\Ervebo\APW4\Data\p_R1.80_NordKivu_HCWring.txt /PP:G:\Ervebo\APW4\Data\PreFPNordKivu_HCWring.txt /O:G:\Ervebo\APW4\Test\Test /D:G:\Ervebo\Populations\NordKivu_MSF_LS2018.bin /L:G:\Ervebo\Populations\NordKivu_MSF_Network_HCW_narrowPlaceKernel.bin /R:1 /CLP1:0.80 /CLP2:0.67 /CLP3:0.85 /CLP4:0.25 /CLP5:10 /CLP6:6 /CLP7:1 /CLP8:1000000000 /CLP9:0.83 98798150 729101 17389101 4797132</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommandArguments>/P:G:\DRC_2019\Data\p_R1.80_NordKivu_MSF.txt /PP:G:\DRC_2019\Data\PreFPNordKivu_MSF.txt /O:G:\DRC_2019\Test\Output /D:G:\DRC_2019\Data\NordKivu_MSF_LS2018.bin /L:G:\DRC_2019\Data\NordKivu_MSF_Network_40_overlap2_narrowPlaceKernel.bin /R:1.34 /KP:1.798494 /KO:32.833489 /RR1:0.534894 /RR2:0.045492 /RR3:0.985508 98798150 729101 17389101 4797132</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+</Project>
