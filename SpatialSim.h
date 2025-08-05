@@ -540,7 +540,8 @@ typedef struct PARAM {
   double TreatMaxCoursesBase,TreatNewCoursesRate,TreatNewCoursesStartTime,TreatMaxCourses,PropPrivateStockpile;
   double VaccSuscDrop,VaccSuscDrop2,HCWVaccSuscDrop,VaccInfDrop,VaccMortDrop,VaccSympDrop,VaccDelayMean,VaccTimeStart,VaccTimeEfficacySwitch,VaccTimeStartGeo;
   double VaccTimeToEfficacy,VaccProp,VaccRadius,VaccRadius2,VaccMinRadius,VaccMinRadius2,VaccPropCaseHouseholds,VaccHouseholdsDuration,VaccMaxCoursesBase,VaccRadiusHighDensity,VaccRadiusHighDensity2;
-  double VaccNewCoursesRate,VaccNewCoursesStartTime,VaccMaxCourses,VaccNewCoursesEndTime,VaccEfficacyDecay,VaccCellIncThresh,VaccCampaignInterval,VaccCoverageIncreasePeriod;
+  int DoVaccDailyReplenishment, DoVaccBulkReplenishment;
+  double VaccNewCoursesRate,VaccNewCoursesBulk,VaccNewCoursesStartTime,VaccNewCoursesDelay,VaccNewCoursesStartTimeBase,VaccMaxCourses,VaccNewCoursesEndTime,VaccEfficacyDecay,VaccCellIncThresh,VaccCampaignInterval,VaccCoverageIncreasePeriod;
   double GeoVaccCellIncThresh, FuneralControlCellIncThresh, ContactTracingCellIncThresh, RingVaccCellIncThresh, ETUCellIncThresh; //added more thresholds for interventions
   double VaccTimeToEfficacyThirdVaccRing;
   int RevaccHCWs,DoRingVaccination, NVaccRings, NVaccRingsActive, MinVaccAge, VaccDosePerDay, MaxVaccDosePerDay, BaseVaccDosePerDay,VaccDoseFlag, UpdateVaccDosePerDay, VaccDosesPerCasePerCell; //added this for ring vaccination - ggilani 15/02/2017
