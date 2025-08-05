@@ -1846,9 +1846,20 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 	}
 	if(!GetInputParameter2(dat,dat2,"Minimum radius from case to vaccinate","%lf",(void *) &(P.VaccMinRadius),1,1,0)) P.VaccMinRadius=0;
 	if(!GetInputParameter2(dat,dat2,"Maximum number of vaccine courses available","%lf",(void *) &(P.VaccMaxCoursesBase),1,1,0)) P.VaccMaxCoursesBase=1e20;
-	if(!GetInputParameter2(dat,dat2,"Start time of additional vaccine production","%lf",(void *) &(P.VaccNewCoursesStartTime),1,1,0)) P.VaccNewCoursesStartTime=USHRT_MAX/P.TimeStepsPerDay;
+	if(!GetInputParameter2(dat,dat2,"Start time of additional vaccine production","%lf",(void *) &(P.VaccNewCoursesStartTimeBase),1,1,0)) P.VaccNewCoursesStartTimeBase=USHRT_MAX/P.TimeStepsPerDay;
 	if(!GetInputParameter2(dat,dat2,"End time of additional vaccine production","%lf",(void *) &(P.VaccNewCoursesEndTime),1,1,0)) P.VaccNewCoursesEndTime=USHRT_MAX/P.TimeStepsPerDay;
-	if(!GetInputParameter2(dat,dat2,"Rate of additional vaccine production (courses per day)","%lf",(void *) &(P.VaccNewCoursesRate),1,1,0)) P.VaccNewCoursesRate=0;
+	if(!GetInputParameter2(dat, dat2, "Do daily vaccine replenishment", "%i", (void*)&(P.DoVaccDailyReplenishment), 1, 1, 0)) P.DoVaccDailyReplenishment = 0;
+	if (P.DoVaccDailyReplenishment)
+	{
+		if (!GetInputParameter2(dat, dat2, "Rate of additional vaccine production (courses per day)", "%lf", (void*)&(P.VaccNewCoursesRate), 1, 1, 0)) P.VaccNewCoursesRate = 0;
+
+	}
+	if (!GetInputParameter2(dat, dat2, "Do bulk vaccine replenishment", "%i", (void*)&(P.DoVaccBulkReplenishment), 1, 1, 0)) P.DoVaccBulkReplenishment = 0;
+	if (P.DoVaccBulkReplenishment)
+	{
+		if (!GetInputParameter2(dat, dat2, "Number of vaccine doses per delivery", "%lf", (void*)&(P.VaccNewCoursesBulk), 1, 1, 0)) P.VaccNewCoursesBulk = 0;
+		if (!GetInputParameter2(dat, dat2, "Time between vaccine doses deliveries", "%lf", (void*)&(P.VaccNewCoursesDelay), 1, 1, 0)) P.VaccNewCoursesDelay = 0;
+	}
 	if(!GetInputParameter2(dat,dat2,"Apply mass rather than reactive vaccination","%i",(void *) &(P.DoMassVacc),1,1,0)) P.DoMassVacc=0;
 	if(!GetInputParameter2(dat,dat2,"Priority age range for mass vaccination","%i",(void *) P.VaccPriorityGroupAge,2,1,0)) {P.VaccPriorityGroupAge[0]=1;P.VaccPriorityGroupAge[1]=0;}
 	if(P.DoAdUnits)
@@ -1859,6 +1870,7 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 		}
 	else
 		{P.VaccAdminUnitDivisor=1;P.VaccByAdminUnit=0;}
+	
 
 	if(!GetInputParameter2(dat,dat2,"Movement restrictions trigger incidence per cell","%i",(void *) &(P.MoveRestrCellIncThresh),1,1,0)) P.MoveRestrCellIncThresh=1000000000;
 	if(!GetInputParameter2(dat,dat2,"Delay to start movement restrictions","%lf",(void *) &(P.MoveDelayMean),1,1,0)) P.MoveDelayMean=0;
@@ -7262,6 +7274,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.TreatMaxCourses=P.TreatMaxCoursesBase;
 	P.VaccMaxCourses=P.VaccMaxCoursesBase;
 	P.PlaceCloseDuration=P.PlaceCloseDurationBase;
+	P.VaccNewCoursesStartTime = P.VaccNewCoursesStartTimeBase;
 	//if do hospitalisation, reset a couple of hospitalisation parameters
 	P.CurrIndETUBeds=0;
 	P.CurrIndMeanTimeToHosp=0;
@@ -7644,7 +7657,18 @@ void RunModel(int run) //added run number as parameter
 			if(P.DoDeath) P.ts_age++;
 			if((P.DoSaveSnapshot)&&(t<=P.SnapshotSaveTime)&&(t+P.TimeStep>P.SnapshotSaveTime)) SaveSnapshot();
 			if(t>P.TreatNewCoursesStartTime) P.TreatMaxCourses+=P.TimeStep*P.TreatNewCoursesRate;
-			if((t>P.VaccNewCoursesStartTime)&&(t<P.VaccNewCoursesEndTime)) P.VaccMaxCourses+=P.TimeStep*P.VaccNewCoursesRate;
+			if ((t > P.VaccNewCoursesStartTime) && (t < P.VaccNewCoursesEndTime))
+			{
+				if (P.DoVaccDailyReplenishment)
+				{
+					P.VaccMaxCourses += P.TimeStep * P.VaccNewCoursesRate;
+				}
+				else if (P.DoVaccBulkReplenishment)
+				{
+					P.VaccMaxCourses += P.VaccNewCoursesBulk;
+					P.VaccNewCoursesStartTime += P.VaccNewCoursesDelay;
+				}
+			}
 			cI=((double) (State.S))/((double) P.N);
 #ifndef NEW_AGE_MODEL			
 			if(((lcI-cI)>0.2)&&(!P.DoSIS)) 
@@ -12638,6 +12662,10 @@ void RecordSample(double t,int n)
 					{
 					P.VaccTimeStart = t + P.VaccTimeStartBase;
 					}
+				if (P.VaccNewCoursesStartTimeBase >= 1e10)
+				{
+					P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTime;
+				}
 				}
 			if(D>=P.SocDistCellIncThresh)
 				{
