@@ -1304,21 +1304,35 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 	if(!GetInputParameter2(dat,dat2,"Include mortality","%i",(void *) &(P.DoMortality),1,1,0)) P.DoMortality=0;
 	if(P.DoMortality) //changes to mortality to allow for probability of death/recovery to be decided when leaving the infectious class: ggilani - 23/10/14
 	{
-		if(!GetInputParameter2(dat,dat2,"Proportion of cases dying","%lf",(void *) &(P.DiseaseMortality),1,1,0)) P.DiseaseMortality=0;
-		if (!GetInputParameter2(dat, dat2, "Proportion of vaccinated cases dying", "%lf", (void*)&(P.DiseaseMortalityVacc), 1, 1, 0)) P.DiseaseMortalityVacc = P.DiseaseMortality;
-		if (!GetInputParameter2(dat, dat2, "Relative duration of infectiousness for dying cases", "%lf", (void*)&(P.LethalInfectiousPeriod), 1, 1, 0)) P.LethalInfectiousPeriod = 1; // P.LethalInfectiousPeriod = P.InfectiousPeriod;
-		if(!GetInputParameter2(dat,dat2,"Amplitude of recovery function","%lf",(void *) &(P.RecoveryAmp),1,1,0)) P.RecoveryAmp=0;
-		if(!GetInputParameter2(dat,dat2,"Weibull shape of recovery function","%lf",(void *) &(P.RecoveryShape),1,1,0)) P.RecoveryShape=0;
-		if(!GetInputParameter2(dat,dat2,"Weibull scale of recovery function","%lf",(void *) &(P.RecoveryScale),1,1,0)) P.RecoveryScale=0;
-		if(!P.DiseaseMortality)
+		if (!GetInputParameter2(dat, dat2, "Include event-dependent mortality", "%i", (void*)&(P.DoEventMortality), 1, 1, 0)) P.DoEventMortality = 0;
+		if(P.DoEventMortality)
 		{
-			if(P.RecoveryAmp>0)
+			if (!GetInputParameter2(dat, dat2, "Amplitude of recovery function", "%lf", (void*)&(P.RecoveryAmp), 1, 1, 0)) P.RecoveryAmp = 0;
+			if (!GetInputParameter2(dat, dat2, "Weibull shape of recovery function", "%lf", (void*)&(P.RecoveryShape), 1, 1, 0)) P.RecoveryShape = 0;
+			if (!GetInputParameter2(dat, dat2, "Weibull scale of recovery function", "%lf", (void*)&(P.RecoveryScale), 1, 1, 0)) P.RecoveryScale = 0;
+			if (P.RecoveryAmp > 0)
 			{
-				for(i=0;i<RECOVERY_RES;i++)	P.RecoveryProb[i]=P.RecoveryAmp*(WeibullCDF(i,P.RecoveryShape,P.RecoveryScale)-WeibullCDF(i-1,P.RecoveryShape,P.RecoveryScale));
+				for (i = 0; i < RECOVERY_RES; i++)	P.RecoveryProb[i] = P.RecoveryAmp * (WeibullCDF(i, P.RecoveryShape, P.RecoveryScale) - WeibullCDF(i - 1, P.RecoveryShape, P.RecoveryScale));
 			}
 			else
 			{
-				for(i=0;i<RECOVERY_RES;i++)	P.RecoveryProb[i]=1.0; //i.e. if we don't provide any information about the shape of the recovery function, we'll assume everyone recovers
+				for (i = 0; i < RECOVERY_RES; i++)	P.RecoveryProb[i] = 1.0; //i.e. if we don't provide any information about the shape of the recovery function, we'll assume everyone recovers
+			}
+		}
+		else
+		{
+			//These first parameters are scalings that are used for both age-dependent and age-independent mortality
+			if (!GetInputParameter2(dat, dat2, "Relative mortality of vaccinated cases dying", "%lf", (void*)&(P.DiseaseMortalityVacc), 1, 1, 0)) P.DiseaseMortalityVacc = 1;
+			if (!GetInputParameter2(dat, dat2, "Relative duration of infectiousness for dying cases", "%lf", (void*)&(P.LethalInfectiousPeriod), 1, 1, 0)) P.LethalInfectiousPeriod = 1; // P.LethalInfectiousPeriod = P.InfectiousPeriod;
+			
+			if (!GetInputParameter2(dat, dat2, "Include age-dependent mortality", "%i", (void*)&(P.DoAgeMortality), 1, 1, 0)) P.DoAgeMortality = 0;
+			if (P.DoAgeMortality)
+			{
+				if (!GetInputParameter2(dat, dat2, "Mortality by age", "%lf", (void*)P.AgeMortality, NUM_AGE_GROUPS, 1, 0));
+			}
+			else
+			{
+				if (!GetInputParameter2(dat, dat2, "Proportion of cases dying", "%lf", (void*)&(P.DiseaseMortality), 1, 1, 0)) P.DiseaseMortality = 0;
 			}
 		}
 	}
@@ -1390,7 +1404,7 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 		if(!GetInputParameter2(dat,dat2,"Hospital waiting time","%lf",(void *) &(P.HospWaitingTime),1,1,0)) P.HospWaitingTime=0.25; //To ensure acceptance 
 		if(!GetInputParameter2(dat,dat2,"Time to hospitalisation inverse CDF","%lf",(void *) P.hospital_icdf,CDF_RES+1,1,0))
 			{
-			P.hospital_icdf[CDF_RES]=1e10;
+			P.hospital_icdf[CDF_RES]=1e10; 
 			for(i=0;i<CDF_RES;i++)
 				P.hospital_icdf[i]=-log(1-((double)i)/CDF_RES);
 			}
@@ -2615,7 +2629,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 {
 	int i,j,k,l,m,i2,j2,l2,m2,tn,BedCapacity; //added tn as variable for multi-threaded loops: 28/11/14
 	unsigned int rn;
-	double t,s,s2,s3,x,y,t2,t3,d,q,contact_scale,inf_period,ProbHosp;
+	double t,s,s2,s3,x,y,t2,t3,d,q,contact_scale,inf_period,ProbHosp,probMort;
 	char buf[2048];
 	FILE *dat,*dat2;
 
@@ -2991,16 +3005,24 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 		{
 			if(P.DoMortality)
 			{
-				if (P.DiseaseMortality == 0)
+				if (P.DoEventMortality)
 				{
 					if (ranf_mt(tn) <= P.RecoveryProb[(int)ceil(Hosts[i].recovery_time * P.TimeStep)]) Hosts[i].to_die = 0; //made this multi-threaded: 28/11/14
 					else Hosts[i].to_die = 1;
 				}
 				else
 				{
-					if (ranf_mt(tn) < P.DiseaseMortality)
+					if (P.DoAgeMortality)
 					{
-						Hosts[i].to_die = 1; 
+						probMort = P.AgeMortality[HOST_AGE_GROUP(i)];
+					}
+					else
+					{
+						probMort = P.DiseaseMortality;
+					}
+					if (ranf_mt(tn) < probMort)
+					{
+						Hosts[i].to_die = 1;
 						Hosts[i].recovery_time = (unsigned short int)(P.LethalInfectiousPeriod * (double)Hosts[i].recovery_time);//lethal infectious period
 					}
 					else Hosts[i].to_die = 0;
@@ -3012,7 +3034,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 		{
 			//calculate number of hospital beds to be utilised over the simulation, which will allow us to estimate the number of people who actually seek healthcare are able to access hospital care
 			//due to capacity restraints
-			if (P.DiseaseMortality == 0)
+			if (P.DoEventMortality)
 			{
 				inf_period = P.InfectiousPeriod;
 			}
@@ -8104,14 +8126,14 @@ void SaveResults(void)
 	{
 		sprintf(outname, "%s.inftype.csv", OutFile);
 		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		fprintf(dat, "t\tR");
+		fprintf(dat, "t,R");
 		for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, ",Rtype_%i", j);
 		for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, ",incItype_%i", j);
 		for (j = 0; j < NUM_AGE_GROUPS; j++) fprintf(dat, ",Rage_%i", j);
 		fprintf(dat, "\n");
 		for (i = 0; i < P.NumSamples; i++)
 		{
-			fprintf(dat, "%lg\t%lg", TimeSeries[i].t, TimeSeries[i].Rdenom);
+			fprintf(dat, "%lg,%lg", TimeSeries[i].t, TimeSeries[i].Rdenom);
 			for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, ",%lg", TimeSeries[i].Rtype[j]);
 			for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, ",%lg", TimeSeries[i].incItype[j]);
 			for (j = 0; j < NUM_AGE_GROUPS; j++) fprintf(dat, ",%lg", TimeSeries[i].Rage[j]);
@@ -8635,14 +8657,14 @@ void SaveSummaryResults(void)
 	{
 		sprintf(outname, "%s.inftype.xls", OutFile);
 		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		fprintf(dat, "t\tR");
+		fprintf(dat, "t,R");
 		for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, "\tRtype_%i", j);
 		for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, "\tincItype_%i", j);
 		for (j = 0; j < NUM_AGE_GROUPS; j++) fprintf(dat, "\tRage_%i", j);
 		fprintf(dat, "\n");
 		for (i = 0; i < P.NumSamples; i++)
 		{
-			fprintf(dat, "%lg\t%lg", c * TSMean[i].t, c * TSMean[i].Rdenom);
+			fprintf(dat, "%lg,%lg", c * TSMean[i].t, c * TSMean[i].Rdenom);
 			for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, "\t%lg", c * TSMean[i].Rtype[j]);
 			for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, "\t%lg", c * TSMean[i].incItype[j]);
 			for (j = 0; j < NUM_AGE_GROUPS; j++) fprintf(dat, "\t%lg", c * TSMean[i].Rage[j]);
@@ -13160,15 +13182,20 @@ void DoIncub(int ai,unsigned short int ts,int tn, int run)
 	age=HOST_AGE_GROUP(ai);
 	if(age>=NUM_AGE_GROUPS) age=NUM_AGE_GROUPS-1;
 
-	if (P.DiseaseMortality)
+	if (!P.DoEventMortality)
 	{
-		if (HOST_TO_BE_VACCED(ai) || HOST_VACCED(ai))
+		if (P.DoAgeMortality)
 		{
-			cfr = P.DiseaseMortalityVacc;
+			cfr = P.AgeMortality[HOST_AGE_GROUP(i)];
 		}
 		else
 		{
-			cfr = P.DiseaseMortality;
+			cfr = P.DiseaseMortalityVacc;
+		}
+
+		if (HOST_TO_BE_VACCED(ai) || HOST_VACCED(ai))
+		{
+			cfr = cfr * P.DiseaseMortalityVacc;
 		}
 	}
 
@@ -13206,7 +13233,7 @@ void DoIncub(int ai,unsigned short int ts,int tn, int run)
 
 		if (P.DoMortality) //added DoMortality to allow different approaches to assigning mortality: ggilani - 22/10/2014
 		{
-			if (P.DiseaseMortality == 0)
+			if (P.DoEventMortality)
 			{
 				day = (int)ceil(P.TimeStep * (a->recovery_time - a->latent_time));
 				if (ranf_mt(tn) <= P.RecoveryProb[day])

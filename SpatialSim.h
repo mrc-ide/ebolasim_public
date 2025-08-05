@@ -496,7 +496,8 @@ typedef struct PARAM {
   double SymptSpatialContactRate,SymptPlaceTypeContactRate[NUM_PLACE_TYPES],InhibitInterAdunitPlaceAssignment[NUM_PLACE_TYPES];
   double SymptPlaceTypeWithdrawalProp[NUM_PLACE_TYPES],CaseAbsenteeismDuration,CaseAbsenteeismDelay;
   double CaseAbsentChildPropAdultCarers;
-  double ProportionHospitalised,DiseaseMortality,DiseaseMortalityVacc;
+  int DoEventMortality, DoAgeMortality;
+  double ProportionHospitalised,AgeMortality[NUM_AGE_GROUPS],DiseaseMortality,DiseaseMortalityVacc;
   double RelativeTravelRate[NUM_AGE_GROUPS],RelativeSpatialContact[NUM_AGE_GROUPS];
   double AgeSusceptibility[NUM_AGE_GROUPS],AgeInfectiousness[NUM_AGE_GROUPS],InitialImmunity[NUM_AGE_GROUPS];
   double WAIFW_Matrix[NUM_AGE_GROUPS][NUM_AGE_GROUPS];
