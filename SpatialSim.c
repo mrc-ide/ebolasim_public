@@ -1858,7 +1858,7 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 	if (P.DoVaccBulkReplenishment)
 	{
 		if (!GetInputParameter2(dat, dat2, "Number of vaccine doses per delivery", "%lf", (void*)&(P.VaccNewCoursesBulk), 1, 1, 0)) P.VaccNewCoursesBulk = 0;
-		if (!GetInputParameter2(dat, dat2, "Time between vaccine doses deliveries", "%lf", (void*)&(P.VaccNewCoursesDelay), 1, 1, 0)) P.VaccNewCoursesDelay = 0;
+		if (!GetInputParameter2(dat, dat2, "Time between vaccine doses deliveries (in days)", "%lf", (void*)&(P.VaccNewCoursesDelay), 1, 1, 0)) P.VaccNewCoursesDelay = 0;
 	}
 	if(!GetInputParameter2(dat,dat2,"Apply mass rather than reactive vaccination","%i",(void *) &(P.DoMassVacc),1,1,0)) P.DoMassVacc=0;
 	if(!GetInputParameter2(dat,dat2,"Priority age range for mass vaccination","%i",(void *) P.VaccPriorityGroupAge,2,1,0)) {P.VaccPriorityGroupAge[0]=1;P.VaccPriorityGroupAge[1]=0;}
@@ -7274,7 +7274,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.TreatMaxCourses=P.TreatMaxCoursesBase;
 	P.VaccMaxCourses=P.VaccMaxCoursesBase;
 	P.PlaceCloseDuration=P.PlaceCloseDurationBase;
-	P.VaccNewCoursesStartTime = P.VaccNewCoursesStartTimeBase;
+	P.VaccNewCoursesStartTime = 1e10;
 	//if do hospitalisation, reset a couple of hospitalisation parameters
 	P.CurrIndETUBeds=0;
 	P.CurrIndMeanTimeToHosp=0;
@@ -7519,7 +7519,7 @@ void RunModel(int run) //added run number as parameter
 				UpdateHospitals(t);
 			}
 			//update vaccination parameters at the beginning of every time step
-			if ((P.DoRingVaccination)&&(t>=P.RingVaccTimeStart))
+			if ((P.DoRingVaccination)&&(t>P.RingVaccTimeStart))
 			{
 				UpdateVaccination(t,ns-1);
 			}
@@ -11336,7 +11336,7 @@ void UpdateVaccination(double t,int n)
 	if (P.UpdateVaccDosePerDay)
 	{
 		weeklyDC = 0;
-		for (i = n - 6; i <= n; i++)
+		for (i = max(n - 6,0); i <= n; i++)
 		{
 			weeklyDC += TimeSeries[i].incDC;
 		}
@@ -12662,9 +12662,9 @@ void RecordSample(double t,int n)
 					{
 					P.VaccTimeStart = t + P.VaccTimeStartBase;
 					}
-				if (P.VaccNewCoursesStartTimeBase >= 1e10)
+				if (P.VaccNewCoursesStartTime >= 1e10)
 				{
-					P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTime;
+					P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
 				}
 				}
 			if(D>=P.SocDistCellIncThresh)
@@ -12732,6 +12732,10 @@ void RecordSample(double t,int n)
 			{
 				P.VaccTimeStart = t + P.VaccTimeStartBase;
 				//fprintf(stderr, "t=%lg, P.VaccTimeStart=%lg, P.VaccTimeStartBase=%lg\n", t, P.VaccTimeStart, P.VaccTimeStartBase);
+			}
+			if (P.VaccNewCoursesStartTime >= 1e10)
+			{
+				P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
 			}
 			if(P.SocDistTimeStart>=1e10) P.SocDistTimeStart=t+P.SocDistTimeStartBase;
 			if(P.PlaceCloseTimeStart>=1e10) P.PlaceCloseTimeStart=t+P.PlaceCloseTimeStartBase;
@@ -13214,7 +13218,7 @@ void DoIncub(int ai,unsigned short int ts,int tn, int run)
 	{
 		if (P.DoAgeMortality)
 		{
-			cfr = P.AgeMortality[HOST_AGE_GROUP(i)];
+			cfr = P.AgeMortality[age];
 		}
 		else
 		{
