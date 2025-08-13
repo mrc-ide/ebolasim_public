@@ -105,7 +105,7 @@
     <ClCompile>
       <OpenMPSupport>true</OpenMPSupport>
       <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>COUNTRY_UK</PreprocessorDefinitions>
+      <PreprocessorDefinitions>COUNTRY_WA</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>gdiplus.lib;Vfw32.lib;%(AdditionalDependencies)</AdditionalDependencies>
