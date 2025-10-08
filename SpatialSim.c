@@ -46,6 +46,8 @@ void HospitalSweepAdunits(double); //added hospitalisation by adunit sweep funct
 void ContactTracingSweep(double); // added function to update contact tracing number
 void VaccSweep(double); //added function to process ring vaccination queue: ggilani - 21/08/19
 void UpdateHospitals(double); //added function to update hospital parameters on each time step: ggilani - 11/03/2017
+void UpdateContactTracing(double); //added function to update contact tracing capacity
+void UpdateSDB(double); //added function to update safe burial capacity
 void UpdateVaccination(double,int); //added function to update vaccination parameters at each time step: ggilani - 29/05/2019
 void UpdateCaseDetection(double); //added function to update vaccination parameters at each time step: ggilani - 29/05/2019
 void SaveAgeDistrib(void);
@@ -78,7 +80,7 @@ void DoProph(int,unsigned short int,int);
 void DoPrivateTreatCase(int,unsigned short int,int);
 void DoPrivateProph(int,unsigned short int,int);
 void DoProphNoDelay(int,unsigned short int,int,int);
-int DoVacc(int,int);
+int DoVacc(int,int,int);
 void DoVaccNoDelay(int,int);
 void CalcOriginDestMatrix_adunit(void); //added function to calculate origin destination matrix: ggilani 28/01/15
 int BedsAvailablePerAdUnit(double,int); //added function to check current number of beds available in an admin unit
@@ -1345,6 +1347,11 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 		if (!GetInputParameter2(dat, dat2, "Safe burial start time", "%lf", (void*)&(P.FuneralControlTimeStartBase), 1, 1, 0)) P.FuneralControlTimeStartBase = USHRT_MAX / P.TimeStepsPerDay;
 		if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a safe burial", "%lf", (void*)&(P.RelInfSafeFuneral), 1, 1, 0)) P.RelInfSafeFuneral = 1;
 		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely", "%lf", (void*)&(P.ProportionSafeFuneral), 1, 1, 0)) P.ProportionSafeFuneral = 1;
+		if (!GetInputParameter2(dat, dat2, "Daily burials per admin unit", "%i", (void*)&(P.AdunitSDBCapacity), 1, 1, 0)) P.AdunitSDBCapacity = 0;
+		if (!GetInputParameter2(dat, dat2, "Delay to increase burial capacity", "%lf", (void*)&(P.DelayToSDB), 1, 1, 0)) P.DelayToSDB = 0;
+		if (!GetInputParameter2(dat, dat2, "Capacity when burial capacity increases", "%lf", (void*)&(P.CapacityToMoreSDB), 1, 1, 0)) P.CapacityToMoreSDB = 1;
+		if (!GetInputParameter2(dat, dat2, "Increase in burial capacity", "%i", (void*)&(P.incCapacitySDB), 1, 1, 0)) P.incCapacitySDB = 1;
+		
 		//if(!GetInputParameter2(dat,dat2,"Funeral controls by admin unit","%i",(void *) &(P.DoFuneralByAdUnit),1,1,0)) P.DoFuneralByAdUnit=0;
 		//if((P.DoFuneralByAdUnit)&&(P.DoAdUnits))
 		//{
@@ -1773,6 +1780,8 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 	if(!GetInputParameter2(dat,dat2,"Years between rounds of vaccination","%lf",(void *) &(P.VaccCampaignInterval),1,1,0)) P.VaccCampaignInterval=1e10;
 	if(!GetInputParameter2(dat, dat2, "Base vaccine doses per day", "%i", (void*)&(P.BaseVaccDosePerDay), 1, 1, 0)) P.BaseVaccDosePerDay = -1;
 	if(!GetInputParameter2(dat,dat2,"Max vaccine doses per day","%i",(void *) &(P.MaxVaccDosePerDay),1,1,0)) P.MaxVaccDosePerDay=-1;
+	if (!GetInputParameter2(dat, dat2, "Base geo vaccine doses per day", "%i", (void*)&(P.BaseVaccGeoDosePerDay), 1, 1, 0)) P.BaseVaccGeoDosePerDay = -1;
+	if (!GetInputParameter2(dat, dat2, "Max geo vaccine doses per day", "%i", (void*)&(P.MaxVaccGeoDosePerDay), 1, 1, 0)) P.MaxVaccGeoDosePerDay = -1;
 	if (!GetInputParameter2(dat, dat2, "Reset vaccination queue each day", "%i", (void*)&(P.ResetVaccQueue), 1, 1, 0)) P.ResetVaccQueue = 0;
 	P.VaccCampaignInterval*=DAYS_PER_YEAR;
 	if(!GetInputParameter2(dat,dat2,"Maximum number of rounds of vaccination","%i",(void *) &(P.VaccMaxRounds),1,1,0)) P.VaccMaxRounds=1;
@@ -1995,9 +2004,12 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 			//int AdunitCTCapacity[MAX_ADUNITS];
 			//int AdunitCTCapacityInc[MAX_ADUNITS];
 			//int AdunitCTThreshold[MAX_ADUNITS];
-			if (!GetInputParameter(dat, dat2, "Contact tracing capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacity), P.NumAdunits, 1, 0)) P.AdunitCTCapacity = 0;
-			if (!GetInputParameter(dat, dat2, "Contact tracing threshold per admin unit", "%i", (void*)&(P.AdunitCTThreshold), P.NumAdunits, 1, 0)) P.AdunitCTThreshold = 0;
-			if (!GetInputParameter2(dat, dat2, "Contact tracing increased capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacityInc), P.NumAdunits, 1, 0)) P.AdunitCTCapacityInc = 0;
+			if (!GetInputParameter(dat, dat2, "Contact tracing capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacity), 1, 1, 0)) P.AdunitCTCapacity = 0;
+			if (!GetInputParameter(dat, dat2, "Contact tracing threshold per admin unit", "%i", (void*)&(P.AdunitCTThreshold), 1, 1, 0)) P.AdunitCTThreshold = 0;
+			if (!GetInputParameter2(dat, dat2, "Contact tracing increased capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacityInc), 1, 1, 0)) P.AdunitCTCapacityInc = 0;
+			if (!GetInputParameter2(dat, dat2, "Contact tracing capacity reached before increasing teams", "%lf", (void*)&(P.CapacityToMoreCT), 1, 1, 0)) P.CapacityToMoreCT = 1;
+			if (!GetInputParameter2(dat, dat2, "Subsequent time to increase teams", "%lf", (void*)&(P.DelayToCT), 1, 1, 0)) P.DelayToCT = 0;
+
 			for(i=0;i<P.NumAdunits;i++)
 			{
 				//Some terrible hard coding to assign different thresholds to Guinea and Liberia&Sierra Leone!! Replace as soon as possible!! ggilani: 19/11/14
@@ -2006,6 +2018,7 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 					AdUnits[i].contactTraceCaseThreshold=P.CT_scale1*P.AdunitCTThreshold;
 					AdUnits[i].contactTraceCapacity=P.CT_scale1*P.AdunitCTCapacity; //scaling up contact tracing capacity if needed
 					AdUnits[i].contactTraceCapacityInc=P.CTinc_scale1*P.AdunitCTCapacityInc; //scaling up increased contact tracing capacity if needed
+					AdUnits[i].nextTimeToCT = 0;
 				}
 				else //else assign contact tracing threshold 2
 				{
@@ -4212,13 +4225,11 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		{
 			if (!(StateT[j].vacc_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
 			if (!(StateT[j].ring_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n"); // to store the ring a person is in - potentially useful for dosage
-			//if (!(StateT[j].ringvacc_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
-			//if (!(StateT[j].ring_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n"); // to store the ring a person is in - potentially useful for dosage
+			
 		}
 		if (!(State.vacc_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
 		if (!(State.ring_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n"); // to store the ring a person is in - potentially useful for dosage
-		//if (!(State.ringvacc_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
-		//if (!(State.ring_queue = (int*)malloc(P.N * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n"); // to store the ring a person is in - potentially useful for dosage
+
 	}
 	fprintf(stderr, "Population: %i\n",P.N);
 	//if (P.DoGeoVaccination)
@@ -7009,7 +7020,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	if(P.DoAdUnits)
 		for(i=0;i<=P.NumAdunits;i++) 
 			{
-			State.cumI_adunit[i]=State.cumC_adunit[i]=State.cumT_adunit[i]=State.cumETU_adunit[i]= State.cumH_adunit[i]=State.cumDC_adunit[i]= State.cumDD_adunit[i] = State.cumSDB_adunit[i]=State.cumDR_adunit[i] = State.cumCT_adunit[i]=State.cumV_adunit[i]=State.cumC_adunit[i]=State.cumCC_adunit[i]=0; //added hospitalisation, added detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
+			State.cumI_adunit[i]=State.cumC_adunit[i]=State.cumT_adunit[i]=State.cumETU_adunit[i]= State.cumH_adunit[i]=State.cumDC_adunit[i]= State.cumDD_adunit[i] = State.cumSDB_adunit[i]=State.cumDR_adunit[i] = State.cumCT_adunit[i]=State.cumV_adunit[i]=State.cumVG_adunit[i]=State.cumC_adunit[i]=State.cumCC_adunit[i]=0; //added hospitalisation, added detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
 			State.ETU_adunit[i] = State.H_adunit[i] = State.NumBeds_adunits[i]=0;
 			AdUnits[i].place_close_trig=0;
 			AdUnits[i].revacc = 0;
@@ -7038,6 +7049,9 @@ void InitModel(int run) //passing run number so we can save run number in the in
 			AdUnits[i].nct_queue=0; //no-one in contact tracing queue at beginning of run
 			AdUnits[i].nh_queue=0; //no-one in hospital queue at beginning of run
 			AdUnits[i].contactTraceStartDay=1e6;
+			AdUnits[i].contactTraceCapacity = P.AdunitCTCapacity;
+			AdUnits[i].nextTimeToSDB = 0;
+			AdUnits[i].maxSDB = P.AdunitSDBCapacity;
 			}
 	for(j=0;j<MAX_NUM_THREADS;j++)
 		{
@@ -7055,7 +7069,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 		for(i=0;i<MAX_COUNTRIES;i++) StateT[j].cumC_country[i]=0;
 		if(P.DoAdUnits)
 			for(i=0;i<=P.NumAdunits;i++) 
-				StateT[j].cumI_adunit[i]=StateT[j].cumC_adunit[i]=StateT[j].cumT_adunit[i]=StateT[j].cumETU_adunit[i]=StateT[j].cumH_adunit[i]=StateT[j].ETU_adunit[i]= StateT[j].H_adunit[i] = StateT[j].cumDC_adunit[i]= StateT[j].cumD_adunit[i]=StateT[j].cumDD_adunit[i]= StateT[j].cumSDB_adunit[i]=StateT[j].cumDR_adunit[i]=StateT[j].cumCT_adunit[i]=StateT[j].cumV_adunit[i]=StateT[j].cumC_adunit[i]=StateT[j].cumCC_adunit[i]= StateT[j].nct_queue[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
+				StateT[j].cumI_adunit[i]=StateT[j].cumC_adunit[i]=StateT[j].cumT_adunit[i]=StateT[j].cumETU_adunit[i]=StateT[j].cumH_adunit[i]=StateT[j].ETU_adunit[i]= StateT[j].H_adunit[i] = StateT[j].cumDC_adunit[i]= StateT[j].cumD_adunit[i]=StateT[j].cumDD_adunit[i]= StateT[j].cumSDB_adunit[i]=StateT[j].cumDR_adunit[i]=StateT[j].cumCT_adunit[i]=StateT[j].cumV_adunit[i]=StateT[j].cumV_adunit[i]=StateT[j].cumC_adunit[i]=StateT[j].cumCC_adunit[i]= StateT[j].nct_queue[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
 		}
 	nim=0;
 
@@ -7285,6 +7299,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.OutbreakDetected = 0;
 	P.PropHospSeek = P.PropHospSeekPreOutbreak;
 	P.VaccDosePerDay = P.BaseVaccDosePerDay;
+	P.VaccGeoDosePerDay = P.BaseVaccGeoDosePerDay;
 	P.VaccDoseFlag = 1;
 	P.UpdateVaccDosePerDay = 1;
 
@@ -7517,6 +7532,16 @@ void RunModel(int run) //added run number as parameter
 			if ((P.DoHospitalisation)&&(t>=P.ETUTimeStart))
 			{
 				UpdateHospitals(t);
+			}
+			//update contact tracing parameters at the beginning of every time step? ggilani - 11/03/2017
+			if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart))
+			{
+				UpdateContactTracing(t);
+			}
+			//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
+			if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
+			{
+				UpdateSDB(t);
 			}
 			//update vaccination parameters at the beginning of every time step
 			if ((P.DoRingVaccination)&&(t>P.RingVaccTimeStart))
@@ -7921,14 +7946,14 @@ void SaveResults(void)
 
 	sprintf(outname,"%s.csv",OutFile);
 	if(!(dat=fopen(outname,"w"))) ERR_CRITICAL("Unable to open output file\n");
-	fprintf(dat,"t,S,L,I,R,D,incI,incR,incFC,incFI,incC,incDC,incD,incDD,incSDB,incTC,incETU,incH,incCT,incCC,cumT,cumTP,cumV,cumVG,nBeds,Extinct,Detected,rmsRad,maxRad\n");//\t\t%lg\t%lg\t%lg\n",P.R0household,P.R0places,P.R0spatial);
+	fprintf(dat,"t,S,L,I,R,D,incI,incR,incFC,incFI,incC,incDC,incD,incDD,incSDB,incTC,incETU,incH,incCT,incCC,cumT,cumTP,cumV,capV,cumVG,capVG,nBeds,Extinct,Detected,rmsRad,maxRad\n");//\t\t%lg\t%lg\t%lg\n",P.R0household,P.R0places,P.R0spatial);
 	for(i=0;i<P.NumSamples;i++)
 		{
 		fprintf(dat,"%lg,%lf,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg\n",
 			TimeSeries[i].t,TimeSeries[i].S,TimeSeries[i].L,TimeSeries[i].I,
 			TimeSeries[i].R,TimeSeries[i].D,TimeSeries[i].incI,
 			TimeSeries[i].incR,TimeSeries[i].incFC,TimeSeries[i].incFI,TimeSeries[i].incC,TimeSeries[i].incDC, TimeSeries[i].incD, TimeSeries[i].incDD, TimeSeries[i].incSDB,TimeSeries[i].incTC,TimeSeries[i].incETU,TimeSeries[i].incH,TimeSeries[i].incCT,TimeSeries[i].incCC, //added incidence funeral transmissions and hospitalisation
-			TimeSeries[i].cumT,TimeSeries[i].cumTP,TimeSeries[i].cumV,TimeSeries[i].cumVG,TimeSeries[i].nBeds,TimeSeries[i].extinct,TimeSeries[i].detected,TimeSeries[i].rmsRad,TimeSeries[i].maxRad);
+			TimeSeries[i].cumT,TimeSeries[i].cumTP,TimeSeries[i].cumV, TimeSeries[i].capV, TimeSeries[i].cumVG, TimeSeries[i].capVG, TimeSeries[i].nBeds,TimeSeries[i].extinct,TimeSeries[i].detected,TimeSeries[i].rmsRad,TimeSeries[i].maxRad);
 		}
 	fclose(dat);
 	if (P.DoControlOutput)
@@ -8010,6 +8035,7 @@ void SaveResults(void)
 		if (P.DoFuneralTransmission)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "SDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
 		}
 
 		if((P.DoHospitalisation)&(P.DoETUByAdUnit))
@@ -8028,6 +8054,7 @@ void SaveResults(void)
 		{
 			for(i=0;i<P.NumAdunits;i++) fprintf(dat,"incCT_%s,",AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for(i=0;i<P.NumAdunits;i++) fprintf(dat,"CT_%s,",AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCC_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of cases who are contacts
 
 			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CTC_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
@@ -8036,6 +8063,10 @@ void SaveResults(void)
 		if (P.DoRingVaccination)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incV_%s,", AdUnits[i].ad_name); //"\tT%i" //added vaccination
+		}
+		if (P.DoGeoVaccination)
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incVG_%s,", AdUnits[i].ad_name); //"\tT%i" //added vaccination
 		}
 		//for(i=0;i<P.NumAdunits;i++) fprintf(dat,"%lg,",P.PopByAdunit[i][0]); //"\t%lg"
 		//for(i=0;i<P.NumAdunits;i++) fprintf(dat,"%lg,",P.PopByAdunit[i][1]); //"\t%lg"
@@ -8058,6 +8089,8 @@ void SaveResults(void)
 			{
 				for (j = 0; j < P.NumAdunits; j++) 
 					fprintf(dat, "%lg,", TimeSeries[i].incSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
 			}
 
 			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
@@ -8084,6 +8117,8 @@ void SaveResults(void)
 					fprintf(dat,"%lg,",TimeSeries[i].incCT_adunit[j]); //"\t%lg" //added contact tracing
 				for(j=0;j<P.NumAdunits;j++)
 					fprintf(dat,"%lg,",TimeSeries[i].CT_adunit[j]); //"\t%lg" //added contact tracing
+				for(j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incCC_adunit[j]); //"\t%lg" //added cases who are contacts
 				//for (j = 0; j < P.NumAdunits; j++)
@@ -8092,7 +8127,12 @@ void SaveResults(void)
 			if (P.DoRingVaccination)
 			{
 				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incV_adunit[j]); //"\t%lg" //added contact tracing
+					fprintf(dat, "%lg,", TimeSeries[i].incV_adunit[j]); //"\t%lg" //added vaccination
+			}
+			if (P.DoGeoVaccination)
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].incVG_adunit[j]); //"\t%lg" //added geographic vaccination
 			}
 			fprintf(dat,"\n");
 			}
@@ -10644,7 +10684,7 @@ void IncubRecoverySweep(double t,int run)
 							//if in hospital, they are definitely detected when they die
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
-							if (t >= P.FuneralControlTimeStart)
+							if ((t >= P.FuneralControlTimeStart)&&(State.cumSDB_adunit[Mcells[si->mcell].adunit]<AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if someone has died in hospital, we assumed that they will have a safe burial
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
@@ -10659,7 +10699,7 @@ void IncubRecoverySweep(double t,int run)
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral)&& (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
@@ -11088,7 +11128,7 @@ void VaccSweep(double t)
 			if (State.nvacc_queue < P.N) //to stop overspill from the queue: ggilani
 			{
 				State.vacc_queue[State.nvacc_queue] = StateT[i].vacc_queue[j];
-				//State.ring_queue[State.nringvacc_queue] = StateT[i].ring_queue[j];
+				State.ring_queue[State.nvacc_queue] = StateT[i].ring_queue[j];
 				State.nvacc_queue++;
 			}
 		}
@@ -11104,11 +11144,20 @@ void VaccSweep(double t)
 	{
 		for (i = State.vacc_ind; i < State.nvacc_queue; i++)
 		{
-			if (((P.VaccDosePerDay >= 0) ? (State.cumV_daily < P.VaccDosePerDay) : 1) && (State.cumV < P.VaccMaxCourses))
+			if ((State.cumV + State.cumVG) < P.VaccMaxCourses)
 			{
-				DoVacc(State.vacc_queue[i], ts);
-				k++;
-				l++;
+				if ((State.ring_queue[i] == 1) && (State.cumV_daily < P.VaccDosePerDay)) //for ring vaccination
+				{
+					DoVacc(State.vacc_queue[i], ts,1);
+					k++;
+					l++;
+				}
+				else if ((State.ring_queue[i] == 0) && (State.cumVG_daily < P.VaccGeoDosePerDay)) //for geo vaccination
+				{
+					DoVacc(State.vacc_queue[i], ts, 0);
+					k++;
+					l++;
+				}
 			}
 		}
 	}
@@ -11300,6 +11349,99 @@ void UpdateHospitals(double t)
 
 }
 
+
+/*
+ * Function: UpdateContactTracing
+ *
+ * Purpose: updates contact tracing capacity
+ * Parameters: time t
+ * Returns: none
+ *
+ * Author: ggilani, 11/03/2017
+ */
+void UpdateContactTracing(double t)
+{
+	int i, j;
+	int nCT, numBedsTotal, numBedsInUse;
+	double capacityFlag;
+	//pop=P.N;
+
+	if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart))
+	{
+		//code to see if contact tracing capacity should be increased
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			if ((AdUnits[i].contactTraceThresholdCrossed)&&(AdUnits[i].nextTimeToCT < t))
+			{
+				capacityFlag = (double)(AdUnits[i].nct) / (double)(AdUnits[i].contactTraceCapacity);
+				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding beds again)
+				if (capacityFlag > P.CapacityToMoreCT) //we also can't add more beds until we've added the last set
+				{
+					//set time for next lot of beds to be added
+					AdUnits[i].nextTimeToCT = t + P.DelayToCT;
+				}
+			}
+		}
+		// check to see if new beds should be allocated
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			//check to see if new beds should be added
+			if (((int)t == (int)AdUnits[i].nextTimeToCT) && (AdUnits[i].contactTraceCaseThreshold == 1))
+			{
+				AdUnits[i].contactTraceCapacity += AdUnits[i].contactTraceCapacityInc;
+				//State.NumBeds += AdUnits[i].nextETUBeds;
+				//State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
+			}
+		}
+	}
+}
+
+/*
+ * Function: UpdateSDB
+ *
+ * Purpose: updates maximum number of safe and dignified burials per admin unit
+ * Parameters: time t
+ * Returns: none
+ *
+ * Author: ggilani, 11/03/2017
+ */
+void UpdateSDB(double t)
+{
+	int i, j;
+	int nCT, numBedsTotal, numBedsInUse;
+	double capacityFlag;
+	//pop=P.N;
+
+	if  (t >= P.FuneralControlTimeStart)
+	{
+		//code to see if contact tracing capacity should be increased
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			if (AdUnits[i].nextTimeToSDB < t)
+			{
+				capacityFlag = (double)(State.cumSDB_adunit[i]) / (double)(AdUnits[i].maxSDB);
+				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding beds again)
+				if (capacityFlag > P.CapacityToMoreSDB) //we also can't add more beds until we've added the last set
+				{
+					//set time for next lot of beds to be added
+					AdUnits[i].nextTimeToSDB = t + P.DelayToSDB;
+				}
+			}
+		}
+		// check to see if new beds should be allocated
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			//check to see if new beds should be added
+			if ((int)t == (int)AdUnits[i].nextTimeToSDB)
+			{
+				AdUnits[i].maxSDB += P.incCapacitySDB;
+				//State.NumBeds += AdUnits[i].nextETUBeds;
+				//State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
+			}
+		}
+	}
+}
+
 /*
  * Function: UpdateVaccination
  *
@@ -11345,10 +11487,12 @@ void UpdateVaccination(double t,int n)
 		{
 			P.VaccDoseFlag++;
 			P.VaccDosePerDay = P.VaccDoseFlag * P.BaseVaccDosePerDay;
+			P.VaccGeoDosePerDay = P.VaccDoseFlag * P.BaseVaccGeoDosePerDay;
 		}
 		if (P.VaccDosePerDay > P.MaxVaccDosePerDay)
 		{
 			P.VaccDosePerDay = P.MaxVaccDosePerDay;
+			P.MaxVaccDosePerDay = P.MaxVaccGeoDosePerDay;
 			P.UpdateVaccDosePerDay = 0;
 		}
 	}
@@ -11565,7 +11709,7 @@ int TreatSweep(double t)
 			if(m>State.n_mvacc) m=State.n_mvacc;
 #pragma omp parallel for private(i) schedule(static,1000)
 			for(i=State.mvacc_cum;i<m;i++)
-				DoVacc(State.mvacc_queue[i],ts);
+				DoVacc(State.mvacc_queue[i],ts,0);
 			State.mvacc_cum=m;
 			}
 	if((t>=P.TreatTimeStart)||(t>=P.VaccTimeStart)||(t>=P.PlaceCloseTimeStart)||(t>=P.MoveRestrTimeStart)||(t>=P.SocDistTimeStart)||(t>=P.KeyWorkerProphTimeStart))
@@ -11736,9 +11880,10 @@ int TreatSweep(double t)
 													LastPerson = FirstPerson + Households[Mcells[k].FirstHousehold + SamplingQueue[tn][ii]].nh;
 													for (jj = FirstPerson; jj < LastPerson; jj++)
 													{
-														if (((Hosts[jj].vacc_accept < P.VaccProp)) && !(HOST_TO_BE_VACCED(jj)) && (State.cumV < P.VaccMaxCourses) && !(Hosts[jj].inf >= 5) && (HOST_AGE_YEAR(jj) >= P.MinVaccAge))
+														if (((Hosts[jj].vacc_accept < P.VaccProp)) && !(HOST_TO_BE_VACCED(jj)) && (State.cumVG < P.VaccMaxCourses) && !(Hosts[jj].inf >= 5) && (HOST_AGE_YEAR(jj) >= P.MinVaccAge))
 														{
 															StateT[tn].vacc_queue[StateT[tn].nvacc_queue] = jj;
+															StateT[tn].ring_queue[StateT[tn].nvacc_queue] = 0; //set this to zero to indicate geographic vaccination
 															StateT[tn].nvacc_queue++;
 															maxx++;
 														}
@@ -12379,6 +12524,7 @@ void RecordSample(double t,int n)
 	int cumDR_adunit[MAX_ADUNITS]; //added cumulative detected recoveries per adunit - ggilani 13/09/23
 	int cumSDB_adunit[MAX_ADUNITS];
 	int cumV_adunit[MAX_ADUNITS];
+	int cumVG_adunit[MAX_ADUNITS];
 	int cumD_adunit[MAX_ADUNITS];
 	cell *ct;
 	unsigned short int ts;
@@ -12389,7 +12535,7 @@ void RecordSample(double t,int n)
 	ts=(unsigned short int) (P.TimeStepsPerDay*t);
 	S=L=I=R=D=cumI=cumC=cumDC=cumDD=cumSDB=cumTC=cumFC=cumFI=cumHQ=cumAC=cumAA=cumAH=cumACS=cumAPC=cumAPA=cumAPCS=cumD=cumETU=cumH=cumCT=cumCC=0;
 	for(i=0;i<MAX_COUNTRIES;i++) cumC_country[i]=0;
-	for(i=0;i<MAX_ADUNITS;i++) cumC_adunit[i]=cumDC_adunit[i]=cumD_adunit[i]=cumDD_adunit[i]=cumDR_adunit[i]=cumSDB_adunit[i]=cumV_adunit[i]=0; //added cumulative detected cases, detected deaths, detected recoveries
+	for(i=0;i<MAX_ADUNITS;i++) cumC_adunit[i]=cumDC_adunit[i]=cumD_adunit[i]=cumDD_adunit[i]=cumDR_adunit[i]=cumSDB_adunit[i]=cumV_adunit[i]=cumVG_adunit[i]=0; //added cumulative detected cases, detected deaths, detected recoveries
 #pragma omp parallel for private(i,ct) schedule(static,10000) reduction(+:S,L,I,R,D,cumTC) //added i to private
 	for(i=0;i<P.NCP;i++)
 		{
@@ -12435,6 +12581,7 @@ void RecordSample(double t,int n)
 		for (i = 0; i < P.NumAdunits; i++) cumD_adunit[i] += StateT[j].cumD_adunit[i];
 		for (i = 0; i < P.NumAdunits; i++) cumSDB_adunit[i] += StateT[j].cumSDB_adunit[i];
 		for (i = 0; i < P.NumAdunits; i++) cumV_adunit[i] += StateT[j].cumV_adunit[i];
+		for (i = 0; i < P.NumAdunits; i++) cumVG_adunit[i] += StateT[j].cumVG_adunit[i]; //added geographically targeted vaccination by admin_unit
 		for (i = 0; i < P.NumAdunits; i++) cumDD_adunit[i] += StateT[j].cumDD_adunit[i]; //detected deaths
 		for (i = 0; i < P.NumAdunits; i++) cumDR_adunit[i] += StateT[j].cumDR_adunit[i]; //detected recoveries
 		if(State.maxRad2<StateT[j].maxRad2) State.maxRad2=StateT[j].maxRad2;
@@ -12474,7 +12621,18 @@ void RecordSample(double t,int n)
 	TimeSeries[n].cumUT=State.cumUT;
 	TimeSeries[n].cumTP=State.cumTP;
 	TimeSeries[n].cumV=State.cumV;
+	if (t > P.VaccTimeStart)
+	{
+		TimeSeries[n].capV = P.VaccDosePerDay;
+		TimeSeries[n].capVG = P.VaccGeoDosePerDay;
+	}
+	else
+	{
+		TimeSeries[n].capV = 0;
+		TimeSeries[n].capVG = 0;
+	}
 	TimeSeries[n].cumVG = State.cumVG; //added VG;
+	
 	TimeSeries[n].cumDC=cumDC;
 	TimeSeries[n].cumDD = cumDD;
 	TimeSeries[n].cumSDB = cumSDB;
@@ -12521,6 +12679,7 @@ void RecordSample(double t,int n)
 	for (i = 0; i < P.NumAdunits; i++) State.cumDD_adunit[i] += cumDD_adunit[i];
 	for (i = 0; i < P.NumAdunits; i++) State.cumSDB_adunit[i] += cumSDB_adunit[i];
 	for (i = 0; i < P.NumAdunits; i++) State.cumV_adunit[i] += cumV_adunit[i]; //added vaccination: ggilani 14/01/25
+	for (i = 0; i < P.NumAdunits; i++) State.cumVG_adunit[i] += cumVG_adunit[i]; //added geographically targeted vaccination: ggilani 22/08/25
 	TimeSeries[n].rmsRad=(State.cumI>0) ? sqrt(State.sumRad2/((double)State.cumI)):0;
 	TimeSeries[n].maxRad=sqrt(State.maxRad2);
 	TimeSeries[n].extinct=((((P.SmallEpidemicCases>=0)&&(State.R<=P.SmallEpidemicCases))||(P.SmallEpidemicCases<0))&&(State.I+State.L==0))?1:0;
@@ -12576,7 +12735,7 @@ void RecordSample(double t,int n)
 	if(P.DoAdUnits)
 		for(i=0;i<=P.NumAdunits;i++)
 		{
-			TimeSeries[n].incI_adunit[i]=TimeSeries[n].incC_adunit[i]= TimeSeries[n].incDC_adunit[i]= TimeSeries[n].incD_adunit[i]= TimeSeries[n].incDD_adunit[i]= TimeSeries[n].incDR_adunit[i]= TimeSeries[n].incSDB_adunit[i]= TimeSeries[n].incV_adunit[i]= TimeSeries[n].incETU_adunit[i]=TimeSeries[n].incH_adunit[i]=TimeSeries[n].cumT_adunit[i]=TimeSeries[n].incCT_adunit[i]=TimeSeries[n].incCC_adunit[i]=TimeSeries[n].capETU_adunit[i]= TimeSeries[n].ETU_adunit[i]=0; //added detected cases: ggilani 03/02/15
+			TimeSeries[n].incI_adunit[i]=TimeSeries[n].incC_adunit[i]= TimeSeries[n].incDC_adunit[i]= TimeSeries[n].incD_adunit[i]= TimeSeries[n].incDD_adunit[i]= TimeSeries[n].incDR_adunit[i]= TimeSeries[n].incSDB_adunit[i]= TimeSeries[n].incV_adunit[i]= TimeSeries[n].incVG_adunit[i]=TimeSeries[n].incETU_adunit[i]=TimeSeries[n].incH_adunit[i]=TimeSeries[n].cumT_adunit[i]=TimeSeries[n].incCT_adunit[i]=TimeSeries[n].incCC_adunit[i]=TimeSeries[n].capETU_adunit[i]= TimeSeries[n].ETU_adunit[i]=0; //added detected cases: ggilani 03/02/15
 			for(j=0;j<P.NumThreads;j++)
 			{
 				TimeSeries[n].incI_adunit[i]+=(double) StateT[j].cumI_adunit[i];
@@ -12586,13 +12745,31 @@ void RecordSample(double t,int n)
 				TimeSeries[n].incDD_adunit[i] += (double)StateT[j].cumDD_adunit[i]; //added detected deaths: ggilani 03/02/15
 				TimeSeries[n].incDR_adunit[i] += (double)StateT[j].cumDR_adunit[i]; //added detected recoveries: ggilani 03/02/15
 				TimeSeries[n].incSDB_adunit[i] += (double)StateT[j].cumSDB_adunit[i]; //added safe burials: ggilani 05/10/23
-				TimeSeries[n].incV_adunit[i] += (double)StateT[j].cumV_adunit[i]; //added safe burials: ggilani 05/10/23
+				if ((t >= P.FuneralControlTimeStart) && (AdUnits[i].contactTraceThresholdCrossed))
+				{
+					TimeSeries[n].capSDB_adunit[i] = AdUnits[i].maxSDB;
+				}
+				else
+				{
+					TimeSeries[n].capSDB_adunit[i] = 0;
+				}
+				if ((t >= P.ContactTracingTimeStart) && (AdUnits[i].contactTraceThresholdCrossed))
+				{
+					TimeSeries[n].capCT_adunit[i] = AdUnits[i].contactTraceCapacity;
+				}
+				else
+				{
+					TimeSeries[n].capCT_adunit[i] = 0;
+				}
+
+				TimeSeries[n].incV_adunit[i] += (double)StateT[j].cumV_adunit[i]; //added vaccination: ggilani 05/10/23
+				TimeSeries[n].incVG_adunit[i] += (double)StateT[j].cumVG_adunit[i]; //added vaccination: ggilani 05/10/23
 				TimeSeries[n].incETU_adunit[i]+=(double) StateT[j].cumETU_adunit[i]; //added hospitalisation
 				TimeSeries[n].incH_adunit[i] += (double)StateT[j].cumH_adunit[i];
 				TimeSeries[n].incCT_adunit[i]+=(double) StateT[j].cumCT_adunit[i]; //added contact tracing: ggilani 15/06/17
 				TimeSeries[n].incCC_adunit[i] += (double)StateT[j].cumCC_adunit[i]; //added cases who are contacts: ggilani 28/05/2019
 				TimeSeries[n].cumT_adunit[i]+=(double) StateT[j].cumT_adunit[i];
-				StateT[j].cumI_adunit[i]=StateT[j].cumC_adunit[i]=StateT[j].cumH_adunit[i]=StateT[j].cumDC_adunit[i]= StateT[j].cumD_adunit[i]=StateT[j].cumDD_adunit[i]= StateT[j].cumDR_adunit[i]=StateT[j].cumSDB_adunit[i]=StateT[j].cumCT_adunit[i]=StateT[j].cumV_adunit[i]= StateT[j].cumETU_adunit[i]= StateT[j].cumCC_adunit[i]=0; //added hospitalisation, detected cases, contact tracing: ggilani 03/02/15, 15/06/17
+				StateT[j].cumI_adunit[i]=StateT[j].cumC_adunit[i]=StateT[j].cumH_adunit[i]=StateT[j].cumDC_adunit[i]= StateT[j].cumD_adunit[i]=StateT[j].cumDD_adunit[i]= StateT[j].cumDR_adunit[i]=StateT[j].cumSDB_adunit[i]=StateT[j].cumCT_adunit[i]=StateT[j].cumV_adunit[i]= StateT[j].cumVG_adunit[i]=StateT[j].cumETU_adunit[i]= StateT[j].cumCC_adunit[i]=0; //added hospitalisation, detected cases, contact tracing: ggilani 03/02/15, 15/06/17
 			}
 
 			if ((P.DoHospitalisation) && (P.DoETUByAdUnit)) //added this to print out total number of beds in use at each time point: ggilani 31/10/14
@@ -13346,7 +13523,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 		//if (P.OutbreakDetected)
 		//{
 			if (Mcells[a->mcell].treat_trig < USHRT_MAX - 1) Mcells[a->mcell].treat_trig++;
-			if (!P.OnlyDoGeoVaccWhenNoRing)
+			if ((!P.OnlyDoGeoVaccWhenNoRing)|| (Hosts[ai].vacc_accept > P.ProbEstablishRing))
 			{
 				if (Mcells[a->mcell].vacc_trig < USHRT_MAX - 1) Mcells[a->mcell].vacc_trig++;
 			}
@@ -13967,7 +14144,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 						{
 
 							StateT[tn].vacc_queue[StateT[tn].nvacc_queue] = StateT[tn].ringvacclist[i];
-							//StateT[tn].ring_queue[StateT[tn].nringvacc_queue] = StateT[tn].ringlist[i];
+							StateT[tn].ring_queue[StateT[tn].nvacc_queue] = 1; //set this to one if added to the queue via ring vaccination - it will be zero for geo
 							StateT[tn].nvacc_queue++;
 						}
 					}
@@ -14639,7 +14816,7 @@ void DoPlaceClose(int i,int j,unsigned short int ts,int tn,int DoAnyway)
 }
 
 
-int DoVacc(int ai,int ts)
+int DoVacc(int ai,int ts,int ringflag)
 {
 	int j;
 	double x,y;
@@ -14663,20 +14840,41 @@ int DoVacc(int ai,int ts)
 		//	//This person was in a third ring and it will take longer for efficacy - mark them as such
 		//	Hosts[ai].thirdVaccRing = 1;
 		//}
-#pragma omp critical (state_cumV)
-		State.cumV++;
-#pragma omp critical (state_cumVa)
-		State.cumVa[age]++; //added vaccination by age: ggilani 23/02/22
-#pragma omp critical (state_cumVad)
-		if (P.DoAdUnits)
-		{	
-			StateT[0].cumV_adunit[Mcells[Hosts[ai].mcell].adunit]++;
-		}
-#pragma omp critical (state_cumV_daily)
-		if(P.VaccDosePerDay>=0)
+		if (ringflag == 1) //for ring vaccination
 		{
-		State.cumV_daily++;
+#pragma omp critical (state_cumV)
+			State.cumV++;
+#pragma omp critical (state_cumVa)
+			State.cumVa[age]++; //added vaccination by age: ggilani 23/02/22
+#pragma omp critical (state_cumVad)
+			if (P.DoAdUnits)
+			{
+				StateT[0].cumV_adunit[Mcells[Hosts[ai].mcell].adunit]++;
+			}
+#pragma omp critical (state_cumV_daily)
+			if (P.VaccDosePerDay >= 0)
+			{
+				State.cumV_daily++;
+			}
 		}
+		else if (ringflag==0) //for geographic vaccination
+		{
+#pragma omp critical (state_cumVG)
+			State.cumVG++;
+//#pragma omp critical (state_cumVa)
+//			State.cumVGa[age]++; //added vaccination by age: ggilani 23/02/22
+#pragma omp critical (state_cumVGad)
+			if (P.DoAdUnits)
+			{
+				StateT[0].cumVG_adunit[Mcells[Hosts[ai].mcell].adunit]++;
+			}
+#pragma omp critical (state_cumVG_daily)
+			if (P.VaccGeoDosePerDay >= 0)
+			{
+				State.cumVG_daily++;
+			}
+		}
+
 #pragma omp critical (tot_vacc)
 		Cells[Hosts[ai].pcell].tot_vacc++;
 		Mcells[Hosts[ai].mcell].popvacc++;
