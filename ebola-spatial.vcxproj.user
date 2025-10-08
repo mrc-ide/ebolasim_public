@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>/P:G:\Ervebo\Gavi\Data\p_R1.80_NordKivu_HCWring_lowAccept.txt /PP:G:\Ervebo\Gavi\Data\PreFPNordKivu_HCWring_vaccCFR.txt /O:G:\Ervebo\Gavi\TestOutput\Test /D:G:\Ervebo\Populations\NordKivu_MSF_LS2018.bin /L:G:\Ervebo\Populations\NordKivu_MSF_Network_HCW_Gavi.bin /R:1 /CLP1:24 /CLP2:1500 /CLP3:10 /CLP4:6 /CLP5:500 /CLP6:1000 /CLP7:1000 /CLP8:5000 /CLP9:100000 /C:P10:450 98798150 729101 17389101 4797132</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>/P:G:\Ervebo\Gavi\Data\p_R1.80_NordKivu_HCWring_highAccept.txt /PP:G:\Ervebo\Gavi\Data\PreFPNordKivu_HCWring_vaccCFR.txt /O:G:\Ervebo\Gavi\TestOutput\Test /D:G:\Ervebo\Populations\NordKivu_MSF_LS2018.bin /L:G:\Ervebo\Populations\NordKivu_MSF_Network_HCW_Gavi.bin /R:1 /CLP1:24 /CLP2:1500 /CLP3:10 /CLP4:6 /CLP5:500 /CLP6:1000 /CLP7:1000 /CLP8:5000 /CLP9:100000 /CLP10:450 /CLP11:20 98798150 729101 17389101 4797132</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

@@ -316,7 +316,7 @@ typedef struct RESULTS {
   double CT,incCT,CC,incCC; //added total numbers being contact traced and incidence of contact tracing: ggilani 15/06/17
   double nBeds; //number of beds available on any given day: ggilani 12/04/22
   double incC_country[MAX_COUNTRIES]; //added incidence of cases
-  double cumT,cumUT,cumTP,cumV,cumTmax,cumVmax,cumDC,cumDD,cumSDB,extinct,detected,cumVG; //added cumVG. added detected: ggilani 13/09/23
+  double cumT,cumUT,cumTP,cumV,capV,cumTmax,cumVmax,cumDC,cumDD,cumSDB,extinct,detected,cumVG,capVG; //added cumVG. added detected: ggilani 13/09/23
   double incHQ,incAC,incAH,incAA,incACS,incAPC,incAPA,incAPCS;
   double incIa[NUM_AGE_GROUPS],incCa[NUM_AGE_GROUPS],incDa[NUM_AGE_GROUPS],incDCa[NUM_AGE_GROUPS],incETUa[NUM_AGE_GROUPS], incHa[NUM_AGE_GROUPS], incVa[NUM_AGE_GROUPS];
   double incItype[INFECT_TYPE_MASK],Rtype[INFECT_TYPE_MASK],Rage[NUM_AGE_GROUPS],Rdenom;
@@ -324,7 +324,7 @@ typedef struct RESULTS {
   double incI_adunit[MAX_ADUNITS],incC_adunit[MAX_ADUNITS],cumT_adunit[MAX_ADUNITS],incETU_adunit[MAX_ADUNITS],ETU_adunit[MAX_ADUNITS],incH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS],incDC_adunit[MAX_ADUNITS]; //added incidence of hospitalisation per day: ggilani 28/10/14, incidence of detected cases per adunit,: ggilani 03/02/15
   double incCT_adunit[MAX_ADUNITS],CT_adunit[MAX_ADUNITS], incCC_adunit[MAX_ADUNITS], CC_adunit[MAX_ADUNITS],incV_adunit[MAX_ADUNITS],incVG_adunit[MAX_ADUNITS]; //added incidence of contact tracing and number of people being contact traced per admin unit: ggilani 15/06/17
   double incD_adunit[MAX_ADUNITS],incDD_adunit[MAX_ADUNITS], incDR_adunit[MAX_ADUNITS],incSDB_adunit[MAX_ADUNITS],nBeds_adunit[MAX_ADUNITS]; //added detected deaths, detected recoveries, safe burials per adunit, beds per admin unit
-  double capETU_adunit[MAX_ADUNITS]; //added marker for hospital capacity in each admin unit: ggilani 04/05/22
+  double capETU_adunit[MAX_ADUNITS],capSDB_adunit[MAX_ADUNITS],capCT_adunit[MAX_ADUNITS]; //added marker for hospital capacity in each admin unit: ggilani 04/05/22
   double incI_keyworker[2],incC_keyworker[2],cumT_keyworker[2],incD_keyworker[2];
   double incI_resist[MAX_NUM_RESIST_TYPES],incC_resist[MAX_NUM_RESIST_TYPES],cumT_resist[MAX_NUM_RESIST_TYPES];
   float *bmi2,*bmi3,*bmi4;
@@ -449,8 +449,8 @@ typedef struct ADMINUNIT {
   int *h_queue,nh_queue; //queues for hospitalisation: ggilani 30/10/14
   int caseDetPreFuneralControl;
   double delayDetFuneralControl,initPropSafeFunerals,secPropSafeFunerals,initRelInfSafeFuneral,secRelInfSafeFuneral; //admin unit level funeral controls: ggilani 10/11/14
-  double timeToSafeFuneral, startFuneralControl, endFuneralControl; //admin unit level funeral controls: ggilani 10/11/14
-  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
+  double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB; //admin unit level funeral controls: ggilani 10/11/14
+  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDBf; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
   int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
   double *origin_dest; //storage for origin-destination matrix between admin units: ggilani 28/01/15
@@ -595,8 +595,8 @@ typedef struct PARAM {
   int DoMortality;
   double RecoveryAmp,RecoveryShape,RecoveryScale,RecoveryProb[RECOVERY_RES];
   //Parameters for funeral transmission
-  int DoFuneralTransmission;
-  double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral;
+  int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB;
+  double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, CapacityToMoreSDB,DelayToSDB;
   //Parameters for hospitalisation/treatment centres: ggilani - 28/10/2014
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
   int IncludeHospitalPlaceType, HospPlaceTypeNum, IncludeFLWs, HospCaseCapacity, DayHCWFLWVacc;
@@ -610,7 +610,7 @@ typedef struct PARAM {
   double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
   //Pseudo contact tracing parameters: ggilani 13/11/14
   int DoContactTracing,contactTraceCapacity,contactTraceCaseThreshold,contactTraceCaseThresholdInc,DoNewContactTracing; //added DoNewContactTracing - 06/06/17
-  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost;
+  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT;
   int CT_scale1, CT_scale2; //scaling factors for contact tracing capacity
   int CT_thresh1, CT_thresh2; //scaling for different contact tracing thresholds
   int CTinc_scale1, CTinc_scale2; //scaling for increased capacity

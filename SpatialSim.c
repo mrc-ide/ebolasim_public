@@ -46,6 +46,8 @@ void HospitalSweepAdunits(double); //added hospitalisation by adunit sweep funct
 void ContactTracingSweep(double); // added function to update contact tracing number
 void VaccSweep(double); //added function to process ring vaccination queue: ggilani - 21/08/19
 void UpdateHospitals(double); //added function to update hospital parameters on each time step: ggilani - 11/03/2017
+void UpdateContactTracing(double); //added function to update contact tracing capacity
+void UpdateSDB(double); //added function to update safe burial capacity
 void UpdateVaccination(double,int); //added function to update vaccination parameters at each time step: ggilani - 29/05/2019
 void UpdateCaseDetection(double); //added function to update vaccination parameters at each time step: ggilani - 29/05/2019
 void SaveAgeDistrib(void);
@@ -1345,6 +1347,11 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 		if (!GetInputParameter2(dat, dat2, "Safe burial start time", "%lf", (void*)&(P.FuneralControlTimeStartBase), 1, 1, 0)) P.FuneralControlTimeStartBase = USHRT_MAX / P.TimeStepsPerDay;
 		if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a safe burial", "%lf", (void*)&(P.RelInfSafeFuneral), 1, 1, 0)) P.RelInfSafeFuneral = 1;
 		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely", "%lf", (void*)&(P.ProportionSafeFuneral), 1, 1, 0)) P.ProportionSafeFuneral = 1;
+		if (!GetInputParameter2(dat, dat2, "Daily burials per admin unit", "%i", (void*)&(P.AdunitSDBCapacity), 1, 1, 0)) P.AdunitSDBCapacity = 0;
+		if (!GetInputParameter2(dat, dat2, "Delay to increase burial capacity", "%lf", (void*)&(P.DelayToSDB), 1, 1, 0)) P.DelayToSDB = 0;
+		if (!GetInputParameter2(dat, dat2, "Capacity when burial capacity increases", "%lf", (void*)&(P.CapacityToMoreSDB), 1, 1, 0)) P.CapacityToMoreSDB = 1;
+		if (!GetInputParameter2(dat, dat2, "Increase in burial capacity", "%i", (void*)&(P.incCapacitySDB), 1, 1, 0)) P.incCapacitySDB = 1;
+		
 		//if(!GetInputParameter2(dat,dat2,"Funeral controls by admin unit","%i",(void *) &(P.DoFuneralByAdUnit),1,1,0)) P.DoFuneralByAdUnit=0;
 		//if((P.DoFuneralByAdUnit)&&(P.DoAdUnits))
 		//{
@@ -1997,9 +2004,12 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 			//int AdunitCTCapacity[MAX_ADUNITS];
 			//int AdunitCTCapacityInc[MAX_ADUNITS];
 			//int AdunitCTThreshold[MAX_ADUNITS];
-			if (!GetInputParameter(dat, dat2, "Contact tracing capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacity), P.NumAdunits, 1, 0)) P.AdunitCTCapacity = 0;
-			if (!GetInputParameter(dat, dat2, "Contact tracing threshold per admin unit", "%i", (void*)&(P.AdunitCTThreshold), P.NumAdunits, 1, 0)) P.AdunitCTThreshold = 0;
-			if (!GetInputParameter2(dat, dat2, "Contact tracing increased capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacityInc), P.NumAdunits, 1, 0)) P.AdunitCTCapacityInc = 0;
+			if (!GetInputParameter(dat, dat2, "Contact tracing capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacity), 1, 1, 0)) P.AdunitCTCapacity = 0;
+			if (!GetInputParameter(dat, dat2, "Contact tracing threshold per admin unit", "%i", (void*)&(P.AdunitCTThreshold), 1, 1, 0)) P.AdunitCTThreshold = 0;
+			if (!GetInputParameter2(dat, dat2, "Contact tracing increased capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacityInc), 1, 1, 0)) P.AdunitCTCapacityInc = 0;
+			if (!GetInputParameter2(dat, dat2, "Contact tracing capacity reached before increasing teams", "%lf", (void*)&(P.CapacityToMoreCT), 1, 1, 0)) P.CapacityToMoreCT = 1;
+			if (!GetInputParameter2(dat, dat2, "Subsequent time to increase teams", "%lf", (void*)&(P.DelayToCT), 1, 1, 0)) P.DelayToCT = 0;
+
 			for(i=0;i<P.NumAdunits;i++)
 			{
 				//Some terrible hard coding to assign different thresholds to Guinea and Liberia&Sierra Leone!! Replace as soon as possible!! ggilani: 19/11/14
@@ -2008,6 +2018,7 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 					AdUnits[i].contactTraceCaseThreshold=P.CT_scale1*P.AdunitCTThreshold;
 					AdUnits[i].contactTraceCapacity=P.CT_scale1*P.AdunitCTCapacity; //scaling up contact tracing capacity if needed
 					AdUnits[i].contactTraceCapacityInc=P.CTinc_scale1*P.AdunitCTCapacityInc; //scaling up increased contact tracing capacity if needed
+					AdUnits[i].nextTimeToCT = 0;
 				}
 				else //else assign contact tracing threshold 2
 				{
@@ -7038,6 +7049,9 @@ void InitModel(int run) //passing run number so we can save run number in the in
 			AdUnits[i].nct_queue=0; //no-one in contact tracing queue at beginning of run
 			AdUnits[i].nh_queue=0; //no-one in hospital queue at beginning of run
 			AdUnits[i].contactTraceStartDay=1e6;
+			AdUnits[i].contactTraceCapacity = P.AdunitCTCapacity;
+			AdUnits[i].nextTimeToSDB = 0;
+			AdUnits[i].maxSDB = P.AdunitSDBCapacity;
 			}
 	for(j=0;j<MAX_NUM_THREADS;j++)
 		{
@@ -7519,6 +7533,16 @@ void RunModel(int run) //added run number as parameter
 			{
 				UpdateHospitals(t);
 			}
+			//update contact tracing parameters at the beginning of every time step? ggilani - 11/03/2017
+			if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart))
+			{
+				UpdateContactTracing(t);
+			}
+			//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
+			if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
+			{
+				UpdateSDB(t);
+			}
 			//update vaccination parameters at the beginning of every time step
 			if ((P.DoRingVaccination)&&(t>P.RingVaccTimeStart))
 			{
@@ -7922,14 +7946,14 @@ void SaveResults(void)
 
 	sprintf(outname,"%s.csv",OutFile);
 	if(!(dat=fopen(outname,"w"))) ERR_CRITICAL("Unable to open output file\n");
-	fprintf(dat,"t,S,L,I,R,D,incI,incR,incFC,incFI,incC,incDC,incD,incDD,incSDB,incTC,incETU,incH,incCT,incCC,cumT,cumTP,cumV,cumVG,nBeds,Extinct,Detected,rmsRad,maxRad\n");//\t\t%lg\t%lg\t%lg\n",P.R0household,P.R0places,P.R0spatial);
+	fprintf(dat,"t,S,L,I,R,D,incI,incR,incFC,incFI,incC,incDC,incD,incDD,incSDB,incTC,incETU,incH,incCT,incCC,cumT,cumTP,cumV,capV,cumVG,capVG,nBeds,Extinct,Detected,rmsRad,maxRad\n");//\t\t%lg\t%lg\t%lg\n",P.R0household,P.R0places,P.R0spatial);
 	for(i=0;i<P.NumSamples;i++)
 		{
 		fprintf(dat,"%lg,%lf,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg\n",
 			TimeSeries[i].t,TimeSeries[i].S,TimeSeries[i].L,TimeSeries[i].I,
 			TimeSeries[i].R,TimeSeries[i].D,TimeSeries[i].incI,
 			TimeSeries[i].incR,TimeSeries[i].incFC,TimeSeries[i].incFI,TimeSeries[i].incC,TimeSeries[i].incDC, TimeSeries[i].incD, TimeSeries[i].incDD, TimeSeries[i].incSDB,TimeSeries[i].incTC,TimeSeries[i].incETU,TimeSeries[i].incH,TimeSeries[i].incCT,TimeSeries[i].incCC, //added incidence funeral transmissions and hospitalisation
-			TimeSeries[i].cumT,TimeSeries[i].cumTP,TimeSeries[i].cumV,TimeSeries[i].cumVG,TimeSeries[i].nBeds,TimeSeries[i].extinct,TimeSeries[i].detected,TimeSeries[i].rmsRad,TimeSeries[i].maxRad);
+			TimeSeries[i].cumT,TimeSeries[i].cumTP,TimeSeries[i].cumV, TimeSeries[i].capV, TimeSeries[i].cumVG, TimeSeries[i].capVG, TimeSeries[i].nBeds,TimeSeries[i].extinct,TimeSeries[i].detected,TimeSeries[i].rmsRad,TimeSeries[i].maxRad);
 		}
 	fclose(dat);
 	if (P.DoControlOutput)
@@ -8011,6 +8035,7 @@ void SaveResults(void)
 		if (P.DoFuneralTransmission)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "SDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
 		}
 
 		if((P.DoHospitalisation)&(P.DoETUByAdUnit))
@@ -8029,6 +8054,7 @@ void SaveResults(void)
 		{
 			for(i=0;i<P.NumAdunits;i++) fprintf(dat,"incCT_%s,",AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for(i=0;i<P.NumAdunits;i++) fprintf(dat,"CT_%s,",AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCC_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of cases who are contacts
 
 			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CTC_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
@@ -8063,6 +8089,8 @@ void SaveResults(void)
 			{
 				for (j = 0; j < P.NumAdunits; j++) 
 					fprintf(dat, "%lg,", TimeSeries[i].incSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
 			}
 
 			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
@@ -8089,6 +8117,8 @@ void SaveResults(void)
 					fprintf(dat,"%lg,",TimeSeries[i].incCT_adunit[j]); //"\t%lg" //added contact tracing
 				for(j=0;j<P.NumAdunits;j++)
 					fprintf(dat,"%lg,",TimeSeries[i].CT_adunit[j]); //"\t%lg" //added contact tracing
+				for(j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incCC_adunit[j]); //"\t%lg" //added cases who are contacts
 				//for (j = 0; j < P.NumAdunits; j++)
@@ -10654,7 +10684,7 @@ void IncubRecoverySweep(double t,int run)
 							//if in hospital, they are definitely detected when they die
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
-							if (t >= P.FuneralControlTimeStart)
+							if ((t >= P.FuneralControlTimeStart)&&(State.cumSDB_adunit[Mcells[si->mcell].adunit]<AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if someone has died in hospital, we assumed that they will have a safe burial
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
@@ -10669,7 +10699,7 @@ void IncubRecoverySweep(double t,int run)
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral)&& (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
@@ -11317,6 +11347,99 @@ void UpdateHospitals(double t)
 	//	}
 	//}
 
+}
+
+
+/*
+ * Function: UpdateContactTracing
+ *
+ * Purpose: updates contact tracing capacity
+ * Parameters: time t
+ * Returns: none
+ *
+ * Author: ggilani, 11/03/2017
+ */
+void UpdateContactTracing(double t)
+{
+	int i, j;
+	int nCT, numBedsTotal, numBedsInUse;
+	double capacityFlag;
+	//pop=P.N;
+
+	if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart))
+	{
+		//code to see if contact tracing capacity should be increased
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			if ((AdUnits[i].contactTraceThresholdCrossed)&&(AdUnits[i].nextTimeToCT < t))
+			{
+				capacityFlag = (double)(AdUnits[i].nct) / (double)(AdUnits[i].contactTraceCapacity);
+				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding beds again)
+				if (capacityFlag > P.CapacityToMoreCT) //we also can't add more beds until we've added the last set
+				{
+					//set time for next lot of beds to be added
+					AdUnits[i].nextTimeToCT = t + P.DelayToCT;
+				}
+			}
+		}
+		// check to see if new beds should be allocated
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			//check to see if new beds should be added
+			if (((int)t == (int)AdUnits[i].nextTimeToCT) && (AdUnits[i].contactTraceCaseThreshold == 1))
+			{
+				AdUnits[i].contactTraceCapacity += AdUnits[i].contactTraceCapacityInc;
+				//State.NumBeds += AdUnits[i].nextETUBeds;
+				//State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
+			}
+		}
+	}
+}
+
+/*
+ * Function: UpdateSDB
+ *
+ * Purpose: updates maximum number of safe and dignified burials per admin unit
+ * Parameters: time t
+ * Returns: none
+ *
+ * Author: ggilani, 11/03/2017
+ */
+void UpdateSDB(double t)
+{
+	int i, j;
+	int nCT, numBedsTotal, numBedsInUse;
+	double capacityFlag;
+	//pop=P.N;
+
+	if  (t >= P.FuneralControlTimeStart)
+	{
+		//code to see if contact tracing capacity should be increased
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			if (AdUnits[i].nextTimeToSDB < t)
+			{
+				capacityFlag = (double)(State.cumSDB_adunit[i]) / (double)(AdUnits[i].maxSDB);
+				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding beds again)
+				if (capacityFlag > P.CapacityToMoreSDB) //we also can't add more beds until we've added the last set
+				{
+					//set time for next lot of beds to be added
+					AdUnits[i].nextTimeToSDB = t + P.DelayToSDB;
+				}
+			}
+		}
+		// check to see if new beds should be allocated
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			//check to see if new beds should be added
+			if ((int)t == (int)AdUnits[i].nextTimeToSDB)
+			{
+				AdUnits[i].maxSDB += P.incCapacitySDB;
+				//State.NumBeds += AdUnits[i].nextETUBeds;
+				//State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
+			}
+		}
+	}
 }
 
 /*
@@ -12498,7 +12621,18 @@ void RecordSample(double t,int n)
 	TimeSeries[n].cumUT=State.cumUT;
 	TimeSeries[n].cumTP=State.cumTP;
 	TimeSeries[n].cumV=State.cumV;
+	if (t > P.VaccTimeStart)
+	{
+		TimeSeries[n].capV = P.VaccDosePerDay;
+		TimeSeries[n].capVG = P.VaccGeoDosePerDay;
+	}
+	else
+	{
+		TimeSeries[n].capV = 0;
+		TimeSeries[n].capVG = 0;
+	}
 	TimeSeries[n].cumVG = State.cumVG; //added VG;
+	
 	TimeSeries[n].cumDC=cumDC;
 	TimeSeries[n].cumDD = cumDD;
 	TimeSeries[n].cumSDB = cumSDB;
@@ -12611,6 +12745,23 @@ void RecordSample(double t,int n)
 				TimeSeries[n].incDD_adunit[i] += (double)StateT[j].cumDD_adunit[i]; //added detected deaths: ggilani 03/02/15
 				TimeSeries[n].incDR_adunit[i] += (double)StateT[j].cumDR_adunit[i]; //added detected recoveries: ggilani 03/02/15
 				TimeSeries[n].incSDB_adunit[i] += (double)StateT[j].cumSDB_adunit[i]; //added safe burials: ggilani 05/10/23
+				if ((t >= P.FuneralControlTimeStart) && (AdUnits[i].contactTraceThresholdCrossed))
+				{
+					TimeSeries[n].capSDB_adunit[i] = AdUnits[i].maxSDB;
+				}
+				else
+				{
+					TimeSeries[n].capSDB_adunit[i] = 0;
+				}
+				if ((t >= P.ContactTracingTimeStart) && (AdUnits[i].contactTraceThresholdCrossed))
+				{
+					TimeSeries[n].capCT_adunit[i] = AdUnits[i].contactTraceCapacity;
+				}
+				else
+				{
+					TimeSeries[n].capCT_adunit[i] = 0;
+				}
+
 				TimeSeries[n].incV_adunit[i] += (double)StateT[j].cumV_adunit[i]; //added vaccination: ggilani 05/10/23
 				TimeSeries[n].incVG_adunit[i] += (double)StateT[j].cumVG_adunit[i]; //added vaccination: ggilani 05/10/23
 				TimeSeries[n].incETU_adunit[i]+=(double) StateT[j].cumETU_adunit[i]; //added hospitalisation
