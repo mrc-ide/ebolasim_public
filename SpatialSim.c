@@ -114,7 +114,7 @@ void HandleBreak(int);
 double PrevalenceDepTransmission(int);
 
 #ifdef FRESSCA
-void FYShuffle(int*, int, int);
+void FYShuffle_mt(int*, int, int);
 void SetupDistrNet(void);
 void DistrVaccSweep(double );
 int DoDistribVacc(int,unsigned short int);
@@ -2882,7 +2882,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 		{
 		while((m<P.KeyWorkerPopNum)&&(l<1000))
 			{
-			i=(int) (((double) P.N)*ranf_mt(0));
+			i=(int) (((double) P.N)*ranf(refseed));
 			if(Hosts[i].keyworker)
 				l++;
 			else
@@ -2892,7 +2892,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 				P.KeyWorkerNum++;
 				P.KeyWorkerIncHouseNum++;
 				l=0;
-				if(ranf_mt(0)<P.KeyWorkerHouseProp)
+				if(ranf(ranf_seed)<P.KeyWorkerHouseProp)
 					{
 					l2=Households[Hosts[i].hh].FirstPerson;
 					m2=l2+Households[Hosts[i].hh].nh;
@@ -2910,12 +2910,12 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 			m=l=0;
 			while((m<P.KeyWorkerPlaceNum[j])&&(l<1000))
 				{
-				k=(int) (((double) P.Nplace[j])*ranf_mt(0));
+				k=(int) (((double) P.Nplace[j])*ranf(ranf_seed));
 				for(i2=0;(m<P.KeyWorkerPlaceNum[j])&&(i2<Places[j][k].n);i2++)
 					{
 					i=Places[j][k].members[i2];
 					if((i<0)||(i>=P.N)) fprintf(stderr,"## %i # ",i);
-					if((Hosts[i].keyworker)||(ranf_mt(0)>=P.KeyWorkerPropInKeyPlaces[j]))
+					if((Hosts[i].keyworker)||(ranf(ranf_seed)>=P.KeyWorkerPropInKeyPlaces[j]))
 						l++;
 					else
 						{
@@ -2927,7 +2927,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 						l2=Households[Hosts[i].hh].FirstPerson;
 						m2=l2+Households[Hosts[i].hh].nh;
 						for(j2=l2;j2<m2;j2++)
-							if((!Hosts[j2].keyworker)&&(ranf_mt(0)<P.KeyWorkerHouseProp))
+							if((!Hosts[j2].keyworker)&&(ranf(ranf_seed)<P.KeyWorkerHouseProp))
 								{
 								Hosts[j2].keyworker=1;
 								P.KeyWorkerIncHouseNum++;
@@ -2975,12 +2975,12 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 		if(P.InfectiousnessSD==0)
 			Hosts[i].infectiousness=P.AgeInfectiousness[HOST_AGE_GROUP(i)];
 		else
-			Hosts[i].infectiousness=P.AgeInfectiousness[HOST_AGE_GROUP(i)]*gen_gamma_mt(P.InfectiousnessGamA,P.InfectiousnessGamR,tn); //made this multi-threaded: 28/11/14
+			Hosts[i].infectiousness=P.AgeInfectiousness[HOST_AGE_GROUP(i)]*gen_gamma_mt(ranf_seed, P.InfectiousnessGamA,P.InfectiousnessGamR,tn); //made this multi-threaded: 28/11/14
 			//Hosts[i].infectiousness=P.AgeInfectiousness[HOST_AGE_GROUP(i)]*gen_beta_mt(P.InfectiousnessBetaA,P.InfectiousnessBetaB,tn);
 		q=P.ProportionSymptomatic[HOST_AGE_GROUP(i)];
-		if(ranf_mt(tn)<q) //made this multi-threaded: 28/11/14
+		if(ranf_mt(ranf_seed, tn)<q) //made this multi-threaded: 28/11/14
 			Hosts[i].infectiousness=-P.SymptInfectiousness*Hosts[i].infectiousness;
-		j=(int) floor((q=ranf_mt(tn)*CDF_RES)); //made this multi-threaded: 28/11/14
+		j=(int) floor((q=ranf_mt(ranf_seed, tn)*CDF_RES)); //made this multi-threaded: 28/11/14
 		q-=((double) j);
 		Hosts[i].recovery_time=(unsigned short int) floor(0.5-(P.InfectiousPeriod*log(q*P.infectious_icdf[j+1]+(1.0-q)*P.infectious_icdf[j])/P.TimeStep));
 		//adding a step here to see, if we are doing funeral transmission, the host dies: ggilani 14/11/14
@@ -2990,7 +2990,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 			{
 				if (P.DoEventMortality)
 				{
-					if (ranf_mt(tn) <= P.RecoveryProb[(int)ceil(Hosts[i].recovery_time * P.TimeStep)]) Hosts[i].to_die = 0; //made this multi-threaded: 28/11/14
+					if (ranf_mt(ranf_seed, tn) <= P.RecoveryProb[(int)ceil(Hosts[i].recovery_time * P.TimeStep)]) Hosts[i].to_die = 0; //made this multi-threaded: 28/11/14
 					else Hosts[i].to_die = 1;
 				}
 				else
@@ -3003,7 +3003,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 					{
 						probMort = P.DiseaseMortality;
 					}
-					if (ranf_mt(tn) < probMort)
+					if (ranf_mt(ranf_seed, tn) < probMort)
 					{
 						Hosts[i].to_die = 1;
 						Hosts[i].recovery_time = (unsigned short int)(P.LethalInfectiousPeriod * (double)Hosts[i].recovery_time);//lethal infectious period
@@ -3027,7 +3027,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 			}
 			BedCapacity = (int)((double)P.HospCaseCapacity * double(P.Nplace[P.HospPlaceTypeNum] * ((double)P.SampleTime / inf_period)));
 			ProbHosp = ((double)BedCapacity) / (P.PropHospSeekPreOutbreak * (double)P.N);
-			Hosts[i].hospitalised = (ranf_mt(tn) < P.PropHospSeekPreOutbreak);
+			Hosts[i].hospitalised = (ranf_mt(ranf_seed,tn) < P.PropHospSeekPreOutbreak);
 			//Hosts[i].hospitalised = (ranf_mt(tn) < ProbHosp);
 		}
 		if(P.DoHouseholds)
@@ -3725,7 +3725,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		{
 		s=mcell_dens[i]/maxd/t;
 		if(s>1.0) s=1.0;
-		m+=(Mcells[i].n=(int) ignbin_mt((long) (P.N-m),s,0));
+		m+=(Mcells[i].n=(int) ignbin(ranf_seed, (long) (P.N-m), s));
 		t-=mcell_dens[i]/maxd;
 		if(Mcells[i].n>0) P.NMCP++;
 		}
@@ -3818,7 +3818,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 			m=1;
 			if(P.DoHouseholds)
 				{
-				s=ranf_mt(0);
+				s=ranf(ranf_seed);
 				while((s>P.HouseholdSizeDistrib[ad][m-1])&&(k+m<Mcells[j].n)&&(m<MAX_HOUSEHOLD_SIZE)) m++;
 				}
 			denom_household[m]++;
@@ -3893,8 +3893,8 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		for(k=0;k<Mcells[j].n;)
 			{
 			m=Hosts[i].listpos;
-			xh=P.mcwidth*(ranf_mt(tn)+x);
-			yh=P.mcheight*(ranf_mt(tn)+y);
+			xh=P.mcwidth*(ranf_mt(ranf_seed, tn)+x);
+			yh=P.mcheight*(ranf_mt(ranf_seed, tn)+y);
 			AssignHouseholdAges(m,i,tn);
 			for(i2=0;i2<m;i2++) Hosts[i+i2].listpos=0;
 			if(P.DoHouseholds)
@@ -4097,7 +4097,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 				if(i==last_i)
 					m+=(Mcells[last_i].np[j2]=P.Nplace[j2]-m);
 				else
-					m+=(Mcells[i].np[j2]=(int) ignbin_mt((long) (P.Nplace[j2]-m),s,tn));
+					m+=(Mcells[i].np[j2]=(int) ignbin_mt(ranf_seed, (long) (P.Nplace[j2]-m), s, tn));
 				t-=mcell_dens[i]/maxd;
 				if(Mcells[i].np[j2]>0)
 					{
@@ -4106,9 +4106,9 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 					y=(double) (i%P.nmch);
 					for(j=0;j<Mcells[i].np[j2];j++)
 						{
-						s=ranf_mt(tn);
-						xh=P.mcwidth*(ranf_mt(tn)+x);
-						yh=P.mcheight*(ranf_mt(tn)+y);
+						s=ranf_mt(ranf_seed, tn);
+						xh=P.mcwidth*(ranf_mt(ranf_seed, tn)+x);
+						yh=P.mcheight*(ranf_mt(ranf_seed, tn)+y);
 						Places[j2][k].loc_x=xh;
 						Places[j2][k].loc_y=yh;
 						Places[j2][k].n=0;
@@ -5297,73 +5297,73 @@ void AssignHouseholdAges(int n, int pers,int tn)
 	if(!P.DoHouseholds)
 		{
 		for(i=0;i<n;i++)
-			a[i]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];
+			a[i]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];
 		}
 	else
 		{
 		if(n==1)
 			{
-			if(ranf_mt(tn)<ONE_PERS_HOUSE_PROB_OLD)
+			if(ranf_mt(ranf_seed, tn)<ONE_PERS_HOUSE_PROB_OLD)
 				{
 				do
-					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 #ifdef COUNTRY_THAILAND
 				while(a[0]<NOCHILD_PERS_AGE);
 #else
 				while((a[0]<NOCHILD_PERS_AGE)
-					||(ranf_mt(tn)>(((double) a[0])-NOCHILD_PERS_AGE+1)/(OLD_PERS_AGE-NOCHILD_PERS_AGE+1)));
+					||(ranf_mt(ranf_seed, tn)>(((double) a[0])-NOCHILD_PERS_AGE+1)/(OLD_PERS_AGE-NOCHILD_PERS_AGE+1)));
 #endif
 				}
-			else if((ONE_PERS_HOUSE_PROB_YOUNG>0)&&(ranf_mt(tn)<ONE_PERS_HOUSE_PROB_YOUNG/(1-ONE_PERS_HOUSE_PROB_OLD)))
+			else if((ONE_PERS_HOUSE_PROB_YOUNG>0)&&(ranf_mt(ranf_seed, tn)<ONE_PERS_HOUSE_PROB_YOUNG/(1-ONE_PERS_HOUSE_PROB_OLD)))
 				{
 				do
-					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 				while((a[0]>YOUNG_AND_SINGLE)||(a[0]<MIN_ADULT_AGE)
-					||(ranf_mt(tn)>1-YOUNG_AND_SINGLE_SLOPE*(((double) a[0])-MIN_ADULT_AGE)/(YOUNG_AND_SINGLE-MIN_ADULT_AGE)));
+					||(ranf_mt(ranf_seed, tn)>1-YOUNG_AND_SINGLE_SLOPE*(((double) a[0])-MIN_ADULT_AGE)/(YOUNG_AND_SINGLE-MIN_ADULT_AGE)));
 				}
 			else
-				while((a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))])<MIN_ADULT_AGE);
+				while((a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))])<MIN_ADULT_AGE);
 			}
 		else if(n==2)
 			{
-			if(ranf_mt(tn)<TWO_PERS_HOUSE_PROB_OLD)
+			if(ranf_mt(ranf_seed, tn)<TWO_PERS_HOUSE_PROB_OLD)
 				{
 				do
-					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 #ifdef COUNTRY_THAILAND
 				while(a[0]<NOCHILD_PERS_AGE);
 #else
 				while((a[0]<NOCHILD_PERS_AGE)
-					||(ranf_mt(tn)>(((double) a[0])-NOCHILD_PERS_AGE+1)/(OLD_PERS_AGE-NOCHILD_PERS_AGE+1)));
+					||(ranf_mt(ranf_seed, tn)>(((double) a[0])-NOCHILD_PERS_AGE+1)/(OLD_PERS_AGE-NOCHILD_PERS_AGE+1)));
 #endif
 				do
-					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 #ifdef COUNTRY_THAILAND
 				while((a[1]>=a[0]+MAX_MF_PARTNER_AGE_GAP)||(a[1]<a[0]-MAX_FM_PARTNER_AGE_GAP)||(a[1]<MIN_ADULT_AGE));
 #else
 				while((a[1]>a[0]+MAX_MF_PARTNER_AGE_GAP)||(a[1]<a[0]-MAX_FM_PARTNER_AGE_GAP)||(a[1]<NOCHILD_PERS_AGE)
-					||(ranf_mt(tn)>(((double) a[1])-NOCHILD_PERS_AGE+1)/(OLD_PERS_AGE-NOCHILD_PERS_AGE+1)));
+					||(ranf_mt(ranf_seed, tn)>(((double) a[1])-NOCHILD_PERS_AGE+1)/(OLD_PERS_AGE-NOCHILD_PERS_AGE+1)));
 #endif
 				}
-			else if(ranf_mt(tn)<ONE_CHILD_TWO_PERS_PROB/(1-TWO_PERS_HOUSE_PROB_OLD))
+			else if(ranf_mt(ranf_seed, tn)<ONE_CHILD_TWO_PERS_PROB/(1-TWO_PERS_HOUSE_PROB_OLD))
 				{
-				while((a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))])>MAX_CHILD_AGE);
+				while((a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))])>MAX_CHILD_AGE);
 				do
-					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 #ifdef COUNTRY_THAILAND
 				while((a[1]>=a[0]+MAX_PARENT_AGE_GAP)||(a[1]<a[0]+MIN_PARENT_AGE_GAP));
 #else
 				while((a[1]>a[0]+MAX_PARENT_AGE_GAP)||(a[1]<a[0]+MIN_PARENT_AGE_GAP)||(a[1]<MIN_ADULT_AGE));
 #endif
 				}
-			else if((TWO_PERS_HOUSE_PROB_YOUNG>0) &&(ranf_mt(tn)<TWO_PERS_HOUSE_PROB_YOUNG/(1-TWO_PERS_HOUSE_PROB_OLD-ONE_CHILD_TWO_PERS_PROB)))
+			else if((TWO_PERS_HOUSE_PROB_YOUNG>0) &&(ranf_mt(ranf_seed,tn)<TWO_PERS_HOUSE_PROB_YOUNG/(1-TWO_PERS_HOUSE_PROB_OLD-ONE_CHILD_TWO_PERS_PROB)))
 				{
 				do
-					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 				while((a[0]<MIN_ADULT_AGE)||(a[0]>YOUNG_AND_SINGLE)
-					||(ranf_mt(tn)>1-YOUNG_AND_SINGLE_SLOPE*(((double) a[0])-MIN_ADULT_AGE)/(YOUNG_AND_SINGLE-MIN_ADULT_AGE)));
+					||(ranf_mt(ranf_seed, tn)>1-YOUNG_AND_SINGLE_SLOPE*(((double) a[0])-MIN_ADULT_AGE)/(YOUNG_AND_SINGLE-MIN_ADULT_AGE)));
 				do
-					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed,tn))];}
 #ifdef COUNTRY_THAILAND
 				while((a[1]>=a[0]+MAX_MF_PARTNER_AGE_GAP)||(a[1]<a[0]-MAX_FM_PARTNER_AGE_GAP)||(a[1]<MIN_ADULT_AGE));
 #else
@@ -5373,10 +5373,10 @@ void AssignHouseholdAges(int n, int pers,int tn)
 			else
 				{
 				do
-					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 				while(a[0]<MIN_ADULT_AGE);
 				do
-					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+					{a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 #ifdef COUNTRY_THAILAND
 				while((a[1]>a[0]+MAX_MF_PARTNER_AGE_GAP)||(a[1]<a[0]-MAX_FM_PARTNER_AGE_GAP)||(a[1]<MIN_ADULT_AGE));
 #else
@@ -5390,30 +5390,30 @@ void AssignHouseholdAges(int n, int pers,int tn)
 			if(n==3)
 				{
 				if((ZERO_CHILD_THREE_PERS_PROB>0)||(TWO_CHILD_THREE_PERS_PROB>0))
-					nc=(ranf_mt(tn)<ZERO_CHILD_THREE_PERS_PROB)?0:((ranf_mt(tn)<TWO_CHILD_THREE_PERS_PROB)?2:1);
+					nc=(ranf_mt(ranf_seed, tn)<ZERO_CHILD_THREE_PERS_PROB)?0:((ranf_mt(ranf_seed, tn)<TWO_CHILD_THREE_PERS_PROB)?2:1);
 				else
 					nc=1;
 				}
 			else if(n==4)
-				nc=(ranf_mt(tn)<ONE_CHILD_FOUR_PERS_PROB)?1:2;
+				nc=(ranf_mt(ranf_seed, tn)<ONE_CHILD_FOUR_PERS_PROB)?1:2;
 			else if(n==5)
-				nc=(ranf_mt(tn)<THREE_CHILD_FIVE_PERS_PROB)?3:2;
+				nc=(ranf_mt(ranf_seed, tn)<THREE_CHILD_FIVE_PERS_PROB)?3:2;
 			else
 #ifdef COUNTRY_INDONESIA
 				do
 					{
-					nc=ignpoi_mt(FRAC_CHILDREN_BIG_HOUSEHOLDS*((double) n),tn);
+					nc=ignpoi_mt(ranf_seed, FRAC_CHILDREN_BIG_HOUSEHOLDS*((double) n),tn);
 					}
 				while((nc>n-2)||(nc<2));
 #else
-				nc=n-2-(int) (3*ranf_mt(tn));
+				nc=n-2-(int) (3*ranf_mt(ranf_seed, tn));
 #endif
 			if(nc==0)
 				{
 				do
 					{
-					a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];
-					a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];
+					a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];
+					a[1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];
 					}
 #ifdef COUNTRY_THAILAND
 				while((a[0]<MIN_ADULT_AGE)||(a[1]>=a[0]+MAX_PARENT_AGE_GAP)
@@ -5423,7 +5423,7 @@ void AssignHouseholdAges(int n, int pers,int tn)
 #endif
 				do
 					{
-					a[2]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];
+					a[2]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];
 					}
 #ifdef COUNTRY_THAILAND
 				while((a[2]>=a[1]+MAX_MF_PARTNER_AGE_GAP)||(a[2]<a[1]-MAX_FM_PARTNER_AGE_GAP)); 
@@ -5436,7 +5436,7 @@ void AssignHouseholdAges(int n, int pers,int tn)
 #ifdef COUNTRY_THAILAND
 				a[0]=0;
 				for(i=1;i<nc;i++)
-					a[i]=a[i-1]+1+((int) ignpoi_mt(MEAN_CHILD_AGE_GAP-1,tn));
+					a[i]=a[i-1]+1+((int) ignpoi_mt(ranf_seed, MEAN_CHILD_AGE_GAP-1,tn));
 				j=a[nc-1]-(MAX_PARENT_AGE_GAP-MIN_PARENT_AGE_GAP);
 				if(j>0)
 					j+=MAX_PARENT_AGE_GAP;
@@ -5444,18 +5444,18 @@ void AssignHouseholdAges(int n, int pers,int tn)
 					j=MAX_PARENT_AGE_GAP;
 				do
 					{
-					a[nc]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];
-					a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];
+					a[nc]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];
+					a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];
 					k=((nc>1)?a[nc-1]:0)+a[0];
 					l=k-MAX_CHILD_AGE;
-					if(ranf_mt(tn)<ONE_CHILD_PROB_YOUNGEST_CHILD_UNDER_FIVE) l=k-5;
+					if(ranf_mt(ranf_seed, tn)<ONE_CHILD_PROB_YOUNGEST_CHILD_UNDER_FIVE) l=k-5;
 					}
 				while((l>0)||(a[nc]>a[0]+j)||(a[nc]<k+MIN_PARENT_AGE_GAP));
 				for(i=1;i<nc;i++) a[i]+=a[0];
-				if((n>nc+1)&&(ranf_mt(tn)>PROP_OTHER_PARENT_AWAY))
+				if((n>nc+1)&&(ranf_mt(ranf_seed, tn)>PROP_OTHER_PARENT_AWAY))
 					{
 					do
-						{a[nc+1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+						{a[nc+1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 					while((a[nc+1]>=a[nc]+MAX_MF_PARTNER_AGE_GAP)
 						||(a[nc+1]<a[nc]-MAX_FM_PARTNER_AGE_GAP));
 					l=nc+2;
@@ -5467,11 +5467,11 @@ void AssignHouseholdAges(int n, int pers,int tn)
 					{
 					a[0]=0;
 					for(i=1;i<nc;i++)
-						a[i]=a[i-1]+1+((int) ignpoi_mt(MEAN_CHILD_AGE_GAP-1,tn));
-					a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))]-a[(int) (ranf_mt(tn)*((double) nc))];
+						a[i]=a[i-1]+1+((int) ignpoi_mt(ranf_seed, MEAN_CHILD_AGE_GAP-1,tn));
+					a[0]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))]-a[(int) (ranf_mt(ranf_seed, tn)*((double) nc))];
 					for(i=1;i<nc;i++) a[i]+=a[0];
-					k=(((nc==1)&&(ranf_mt(tn)<ONE_CHILD_PROB_YOUNGEST_CHILD_UNDER_FIVE))||((nc==2)&&(ranf_mt(tn)<TWO_CHILDREN_PROB_YOUNGEST_UNDER_FIVE))
-						||((nc>2)&&(ranf_mt(tn)<PROB_YOUNGEST_CHILD_UNDER_FIVE)))?5:MAX_CHILD_AGE;
+					k=(((nc==1)&&(ranf_mt(ranf_seed, tn)<ONE_CHILD_PROB_YOUNGEST_CHILD_UNDER_FIVE))||((nc==2)&&(ranf_mt(ranf_seed, tn)<TWO_CHILDREN_PROB_YOUNGEST_UNDER_FIVE))
+						||((nc>2)&&(ranf_mt(ranf_seed, tn)<PROB_YOUNGEST_CHILD_UNDER_FIVE)))?5:MAX_CHILD_AGE;
 					}
 				while((a[0]<0)||(a[0]>k)||(a[nc-1]>MAX_CHILD_AGE));
 				j=a[nc-1]-a[0]-(MAX_PARENT_AGE_GAP-MIN_PARENT_AGE_GAP);
@@ -5481,15 +5481,15 @@ void AssignHouseholdAges(int n, int pers,int tn)
 					j=MAX_PARENT_AGE_GAP;
 				do
 					{
-					a[nc]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];
+					a[nc]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];
 					k=a[nc-1];
 					l=k-MAX_CHILD_AGE;
 					}
 				while((a[nc]>a[0]+j)||(a[nc]<k+MIN_PARENT_AGE_GAP)||(a[nc]<MIN_ADULT_AGE));
-				if((n>nc+1)&&(ranf_mt(tn)>PROP_OTHER_PARENT_AWAY))
+				if((n>nc+1)&&(ranf_mt(ranf_seed, tn)>PROP_OTHER_PARENT_AWAY))
 					{
 					do
-						{a[nc+1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))];}
+						{a[nc+1]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))];}
 					while((a[nc+1]>a[nc]+MAX_MF_PARTNER_AGE_GAP)||(a[nc+1]<a[nc]-MAX_FM_PARTNER_AGE_GAP)
 						||(a[nc+1]>a[0]+j)||(a[nc+1]<k+MIN_PARENT_AGE_GAP)||(a[nc+1]<MIN_ADULT_AGE));
 					l=nc+2;
@@ -5507,7 +5507,7 @@ void AssignHouseholdAges(int n, int pers,int tn)
 					if(j>=NUM_AGE_GROUPS*AGE_GROUP_WIDTH) j=NUM_AGE_GROUPS*AGE_GROUP_WIDTH-1;
 					if(j<NOCHILD_PERS_AGE) j=NOCHILD_PERS_AGE;
 					for(i=nc+2;i<n;i++)
-						while((a[i]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(tn))])<j);
+						while((a[i]=State.InvAgeDist[ad][(int) (1000.0*ranf_mt(ranf_seed, tn))])<j);
 					}
 				}
 			}
@@ -5515,11 +5515,11 @@ void AssignHouseholdAges(int n, int pers,int tn)
 	for(i=0;i<n;i++)
 		{
 #ifdef NEW_AGE_MODEL
-		Hosts[pers+i].birth_time=P.ts_age-(int) ((((double) a[i])+ranf_mt(tn))*P.TimeStepsPerYear);
+		Hosts[pers+i].birth_time=P.ts_age-(int) ((((double) a[i])+ranf_mt(ranf_seed, tn))*P.TimeStepsPerYear);
 		if(P.DoDeath)
 			{
 			f=P.CumulPropDead[0][HOST_AGE_YEAR(pers+i)];
-			f=P.InvLifeExpecDist[0][(int) ceil(1000.0*(f+ranf_mt(tn)*(0)))];
+			f=P.InvLifeExpecDist[0][(int) ceil(1000.0*(f+ranf_mt(ranf_seed, tn)*(0)))];
 			Hosts[pers+i].life_expectancy=((unsigned short int) (f*P.TimeStepsPerYear));
 //			if(((int) f)<a[i]) fprintf(stderr,"##%lg %i %i %lg %lg## ",f,a[i],HOST_AGE_YEAR(pers+i),P.CumulPropDead[0][HOST_AGE_YEAR(pers+i)],P.InvLifeExpecDist[0][(int) ceil(1000*P.CumulPropDead[0][HOST_AGE_YEAR(pers+i)])]);
 			}
@@ -6438,7 +6438,7 @@ void AssignPeopleToPlaces(void)
 									for (i2 = 1; i2 < k; i2++)
 										NearestPlacesProb[tn][i2] += NearestPlacesProb[tn][i2 - 1];
 									s = NearestPlacesProb[tn][k - 1];
-									t = ranf_mt(tn);
+									t = ranf_mt(ranf_seed, tn);
 									f = 0;
 									for (i2 = 0; (i2 < k) && (!f); i2++)
 									{
@@ -6720,7 +6720,7 @@ void StratifyPlaces(void)
 						if((t<0)||(j==P.HospPlaceTypeNum))
 							Places[j][i].ng=1;
 						else
-							Places[j][i].ng=1+(int) ignpoi_mt(t,tn);
+							Places[j][i].ng=1+(int) ignpoi_mt(ranf_seed,t,tn);
 						if(!(Places[j][i].group_start=(int *) calloc(Places[j][i].ng,sizeof(int)))) ERR_CRITICAL("Unable to allocate place storage\n");
 						if(!(Places[j][i].group_size=(int *) calloc(Places[j][i].ng,sizeof(int)))) ERR_CRITICAL("Unable to allocate place storage\n");
 						m=Places[j][i].n-Places[j][i].ng;
@@ -6728,13 +6728,13 @@ void StratifyPlaces(void)
 							{
 							t=1/((double) (Places[j][i].ng-k));
 							Places[j][i].group_start[k]=l;
-							Places[j][i].group_size[k]=1+ignbin_mt((long) m,t,tn);
+							Places[j][i].group_size[k]=1+ignbin_mt(ranf_seed, (long) m,t,tn);
 							m-=(Places[j][i].group_size[k]-1);
 							l+=Places[j][i].group_size[k];
 							}
 						for(k=0;k<Places[j][i].n;k++)
 							{
-							l=(int) (((double) Places[j][i].n)*ranf_mt(tn));
+							l=(int) (((double) Places[j][i].n)*ranf_mt(ranf_seed, tn));
 							n=Places[j][i].members[l];
 							Places[j][i].members[l]=Places[j][i].members[k];
 							Places[j][i].members[k]=n;
@@ -7116,7 +7116,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 							{
 								for (m = 0; m < Households[Hosts[k].hh].nh; m++)
 									Hosts[k + m].inf = 0;
-								if ((P.InitialImmunity[0] == 1) || (ranf_mt(tn) < P.InitialImmunity[0]))
+								if ((P.InitialImmunity[0] == 1) || (ranf_mt(ranf_seed, tn) < P.InitialImmunity[0]))
 									for (m = Households[Hosts[k].hh].nh - 1; m >= 0; m--)
 										DoImmune(k + m);
 							}
@@ -7130,9 +7130,9 @@ void InitModel(int run) //passing run number so we can save run number in the in
 							if(P.SuscReductionFactorPerInfection>0)
 								Hosts[k].susc=exp(-P.MeanAnnualDeathRate*((double) HOST_AGE_YEAR(k)));
 							else
-								Hosts[k].susc=(ranf_mt(tn)>exp(-P.MeanAnnualDeathRate*((double) HOST_AGE_YEAR(k))))?0:1;
+								Hosts[k].susc=(ranf_mt(ranf_seed, tn)>exp(-P.MeanAnnualDeathRate*((double) HOST_AGE_YEAR(k))))?0:1;
 							}
-						else if (ranf_mt(tn)>exp(-P.MeanAnnualDeathRate*((double) HOST_AGE_YEAR(k))))
+						else if (ranf_mt(ranf_seed, tn)>exp(-P.MeanAnnualDeathRate*((double) HOST_AGE_YEAR(k))))
 							DoImmune(k);
 						}
 					else
@@ -7143,11 +7143,11 @@ void InitModel(int run) //passing run number so we can save run number in the in
 							if(P.SuscReductionFactorPerInfection>0)
 								Hosts[k].susc=1-P.InitialImmunity[m];
 							else
-								nim+=(Hosts[k].susc=(ranf_mt(tn)<P.InitialImmunity[m])?0:1);
+								nim+=(Hosts[k].susc=(ranf_mt(ranf_seed,tn)<P.InitialImmunity[m])?0:1);
 							}
 						else
 							{
-							if((P.InitialImmunity[m]==1)||((P.InitialImmunity[m]>0)&&(ranf_mt(tn)<P.InitialImmunity[m]))) {DoImmune(k);nim+=1;}
+							if((P.InitialImmunity[m]==1)||((P.InitialImmunity[m]>0)&&(ranf_mt(ranf_seed, tn)<P.InitialImmunity[m]))) {DoImmune(k);nim+=1;}
 							}
 						}
 					}
@@ -9180,21 +9180,21 @@ void TravelDepartSweep(double t)
 					s=Airports[i].total_traffic;
 					if((t>P.AirportCloseTimeStart)&&(t<P.AirportCloseTimeStart+P.AirportCloseTimeStartBase))
 						s*=P.AirportCloseEffectiveness;
-					n=(s>0)?((int) ignpoi_mt((double) s,tn)):0;
+					n=(s>0)?((int) ignpoi_mt(ranf_seed, (double) s,tn)):0;
 					f3=0;
 					j=0;
 					while(j<n)
 						{
-						s=ranf_mt(tn);
+						s=ranf_mt(ranf_seed, tn);
 						l=Airports[i].Inv_DestMcells[(int) floor(s*1024)];
 						while(Airports[i].DestMcells[l].prob<s) l++;
 						l=Airports[i].DestMcells[l].id;
-						k=(int) (ranf_mt(tn)*((double) Mcells[l].n));
+						k=(int) (ranf_mt(ranf_seed, tn)*((double) Mcells[l].n));
 						i2=Mcells[l].members[k];
 						if((abs(Hosts[i2].inf)<2)&&(Hosts[i2].inf!=-2))
 							{
 							d2=HOST_AGE_GROUP(i2);
-							if((P.RelativeTravelRate[d2]==1)||(ranf_mt(tn)<P.RelativeTravelRate[d2]))
+							if((P.RelativeTravelRate[d2]==1)||(ranf_mt(ranf_seed, tn)<P.RelativeTravelRate[d2]))
 								{
 								f2=1;
 #pragma omp critical
@@ -9207,7 +9207,7 @@ void TravelDepartSweep(double t)
 									}
 								if(!f2)
 									{
-									s=ranf_mt(tn);
+									s=ranf_mt(ranf_seed, tn);
 									l=Airports[i].Inv_prop_traffic[(int) floor(s*128)];
 									while(Airports[i].prop_traffic[l]<s) l++;
 									k=Airports[i].conn_airports[l];
@@ -9216,7 +9216,7 @@ void TravelDepartSweep(double t)
 										{
 										if(dist2_raw(Airports[i].loc_x,Airports[i].loc_y,Airports[k].loc_x,Airports[k].loc_y)>P.MoveRestrRadius2)
 											{
-											if(ranf_mt(tn)>P.MoveRestrEffect) 
+											if(ranf_mt(ranf_seed, tn)>P.MoveRestrEffect) 
 												{
 												f2=1;
 												nsk++;
@@ -9232,7 +9232,7 @@ void TravelDepartSweep(double t)
 										f2=0;
 										do
 											{
-											s=ranf_mt(tn);
+											s=ranf_mt(ranf_seed, tn);
 											m=Airports[k].Inv_DestPlaces[(int) floor(s*1024)];
 											while(Airports[k].DestPlaces[m].prob<s) m++;
 											l=Airports[k].DestPlaces[m].id;
@@ -9248,7 +9248,7 @@ void TravelDepartSweep(double t)
 												{
 												f3=0;
 												Places[HOTEL_PLACE_TYPE][l].members[hp]=i2;
-												d2=(d+P.InvJourneyDurationDistrib[(int) (ranf_mt(tn)*1024.0)])%MAX_TRAVEL_TIME;
+												d2=(d+P.InvJourneyDurationDistrib[(int) (ranf_mt(ranf_seed, tn)*1024.0)])%MAX_TRAVEL_TIME;
 												Hosts[i2].PlaceLinks[HOTEL_PLACE_TYPE]=l;
 												Hosts[i2].Travelling=1+d2;
 												nad++;
@@ -9280,7 +9280,7 @@ void TravelDepartSweep(double t)
 			for(i=tn;i<P.Nplace[HOTEL_PLACE_TYPE];i+=P.NumThreads)
 				{
 				c=((int) (Places[HOTEL_PLACE_TYPE][i].loc_x/P.cwidth))*P.nch+((int) (Places[HOTEL_PLACE_TYPE][i].loc_y/P.cheight));
-				n=(int) ignpoi_mt(nl*Cells[c].tot_prob,tn);
+				n=(int) ignpoi_mt(ranf_seed, nl*Cells[c].tot_prob, tn);
 				if(Places[HOTEL_PLACE_TYPE][i].n+n>mps) 
 					{
 					nsk+=(Places[HOTEL_PLACE_TYPE][i].n+n-mps);
@@ -9291,17 +9291,17 @@ void TravelDepartSweep(double t)
 					do
 						{
 						f=0;
-						s=ranf_mt(tn);
+						s=ranf_mt(ranf_seed, tn);
 						l=Cells[c].InvCDF[(int) floor(s*1024)];
 						while(Cells[c].cum_trans[l]<s) l++;
 						ct=CellLookup[l];
-						m=(int) (ranf_mt(tn)*((double) ct->S0));
+						m=(int) (ranf_mt(ranf_seed, tn)*((double) ct->S0));
 						if(m<(ct->S+ct->L))
 							{
 							i2=ct->susceptible[m];
 							d2=HOST_AGE_GROUP(i2);
 							f3=0;
-							if((Hosts[i2].Travelling==0)&&((P.RelativeTravelRate[d2]==1)||(ranf_mt(tn)<P.RelativeTravelRate[d2])))
+							if((Hosts[i2].Travelling==0)&&((P.RelativeTravelRate[d2]==1)||(ranf_mt(ranf_seed, tn)<P.RelativeTravelRate[d2])))
 								{
 #pragma omp critical
 									{if(Hosts[i2].PlaceLinks[HOTEL_PLACE_TYPE]==-1) {Hosts[i2].PlaceLinks[HOTEL_PLACE_TYPE]=-2;f3=1;}}
@@ -9312,7 +9312,7 @@ void TravelDepartSweep(double t)
 								f2=1;
 								if((bm)&&(s2>P.MoveRestrRadius2))
 									{
-									if(ranf_mt(tn)>=P.MoveRestrEffect)
+									if(ranf_mt(ranf_seed, tn)>=P.MoveRestrEffect)
 										{
 #pragma omp critical
 										Hosts[i2].PlaceLinks[HOTEL_PLACE_TYPE]=-1;
@@ -9323,7 +9323,7 @@ void TravelDepartSweep(double t)
 								if(f2)
 									{
 									s=numKernel(s2)/Cells[c].max_trans[l];
-									if(ranf_mt(tn)>=s)
+									if(ranf_mt(ranf_seed, tn)>=s)
 										{
 #pragma omp critical
 										Hosts[i2].PlaceLinks[HOTEL_PLACE_TYPE]=-1;
@@ -9331,7 +9331,7 @@ void TravelDepartSweep(double t)
 										}
 									else
 										{
-										d2=(d+P.InvLocalJourneyDurationDistrib[(int) (ranf_mt(tn)*1024.0)])%MAX_TRAVEL_TIME;
+										d2=(d+P.InvLocalJourneyDurationDistrib[(int) (ranf_mt(ranf_seed, tn)*1024.0)])%MAX_TRAVEL_TIME;
 										hp=Places[HOTEL_PLACE_TYPE][i].n;
 										Places[HOTEL_PLACE_TYPE][i].n++;
 										Places[HOTEL_PLACE_TYPE][i].members[hp]=i2;
@@ -9496,7 +9496,7 @@ void EquilibPersonDemog(int ai,int tn)
 			while((b+l)<P.ts_age) 
 				{
 				b+=l;
-				f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(tn))];
+				f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(ranf_seed, tn))];
 				l=((int) (f*P.TimeStepsPerYear));
 				}
 			Hosts[ai].birth_time=b;
@@ -9525,7 +9525,7 @@ if they are susceptible and have been contacted. If they are dead they are rebor
 				while((b+l)<P.ts_age) 
 					{
 					b+=l;
-					f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(tn))];
+					f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(ranf_seed, tn))];
 					l=((int) (f*P.TimeStepsPerYear));
 					StateT[tn].cumD++;
 					StateT[tn].cumDa[HOST_AGE_GROUP(ai)]++;
@@ -9533,7 +9533,7 @@ if they are susceptible and have been contacted. If they are dead they are rebor
 				if((b+P.usRoutineImmunisationMinAge<P.usRoutineImmunisationStartTime)||(P.RoutineImmunisationEffectiveCoverage==0))
 					f=1;
 				else
-					f=(ranf_mt(tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
+					f=(ranf_mt(ranf_seed, tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
 #ifdef FRESSCA
 				if(P.DoDistributionVaccination)
 					{
@@ -9595,7 +9595,7 @@ void UpdatePersonDemogSIR(int ai,int tn)
 				StateT[tn].cumD++;
 				StateT[tn].cumDa[l/((int) (P.TimeStepsPerYear*AGE_GROUP_WIDTH))]++;
 				b+=l;
-				f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(tn))];
+				f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(ranf_seed, tn))];
 				l=((int) (f*P.TimeStepsPerYear));
 				}
 			while((b+l)<P.ts_age);
@@ -9614,7 +9614,7 @@ void UpdatePersonDemogSIR(int ai,int tn)
 					else if (coverage==1)
 						f=0;
 					else
-						f=(ranf_mt(tn)<coverage)?0:1;
+						f=(ranf_mt(ranf_seed, tn)<coverage)?0:1;
 					}
 				else
 					f=1;
@@ -9644,7 +9644,7 @@ void UpdatePersonDemogSIR(int ai,int tn)
 				if((b+P.usRoutineImmunisationMinAge<P.usRoutineImmunisationStartTime)||(P.RoutineImmunisationEffectiveCoverage==0))
 					f=1;
 				else
-					f=(ranf_mt(tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
+					f=(ranf_mt(ranf_seed, tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
 				if(f) DoReborn(ai);
 				}
 			}
@@ -9669,7 +9669,7 @@ void UpdateSuscPersonDemogSIR(int ai,int tn)
 				StateT[tn].cumD++;
 				StateT[tn].cumDa[l/((int) (P.TimeStepsPerYear*AGE_GROUP_WIDTH))]++;
 				b+=l;
-				f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(tn))];
+				f=P.InvLifeExpecDist[0][(int) ceil(1000.0*ranf_mt(ranf_seed, tn))];
 				l=((int) (f*P.TimeStepsPerYear));
 				}
 			while((b+l)<P.ts_age);
@@ -9689,7 +9689,7 @@ void UpdateSuscPersonDemogSIR(int ai,int tn)
 					else if (coverage==1)
 						f=0;
 					else
-						f=(ranf_mt(tn)<coverage)?0:1;
+						f=(ranf_mt(ranf_seed, tn)<coverage)?0:1;
 					}
 				else
 					f=1;
@@ -9717,7 +9717,7 @@ void UpdateSuscPersonDemogSIR(int ai,int tn)
 				if((b+P.usRoutineImmunisationMinAge<P.usRoutineImmunisationStartTime)||(P.RoutineImmunisationEffectiveCoverage==0))
 					f=1;
 				else
-					f=(ranf_mt(tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
+					f=(ranf_mt(ranf_seed, tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
 				if(!f) DoImmune(ai);
 				}
 			}
@@ -9738,7 +9738,7 @@ void UpdateVaccStatus(int ai,int tn)
 		if((l<j)||(P.RoutineImmunisationEffectiveCoverage==0))
 			f=1;
 		else
-			f=(ranf_mt(tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
+			f=(ranf_mt(ranf_seed, tn)<P.RoutineImmunisationEffectiveCoverage)?0:1;
 		if(!f)
 			{
 		// Add ai to vaccination queue
@@ -9845,12 +9845,12 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 							if((Hosts[i3].inf==0)&& (!(Hosts[i3].nc_plus_hh_disabled & HH_DISABLED))&& (!Hosts[i3].Travelling))
 								{
 								s=s3*CalcHouseSusc(i3,ts,c->infected[j],tn);
-								if(ranf_mt(tn)<s)
+								if(ranf_mt(ranf_seed, tn)<s)
 									{
 									cq=Hosts[i3].pcell%P.NumThreads;
 									if((Hosts[i3].infector==-1)&&(StateT[tn].n_queue[cq]<P.InfQueuePeakLength))
 										{
-										if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+										if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 											Hosts[i3].infector=Hosts[i3].infect_type=-1;
 										else
 											{
@@ -9899,7 +9899,7 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 								else if(s4>=1)
 									n=Places[k][l].group_size[i2];
 								else
-									n=(int) ignbin_mt((long) Places[k][l].group_size[i2],s4,tn);
+									n=(int) ignbin_mt(ranf_seed, (long) Places[k][l].group_size[i2],s4,tn);
 								if(n>0) SampleWithoutReplacement(tn,n,Places[k][l].group_size[i2]);
 								for(m=0;m<n;m++)
 									{
@@ -9917,12 +9917,12 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 											}
 										else if((mt->moverest!=mp->moverest)&&((mt->moverest==2)||(mp->moverest==2)))
 											s*=P.MoveRestrEffect;
-										if((s==1)||(ranf_mt(tn)<s))
+										if((s==1)||(ranf_mt(ranf_seed, tn)<s))
 											{
 											cq=Hosts[i3].pcell%P.NumThreads;
 											if((Hosts[i3].infector==-1)&&(StateT[tn].n_queue[cq]<P.InfQueuePeakLength))
 												{
-												if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+												if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 													Hosts[i3].infector=Hosts[i3].infect_type=-1;
 												else
 													{
@@ -9945,7 +9945,7 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 								else if(s3>=1)
 									n=Places[k][l].n;
 								else
-									n=(int) ignbin_mt((long) Places[k][l].n,s3,tn);
+									n=(int) ignbin_mt(ranf_seed, (long) Places[k][l].n,s3,tn);
 								if(n>0) SampleWithoutReplacement(tn,n,Places[k][l].n);		
 								for(m=0;m<n;m++)
 									{
@@ -9963,12 +9963,12 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 											}
 										else if((mt->moverest!=mp->moverest)&&((mt->moverest==2)||(mp->moverest==2)))
 											s*=P.MoveRestrEffect;
-										if((s==1)||(ranf_mt(tn)<s))
+										if((s==1)||(ranf_mt(ranf_seed, tn)<s))
 											{
 											cq=Hosts[i3].pcell%P.NumThreads;
 											if((Hosts[i3].infector==-1)&&(StateT[tn].n_queue[cq]<P.InfQueuePeakLength))
 												{
-												if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+												if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 													Hosts[i3].infector=Hosts[i3].infect_type=-1;
 												else
 													{
@@ -10017,7 +10017,7 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 					}
 				if(s3>0)
 					{
-					n=(int) ignpoi_mt(s3*sbeta*((double) c->tot_prob),tn);
+					n=(int) ignpoi_mt(ranf_seed, s3*sbeta*((double) c->tot_prob),tn);
 					if(n>0)
 						{
 						for(j=0;j<i2-1;j++) StateT[tn].cell_inf[j]/=s3;
@@ -10029,7 +10029,7 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 							j=0;
 						else
 							{
-							s=ranf_mt(tn);
+							s=ranf_mt(ranf_seed, tn);
 							j=m=i2/2;
 							f=1;
 							do
@@ -10064,16 +10064,16 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 						f=(StateT[tn].cell_inf[j]<0);
 						do
 							{
-							s=ranf_mt(tn);
+							s=ranf_mt(ranf_seed, tn);
 							l=c->InvCDF[(int) floor(s*1024)];
 							while(c->cum_trans[l]<s) l++;
 							ct=CellLookup[l];
-							m=(int) (ranf_mt(tn)*((double) ct->S0));
+							m=(int) (ranf_mt(ranf_seed, tn)*((double) ct->S0));
 							i3=ct->susceptible[m];
 							s2=dist2(Hosts+i3,Hosts+c->infected[j]);
 							s=numKernel(s2)/c->max_trans[l];
 							f2=0;
-							if((ranf_mt(tn)>=s)||(abs(Hosts[i3].inf)==5))
+							if((ranf_mt(ranf_seed, tn)>=s)||(abs(Hosts[i3].inf)==5))
 								{f2=1;}
 							else if(m<ct->S)
 								{
@@ -10098,12 +10098,12 @@ void InfectSweepOld(double t, int run) //added int as argument to InfectSweepOld
 										if(f2) {s*=P.PlaceCloseSpatialRelContact;}/* NumPCD++;} */
 										f2=0;
 										}
-									if((s==1)||(ranf_mt(tn)<s))
+									if((s==1)||(ranf_mt(ranf_seed, tn)<s))
 										{
 										cq=((int) (ct-Cells))%P.NumThreads;
 										if((Hosts[i3].infector==-1)&&(StateT[tn].n_queue[cq]<P.InfQueuePeakLength))
 											{
-											if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+											if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 												Hosts[i3].infector=Hosts[i3].infect_type=-1;
 											else
 												{
@@ -10188,12 +10188,12 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 							if((Hosts[i3].inf==0)&& (!(Hosts[i3].nc_plus_hh_disabled & HH_DISABLED))&& (!Hosts[i3].Travelling))
 								{
 								s=s3*CalcHouseSusc(i3,ts,ci,tn);
-								if(ranf_mt(tn)<s)
+								if(ranf_mt(ranf_seed, tn)<s)
 									{
 									cq=Hosts[i3].pcell%P.NumThreads;
 									if((StateT[tn].n_queue[cq]<P.InfQueuePeakLength)) //(Hosts[i3].infector==-1)&&
 										{
-										if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+										if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 											Hosts[i3].infector=Hosts[i3].infect_type=-1;
 										else
 											{
@@ -10265,11 +10265,11 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 									{
 										if (k == P.HospPlaceTypeNum)
 										{
-											n = (int)ignbin_mt((long)Places[k][l].nhcws, s4, tn);
+											n = (int)ignbin_mt(ranf_seed, (long)Places[k][l].nhcws, s4, tn);
 										}
 										else
 										{
-											n = (int)ignbin_mt((long)Places[k][l].group_size[i2], s4, tn);
+											n = (int)ignbin_mt(ranf_seed, (long)Places[k][l].group_size[i2], s4, tn);
 										}
 									}
 									if (n > 0)
@@ -10306,12 +10306,12 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 												}
 											else if((mt->moverest!=mp->moverest)&&((mt->moverest==2)||(mp->moverest==2)))
 												s*=P.MoveRestrEffect;
-											if((s==1)||(ranf_mt(tn)<s))
+											if((s==1)||(ranf_mt(ranf_seed, tn)<s))
 												{
 												cq=Hosts[i3].pcell%P.NumThreads;
 												if((StateT[tn].n_queue[cq]<P.InfQueuePeakLength)) //(Hosts[i3].infector==-1)&&
 													{
-													if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+													if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 														Hosts[i3].infector=Hosts[i3].infect_type=-1;
 													else
 														{
@@ -10335,7 +10335,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 									else if(s3>=1)
 										n=Places[k][l].n;
 									else
-										n=(int) ignbin_mt((long) Places[k][l].n,s3,tn);
+										n=(int) ignbin_mt(ranf_seed, (long) Places[k][l].n,s3,tn);
 									if(n>0) SampleWithoutReplacement(tn,n,Places[k][l].n);		
 									for(m=0;m<n;m++)
 										{
@@ -10353,12 +10353,12 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 												}
 											else if((mt->moverest!=mp->moverest)&&((mt->moverest==2)||(mp->moverest==2)))
 												s*=P.MoveRestrEffect;
-											if((s==1)||(ranf_mt(tn)<s))
+											if((s==1)||(ranf_mt(ranf_seed, tn)<s))
 												{
 												cq=Hosts[i3].pcell%P.NumThreads;
 												if((StateT[tn].n_queue[cq]<P.InfQueuePeakLength))//(Hosts[i3].infector==-1)&&
 													{
-													if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+													if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 														Hosts[i3].infector=Hosts[i3].infect_type=-1;
 													else
 														{
@@ -10406,7 +10406,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 				}
 			if(s5>0)
 				{
-				n=(int) ignpoi_mt(s5*sbeta*((double) c->tot_prob),tn);
+				n=(int) ignpoi_mt(ranf_seed, s5*sbeta*((double) c->tot_prob),tn);
 				i2=c->I;
 				if(n>0)
 					{
@@ -10419,7 +10419,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 						j=0;
 					else
 						{
-						s=ranf_mt(tn);
+						s=ranf_mt(ranf_seed, tn);
 						j=m=i2/2;
 						f=1;
 						do
@@ -10456,11 +10456,11 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 					si=Hosts+ci;
 					do
 						{
-						s=ranf_mt(tn);
+						s=ranf_mt(ranf_seed, tn);
 						l=c->InvCDF[(int) floor(s*1024)];
 						while(c->cum_trans[l]<s) l++;
 						ct=CellLookup[l];
-						m=(int) (ranf_mt(tn)*((double) ct->S0));
+						m=(int) (ranf_mt(ranf_seed, tn)*((double) ct->S0));
 						i3=ct->susceptible[m];
 						s2=dist2(Hosts+i3,Hosts+ci);
 						s=numKernel(s2)/c->max_trans[l];
@@ -10470,7 +10470,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 							s*=P.PropCrossBorderInf;
 						}
 						f2=0;
-						if((ranf_mt(tn)>=s)||(abs(Hosts[i3].inf)==5))
+						if((ranf_mt(ranf_seed, tn)>=s)||(abs(Hosts[i3].inf)==5))
 							{f2=1;}
 						//add cross border effect - relative contact assumed to be less if infector and infectee live in different countries: ggilani 09/12/14
 						//else if(((AdUnits[Mcells[Hosts[ci].mcell].adunit].id/P.CountryDivisor)!=(AdUnits[Mcells[Hosts[i3].mcell].adunit].id/P.CountryDivisor))&&(ranf_mt(tn)>=P.PropCrossBorderInf)) //checking to see if they are in the same country
@@ -10502,12 +10502,12 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 									if(f2) {s*=P.PlaceCloseSpatialRelContact;}/* NumPCD++;} */
 									f2=0;
 									}
-								if((s==1)||(ranf_mt(tn)<s))
+								if((s==1)||(ranf_mt(ranf_seed, tn)<s))
 									{
 									cq=((int) (ct-Cells))%P.NumThreads;
 									if((Hosts[i3].inf==0)&&(StateT[tn].n_queue[cq]<P.InfQueuePeakLength)) //Hosts[i3].infector==-1
 										{
-										if((P.FalsePositiveRate>0)&&(ranf_mt(tn)<P.FalsePositiveRate))
+										if((P.FalsePositiveRate>0)&&(ranf_mt(ranf_seed, tn)<P.FalsePositiveRate))
 											Hosts[i3].infector=Hosts[i3].infect_type=-1;
 										else
 											{
@@ -10657,7 +10657,7 @@ void IncubRecoverySweep(double t,int run)
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral)&& (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(ranf_seed, tn) <= P.ProportionSafeFuneral)&& (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
@@ -10681,7 +10681,7 @@ void IncubRecoverySweep(double t,int run)
 					{
 						if((!HOST_TREATED(ci))||(abs(si->inf)==6)) // if infectious status is 6, then host is already dead and cannot be treated!
 							DoDeath(ci,tn,run);
-						else if(ranf_mt(tn)>=P.EvolResistRelTreatDeathDrop[si->resist])
+						else if(ranf_mt(ranf_seed, tn)>=P.EvolResistRelTreatDeathDrop[si->resist])
 							StateT[tn].inf_queue[0][StateT[tn].n_queue[0]++]=ci;
 						else
 							DoDeath(ci,tn,run);
@@ -10693,10 +10693,10 @@ void IncubRecoverySweep(double t,int run)
 				
 			for(j=0;j<StateT[tn].n_queue[0];j++) DoRecover(StateT[tn].inf_queue[0][j],run,tn);
 			StateT[tn].n_queue[0]=0;
-			l=(P.EvolInfectMutationRate==0)?0:((int) ignbin_mt((long) c->I,P.TimeStep*P.EvolInfectMutationRate,tn));
+			l=(P.EvolInfectMutationRate==0)?0:((int) ignbin_mt(ranf_seed, (long) c->I,P.TimeStep*P.EvolInfectMutationRate,tn));
 			for(j=0;j<l;j++)
 			{
-				k=(int) (((double) c->I)*ranf_mt(tn));
+				k=(int) (((double) c->I)*ranf_mt(ranf_seed, tn));
 				if(Hosts[c->infected[k]].base_inf_level<P.EvolInfectMax)
 					Hosts[c->infected[k]].base_inf_level+=P.EvolInfectStep;
 			}
@@ -10968,9 +10968,9 @@ void ContactTracingSweep(double t)
 							Hosts[AdUnits[i].ct_queue[j]].contactTraced = 1; //set that they are being contact traced
 							Hosts[AdUnits[i].ct_queue[j]].contactTraced_start_time = ts; //set the time at which contact tracing starts
 							//add something for lost to follow up contacts - ggilani 11/05/22
-							if (ranf_mt(tn)<P.propContactLost) //if this contact is going to be lost to follow up
+							if (ranf_mt(ranf_seed, tn)<P.propContactLost) //if this contact is going to be lost to follow up
 							{
-								Hosts[AdUnits[i].ct_queue[j]].contactTraced_end_time = ts + (unsigned short int) ((P.contactTraceDuration*ranf_mt(tn)) * P.TimeStepsPerDay);
+								Hosts[AdUnits[i].ct_queue[j]].contactTraced_end_time = ts + (unsigned short int) ((P.contactTraceDuration*ranf_mt(ranf_seed, tn)) * P.TimeStepsPerDay);
 							}
 							else
 							{
@@ -11562,7 +11562,7 @@ void SIASweep(unsigned short int ts)
 					if(P.SIAEffectiveCoverage==1)
 						f=1;
 					else
-						f=(ranf_mt(tn)<P.SIAEffectiveCoverage);
+						f=(ranf_mt(ranf_seed, tn)<P.SIAEffectiveCoverage);
 					if(f)
 						{
 						j=Hosts[l].vacc_queue_pos;
@@ -11636,7 +11636,7 @@ int TreatSweep(double t)
 									(int) Places[j][l].group_start[f],
 									(int) Places[j][l].group_size[f]);
 							else
-*/							if((!HOST_TO_BE_TREATED(Places[j][l].members[m]))&&((P.TreatPlaceTotalProp[j]==1)||(ranf_mt(i)<P.TreatPlaceTotalProp[j])))
+*/							if((!HOST_TO_BE_TREATED(Places[j][l].members[m]))&&((P.TreatPlaceTotalProp[j]==1)||(ranf_mt(ranf_seed, i)<P.TreatPlaceTotalProp[j])))
 								DoProph(Places[j][l].members[m],ts,i);
 							}
 						}
@@ -11649,7 +11649,7 @@ int TreatSweep(double t)
 							for(m=0;m<Places[j][l].n;m++)
 								if(!HOST_TO_BE_TREATED(Places[j][l].members[m]))
 									{
-									if((P.TreatPlaceTotalProp[j]==1)||(ranf_mt(i)<P.TreatPlaceTotalProp[j]))
+									if((P.TreatPlaceTotalProp[j]==1)||(ranf_mt(ranf_seed, i)<P.TreatPlaceTotalProp[j]))
 										DoProph(Places[j][l].members[m],ts,i);
 									}
 							}
@@ -11704,7 +11704,7 @@ int TreatSweep(double t)
 						for(i=0;i<Mcells[b].n;i++)
 							{
 							l=Mcells[b].members[i];
-							if((!HOST_TO_BE_TREATED(l))&&((P.TreatPropRadial==1)||(ranf_mt(tn)<P.TreatPropRadial)))
+							if((!HOST_TO_BE_TREATED(l))&&((P.TreatPropRadial==1)||(ranf_mt(ranf_seed, tn)<P.TreatPropRadial)))
 								DoProphNoDelay(l,ts,tn,1);
 							}
 						}
@@ -12364,13 +12364,13 @@ void DistrVaccSweep(double t)n
 				nvs+=DistrStock;
 				k=DC->get_ndemanders();
        //Lets Shuffle that list of microcells, we don't want to be democrats :)
-				//FYShuffle(MCellDistrIndex[ids],DC->get_ndemanders(),0);
+				//FYShuffle_mt(MCellDistrIndex[ids],DC->get_ndemanders(),0);
 			//fprintf(stderr,"\nStock available at Store %d = %d %d",ids,DistrStock,DC->get_ndemanders());
 				}
 			else
 				k=noCenterMcellNum;
        //Let's loop over the Mcells for each center
-			offset=(int) (ranf_mt(tn)*((double) k)); //randomise the mcell to go first
+			offset=(int) (ranf_mt(ranf_seed, tn)*((double) k)); //randomise the mcell to go first
 			for(imc=0;imc<k;imc++)
 				{
 				m2vacc= &Mcells[MCellDistrIndex[ids][(imc+offset)%k]];
@@ -12439,7 +12439,7 @@ void DistrVaccSweep(double t)n
 						j=0;
 						while(i>0)
 							{
-							n=(int) ignpoi_mt(vacc_per_div,tn);
+							n=(int) ignpoi_mt(ranf_seed, vacc_per_div, tn);
 							if(n>0)
 								{
 								i-=n;
@@ -13208,12 +13208,12 @@ void DoInfect(int ai,double t,int tn, int run) //added int as argument to DoInfe
 			a->listpos=Cells[a->pcell].S;
 			Cells[a->pcell].latent[0]=ai;
 			}
-		if((HOST_TREATED(ai))&&(a->resist<(MAX_NUM_RESIST_TYPES-1))&&(ranf_mt(tn)<P.EvolResistProphMutationRate)) a->resist++;
+		if((HOST_TREATED(ai))&&(a->resist<(MAX_NUM_RESIST_TYPES-1))&&(ranf_mt(ranf_seed, tn)<P.EvolResistProphMutationRate)) a->resist++;
 		StateT[tn].cumI_resist[a->resist]++;
 		StateT[tn].cumI_keyworker[a->keyworker]++;
 		if(P.DoLatent)
 			{
-			i=(int) floor((q=ranf_mt(tn)*CDF_RES));
+			i=(int) floor((q=ranf_mt(ranf_seed, tn)*CDF_RES));
 			q-=((double) i);
 			a->latent_time=(unsigned short int) floor(0.5+(t-P.LatentPeriod*log(q*P.latent_icdf[i+1]+(1.0-q)*P.latent_icdf[i]))*P.TimeStepsPerDay);
 			}
@@ -13372,12 +13372,12 @@ void DoIncub(int ai,unsigned short int ts,int tn, int run)
 		if(P.InfectiousnessSD==0)
 			a->infectiousness=P.AgeInfectiousness[age];
 		else
-			//a->infectiousness=P.AgeInfectiousness[age]*gen_beta_mt(P.InfectiousnessBetaA,P.InfectiousnessBetaB,tn);
-			a->infectiousness=P.AgeInfectiousness[age]*gen_gamma_mt(P.InfectiousnessGamA,P.InfectiousnessGamR,tn);
+			//a->infectiousness=P.AgeInfectiousness[age]*gen_beta_mt(ranf_seed, P.InfectiousnessBetaA,P.InfectiousnessBetaB,tn);
+			a->infectiousness=P.AgeInfectiousness[age]*gen_gamma_mt(ranf_seed, P.InfectiousnessGamA,P.InfectiousnessGamR,tn);
 		q=P.ProportionSymptomatic[age]
 			*(HOST_TREATED(ai)?P.EvolResistRelTreatSympDrop[Hosts[ai].resist]:1)
 			*(HOST_VACCED(ai)?(1-P.VaccSympDrop):1);
-		if(ranf_mt(tn)<q) 
+		if(ranf_mt(ranf_seed, tn)<q) 
 			{
 			a->inf=-1;
 			a->infectiousness=-P.SymptInfectiousness*a->infectiousness;
@@ -13392,7 +13392,7 @@ void DoIncub(int ai,unsigned short int ts,int tn, int run)
 			a->recovery_time=a->latent_time+(unsigned short int) (P.InfectiousPeriod*P.TimeStepsPerDay);
 		else
 			{
-			i=(int) floor(q=ranf_mt(tn)*CDF_RES);
+			i=(int) floor(q=ranf_mt(ranf_seed, tn)*CDF_RES);
 			q-=((double) i);
 			ti=-P.InfectiousPeriod*log(q*P.infectious_icdf[i+1]+(1.0-q)*P.infectious_icdf[i]);
 			a->recovery_time=a->latent_time+(unsigned short int) floor(0.5+(ti*P.TimeStepsPerDay));
@@ -13403,7 +13403,7 @@ void DoIncub(int ai,unsigned short int ts,int tn, int run)
 			if (P.DoEventMortality)
 			{
 				day = (int)ceil(P.TimeStep * (a->recovery_time - a->latent_time));
-				if (ranf_mt(tn) <= P.RecoveryProb[day])
+				if (ranf_mt(ranf_seed, tn) <= P.RecoveryProb[day])
 				{
 					a->to_die = 0;
 				}
@@ -13415,7 +13415,7 @@ void DoIncub(int ai,unsigned short int ts,int tn, int run)
 			else
 			{
 				
-				if (ranf_mt(tn) < cfr)
+				if (ranf_mt(ranf_seed, tn) < cfr)
 				{
 					a->recovery_time = (a->latent_time + (unsigned short int) (P.LethalInfectiousPeriod * ((double)(a->recovery_time - a->latent_time)))); //put LethalInfectiousPeriod as proportion of infectious period - otherwise time until death is too long
 					a->to_die = 1;
@@ -13514,10 +13514,10 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 		{
 			if((P.DoHouseholds)&&(Households[Hosts[ai].hh].stockpile==1))
 			{
-				if((P.PrivateTreatPropCases==1)||(ranf_mt(tn)<P.PrivateTreatPropCases))
+				if((P.PrivateTreatPropCases==1)||(ranf_mt(ranf_seed, tn)<P.PrivateTreatPropCases))
 				{
 					DoPrivateTreatCase(ai,ts,tn);
-					if((t<P.TreatTimeStart+P.TreatHouseholdsDuration)&&((P.PrivateTreatPropCaseHouseholds==1)||(ranf_mt(tn)<P.PrivateTreatPropCaseHouseholds)))
+					if((t<P.TreatTimeStart+P.TreatHouseholdsDuration)&&((P.PrivateTreatPropCaseHouseholds==1)||(ranf_mt(ranf_seed, tn)<P.PrivateTreatPropCaseHouseholds)))
 					{
 						j1=Households[Hosts[ai].hh].FirstPerson;j2=j1+Households[Hosts[ai].hh].nh;
 						for(j=j1;j<j2;j++)
@@ -13525,12 +13525,12 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 					}
 				}
 			}
-			else if((P.TreatPropCases==1)||(ranf_mt(tn)<P.TreatPropCases))
+			else if((P.TreatPropCases==1)||(ranf_mt(ranf_seed, tn)<P.TreatPropCases))
 			{
 				DoTreatCase(ai,ts,tn);
 				if(P.DoHouseholds)
 				{
-					if((t<P.TreatTimeStart+P.TreatHouseholdsDuration)&&((P.TreatPropCaseHouseholds==1)||(ranf_mt(tn)<P.TreatPropCaseHouseholds)))
+					if((t<P.TreatTimeStart+P.TreatHouseholdsDuration)&&((P.TreatPropCaseHouseholds==1)||(ranf_mt(ranf_seed, tn)<P.TreatPropCaseHouseholds)))
 					{
 						j1=Households[Hosts[ai].hh].FirstPerson;j2=j1+Households[Hosts[ai].hh].nh;
 						for(j=j1;j<j2;j++)
@@ -13547,7 +13547,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 								{
 									if(P.DoPlaceGroupTreat)
 									{
-										if((P.TreatPlaceProbCaseId[j]==1)||(ranf_mt(tn)<P.TreatPlaceProbCaseId[j]))
+										if((P.TreatPlaceProbCaseId[j]==1)||(ranf_mt(ranf_seed, tn)<P.TreatPlaceProbCaseId[j]))
 										{
 											StateT[tn].p_queue[j][StateT[tn].np_queue[j]]=a->PlaceLinks[j];
 											StateT[tn].pg_queue[j][StateT[tn].np_queue[j]++]=a->PlaceGroupLinks[j];
@@ -13560,7 +13560,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 										if(!Places[j][a->PlaceLinks[j]].treat) f=Places[j][a->PlaceLinks[j]].treat=1;
 										if(f) 
 										{
-											if((P.TreatPlaceProbCaseId[j]==1)||(ranf_mt(tn)<P.TreatPlaceProbCaseId[j]))
+											if((P.TreatPlaceProbCaseId[j]==1)||(ranf_mt(ranf_seed, tn)<P.TreatPlaceProbCaseId[j]))
 												StateT[tn].p_queue[j][StateT[tn].np_queue[j]++]=a->PlaceLinks[j];
 											else
 												Places[j][a->PlaceLinks[j]].treat=0;
@@ -13593,10 +13593,10 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 				if(!HOST_TO_BE_QUARANTINED(j1))
 				{
 					Hosts[j1].quar_start_time=ts+((unsigned short int) (P.TimeStepsPerDay*P.HQuarantineHouseDelay));
-					k=(ranf_mt(tn)<P.HQuarantinePropHouseCompliant)?1:0;
+					k=(ranf_mt(ranf_seed, tn)<P.HQuarantinePropHouseCompliant)?1:0;
 					if(k) StateT[tn].cumHQ++;
 
-					Hosts[j1].quar_comply=((k==0)?0:((ranf_mt(tn)<P.HQuarantinePropIndivCompliant)?1:0));
+					Hosts[j1].quar_comply=((k==0)?0:((ranf_mt(ranf_seed, tn)<P.HQuarantinePropIndivCompliant)?1:0));
 					if((Hosts[j1].quar_comply)&&(!HOST_ABSENT(j1)))
 					{
 						if(HOST_AGE_YEAR(j1)>=P.CaseAbsentChildAgeCutoff)
@@ -13609,7 +13609,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 					for(j=j1+1;j<j2;j++)
 					{
 						Hosts[j].quar_start_time=Hosts[j1].quar_start_time;
-						Hosts[j].quar_comply=((k==0)?0:((ranf_mt(tn)<P.HQuarantinePropIndivCompliant)?1:0));
+						Hosts[j].quar_comply=((k==0)?0:((ranf_mt(ranf_seed, tn)<P.HQuarantinePropIndivCompliant)?1:0));
 						if((Hosts[j].quar_comply)&&(!HOST_ABSENT(j)))
 						{
 							if(HOST_AGE_YEAR(j)>=P.CaseAbsentChildAgeCutoff)
@@ -13625,7 +13625,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 		}
 		if((t>=P.CaseIsolationTimeStart)&&(t<P.CaseIsolationTimeStart+P.CaseIsolationPolicyDuration))
 		{
-			if((P.CaseIsolationProp==1)||(ranf_mt(tn)<P.CaseIsolationProp))	
+			if((P.CaseIsolationProp==1)||(ranf_mt(ranf_seed, tn)<P.CaseIsolationProp))
 			{
 				Hosts[ai].isolation_start_time=ts;
 				if(HOST_ABSENT(ai))
@@ -13646,7 +13646,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 					if((P.DoHouseholds)&&(P.DoPlaces)&&(HOST_AGE_YEAR(ai)<P.CaseAbsentChildAgeCutoff))
 					{
 						if(!HOST_QUARANTINED(ai)) StateT[tn].cumACS++;
-						if((P.CaseAbsentChildPropAdultCarers==1)||(ranf_mt(tn)<P.CaseAbsentChildPropAdultCarers))
+						if((P.CaseAbsentChildPropAdultCarers==1)||(ranf_mt(ranf_seed, tn)<P.CaseAbsentChildPropAdultCarers))
 						{
 							j1=Households[Hosts[ai].hh].FirstPerson;j2=j1+Households[Hosts[ai].hh].nh;
 							f=0;
@@ -13807,7 +13807,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 				{
 					//if (Hosts[StateT[tn].ringvacclist[i]].vaccRing == 1) //only contact tracing immediate contacts in the first ring
 					//{
-					if ((P.propContactTraced == 0) || (ranf_mt(tn) < P.propContactTraced))
+					if ((P.propContactTraced == 0) || (ranf_mt(ranf_seed, tn) < P.propContactTraced))
 					{
 						StateT[tn].ct_queue[Mcells[Hosts[StateT[tn].ringvacclist[i]].mcell].adunit][StateT[tn].nct_queue[Mcells[Hosts[StateT[tn].ringvacclist[i]].mcell].adunit]++] = StateT[tn].ringvacclist[i];
 					}
@@ -14148,7 +14148,7 @@ void DoCase(int ai,double t,unsigned short int ts,int tn)
 				{
 					if ((a->PlaceLinks[j] >= 0) && (j != HOTEL_PLACE_TYPE) && (!HOST_ABSENT(ai)) && (P.SymptPlaceTypeWithdrawalProp[j] > 0))
 					{
-						if ((P.SymptPlaceTypeWithdrawalProp[j] == 1) || (ranf_mt(tn) < P.SymptPlaceTypeWithdrawalProp[j]))
+						if ((P.SymptPlaceTypeWithdrawalProp[j] == 1) || (ranf_mt(ranf_seed, tn) < P.SymptPlaceTypeWithdrawalProp[j]))
 						{
 							a->absent_start_time = ts + P.usCaseAbsenteeismDelay;
 							a->absent_stop_time = ts + P.usCaseAbsenteeismDelay + P.usCaseAbsenteeismDuration;
@@ -14168,7 +14168,7 @@ void DoCase(int ai,double t,unsigned short int ts,int tn)
 							if ((P.DoHouseholds) && (HOST_AGE_YEAR(ai) < P.CaseAbsentChildAgeCutoff))
 							{
 								if (!HOST_QUARANTINED(ai)) StateT[tn].cumACS++;
-								if ((P.CaseAbsentChildPropAdultCarers == 1) || (ranf_mt(tn) < P.CaseAbsentChildPropAdultCarers))
+								if ((P.CaseAbsentChildPropAdultCarers == 1) || (ranf_mt(ranf_seed, tn) < P.CaseAbsentChildPropAdultCarers))
 								{
 									j1 = Households[Hosts[ai].hh].FirstPerson; j2 = j1 + Households[Hosts[ai].hh].nh;
 									f = 0;
@@ -14286,7 +14286,7 @@ void DoCase(int ai,double t,unsigned short int ts,int tn)
 
 			if ((P.DoHospitalisation))//&&(t>=P.ETUTimeStart))
 			{
-				if ((P.OutbreakDetected)&&(ranf_mt(tn)<P.PropHospSeek))
+				if ((P.OutbreakDetected)&&(ranf_mt(ranf_seed, tn)<P.PropHospSeek))
 				{
 					if (Hosts[ai].contactTraced == 0)
 					{
@@ -14316,7 +14316,7 @@ void DoFalseCase(int ai,double t,unsigned short int ts,int tn)
 
 	/* Arguably adult absenteeism to take care of sick kids could be included here, but then output absenteeism would not be 'excess' absenteeism */
 	a=Hosts+ai;
-	if((P.ControlPropCasesId==1)||(ranf_mt(tn)<P.ControlPropCasesId))
+	if((P.ControlPropCasesId==1)||(ranf_mt(ranf_seed, tn)<P.ControlPropCasesId))
 		{
 		if((!P.DoEarlyCaseDiagnosis)||(State.cumDC>=P.PreControlClusterIdCaseThreshold)) StateT[tn].cumDC++;
 		DoDetectedCase(ai,t,ts,tn);
@@ -14493,7 +14493,7 @@ void DoTreatCase(int ai,unsigned short int ts,int tn)
 
 	if(State.cumT<P.TreatMaxCourses)
 		{
-		if((!HOST_TREATED(ai))&&(Hosts[ai].resist<(MAX_NUM_RESIST_TYPES-1))&&(ranf_mt(tn)<P.EvolResistTreatMutationRate)) Hosts[ai].resist++;
+		if((!HOST_TREATED(ai))&&(Hosts[ai].resist<(MAX_NUM_RESIST_TYPES-1))&&(ranf_mt(ranf_seed, tn)<P.EvolResistTreatMutationRate)) Hosts[ai].resist++;
 #ifdef NO_TREAT_PROPH_CASES
 		if(!HOST_TO_BE_TREATED(ai))
 #endif
@@ -16289,41 +16289,4 @@ if(InterruptRun==2)
 	signal(SIGINT,SIG_DFL);
 	signal(SIGTERM,SIG_DFL);
 	}
-}
-
-#define ABS(x) ((x) >= 0 ? (x) : -(x))
-#define minF(a,b) ((a) <= (b) ? (a) : (b))
-#define maxF(a,b) ((a) >= (b) ? (a) : (b))
-
-void FYShuffle(int* array, int n, int tn)
-{
-	int m,randIndx,tmp;
-	
-	m = n;
-	while(m>1)
-	    {
-		randIndx = ranf_mt(tn)*m;
-		m--;
-		tmp = array[m];
-		array[m] = array[randIndx];
-		array[randIndx] = tmp;
-		}
-}
-
-double gammln(double xx)
-{
-	double x,tmp,ser;
-	static double cof[6]={76.18009173,-86.50532033,24.01409822,
-		-1.231739516,0.120858003e-2,-0.536382e-5};
-	int j;
-
-	x=xx-1.0;
-	tmp=x+5.5;
-	tmp -= (x+0.5)*log(tmp);
-	ser=1.0;
-	for (j=0;j<=5;j++) {
-		x += 1.0;
-		ser += cof[j]/x;
-	}
-	return -tmp+log(2.50662827465*ser);
 }
