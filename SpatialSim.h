@@ -449,7 +449,7 @@ typedef struct ADMINUNIT {
   int *h_queue,nh_queue; //queues for hospitalisation: ggilani 30/10/14
   int caseDetPreFuneralControl;
   double delayDetFuneralControl,initPropSafeFunerals,secPropSafeFunerals,initRelInfSafeFuneral,secRelInfSafeFuneral; //admin unit level funeral controls: ggilani 10/11/14
-  double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB; //admin unit level funeral controls: ggilani 10/11/14
+  double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB, lastCaseDay; //admin unit level funeral controls: ggilani 10/11/14
   int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDBf; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
   int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
@@ -541,7 +541,7 @@ typedef struct PARAM {
   double VaccSuscDrop,VaccSuscDrop2,HCWVaccSuscDrop,VaccInfDrop,VaccMortDrop,VaccSympDrop,VaccDelayMean,VaccTimeStart,VaccTimeEfficacySwitch,VaccTimeStartGeo;
   double VaccTimeToEfficacy,VaccProp,VaccRadius,VaccRadius2,VaccMinRadius,VaccMinRadius2,VaccPropCaseHouseholds,VaccHouseholdsDuration,VaccMaxCoursesBase,VaccRadiusHighDensity,VaccRadiusHighDensity2;
   int DoVaccDailyReplenishment, DoVaccBulkReplenishment;
-  double VaccNewCoursesRate,VaccNewCoursesBulk,VaccNewCoursesStartTime,VaccNewCoursesDelay,VaccNewCoursesStartTimeBase,VaccMaxCourses,VaccNewCoursesEndTime,VaccEfficacyDecay,VaccCellIncThresh,VaccCampaignInterval,VaccCoverageIncreasePeriod;
+  double VaccNewCoursesRate,VaccNewCoursesBulk,VaccNewCoursesStartTime,VaccNewCoursesDelay,VaccNewCoursesStartTimeBase, VaccNewCoursesBoostStartTimeBase, VaccNewCoursesInitFracBulk, VaccNewCoursesInitBulk, VaccNewCoursesInitDelay, VaccNewCoursesBoostStartTime, VaccMaxCourses,VaccNewCoursesEndTime,VaccEfficacyDecay,VaccCellIncThresh,VaccCampaignInterval,VaccCoverageIncreasePeriod;
   double GeoVaccCellIncThresh, FuneralControlCellIncThresh, ContactTracingCellIncThresh, RingVaccCellIncThresh, ETUCellIncThresh; //added more thresholds for interventions
   double VaccTimeToEfficacyThirdVaccRing;
   int RevaccHCWs,DoRingVaccination, NVaccRings, NVaccRingsActive, MinVaccAge, VaccDosePerDay, VaccGeoDosePerDay, MaxVaccDosePerDay, MaxVaccGeoDosePerDay, BaseVaccDosePerDay, BaseVaccGeoDosePerDay, VaccDoseFlag, UpdateVaccDosePerDay, VaccDosesPerCasePerCell; //added this for ring vaccination - ggilani 15/02/2017
@@ -580,7 +580,7 @@ typedef struct PARAM {
   int DoBlanketMoveRestr,PlaceCloseIncTrig,TreatMaxCoursesPerCase,DoImportsViaAirports,DoMassVacc,DurImportTimeProfile;
   unsigned short int usHQuarantineHouseDuration,usVaccTimeToEfficacy,usVaccTimeEfficacySwitch,usVaccTimeToEfficacyThirdRing;
   unsigned short int usCaseIsolationDuration,usCaseIsolationDelay,usCaseAbsenteeismDuration,usCaseAbsenteeismDelay;
-  double clP1, clP2, clP3, clP4, clP5, clP6, clP7, clP8, clP9,clP10,clP11; //command line parameters
+  double clP1, clP2, clP3, clP4, clP5, clP6, clP7, clP8, clP9,clP10,clP11,clP12,clP13,clP14,clP15; //command line parameters
 
   double RoutineImmunisationStartTime,RoutineImmunisationEffectiveCoverage,RoutineImmunisationMinAge,RoutineImmunisationMaxAge,RoutineCoverageNonDistrCountry;
   double SIAMinAge,SIAMaxAge,SIAStartTime,SIARepeatInterval,SIAEffectiveCoverage,SIADuration,VaccPhialLifetime;
@@ -647,7 +647,7 @@ typedef struct PARAM {
   int DoUpdateCaseDetection,NUpdateCaseDetection, CurrIndUpdateCaseDetect,DoUpdateCaseDetectionByTime,DoUpdateCaseDetectionByCases; //separating update case detection by time or cases - ggilani 08/03/23
   int CaseThresholdUntilUpdateCaseDetection,UpdateCaseDetectionByCasesFlag;
   double CaseDetectionRateAfterThresholdReached;
-  double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],DetectTime,PreAlertDetectTime,PostAlertDetectTime;// UpdatedCaseDetectionRate;
+  double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],DetectTime,PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
 
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput;
 
