@@ -334,27 +334,27 @@ int main(int argc,char *argv[])
 			{
 				sscanf(&argv[i][6], "%lf", &P.clP8);
 			}
-			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '9' && argv[i][5] == ':') // generic command line specified param - matched to #8 in param file
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '9' && argv[i][5] == ':') // generic command line specified param - matched to #9 in param file
 			{
 				sscanf(&argv[i][6], "%lf", &P.clP9);
 			}
-			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '0' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '0' && argv[i][6] == ':') // generic command line specified param - matched to #10 in param file
 			{
 				sscanf(&argv[i][7], "%lf", &P.clP10);
 			}
-			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '1' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '1' && argv[i][6] == ':') // generic command line specified param - matched to #11 in param file
 			{
 				sscanf(&argv[i][7], "%lf", &P.clP11);
 			}
-			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '2' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '2' && argv[i][6] == ':') // generic command line specified param - matched to #12 in param file
 			{
 				sscanf(&argv[i][7], "%lf", &P.clP12);
 			}
-			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '3' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '3' && argv[i][6] == ':') // generic command line specified param - matched to #13 in param file
 			{
 				sscanf(&argv[i][7], "%lf", &P.clP13);
 			}
-			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '4' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '4' && argv[i][6] == ':') // generic command line specified param - matched to #14 in param file
 			{
 				sscanf(&argv[i][7], "%lf", &P.clP14);
 			}
@@ -363,7 +363,8 @@ int main(int argc,char *argv[])
 				sscanf(&argv[i][7], "%lf", &P.clP15);
 			}
 
-
+			// Note: since the code was updated to include the /CLP# flags (which allow for any parameter in the parameter file to be set via the command line), these options are pretty much deprecated. 
+			// But we still tend to use the /R flag for scaling R0 - ggilani 20/05/26
 			else if(argv[i][1]=='C' && argv[i][2]=='C' && argv[i][3]=='1' && argv[i][4]==':') //added contact tracing capacity scaling
 				{
 					sscanf(&argv[i][5],"%i",&P.CT_scale1);
