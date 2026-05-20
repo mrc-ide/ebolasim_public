@@ -346,6 +346,23 @@ int main(int argc,char *argv[])
 			{
 				sscanf(&argv[i][7], "%lf", &P.clP11);
 			}
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '2' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			{
+				sscanf(&argv[i][7], "%lf", &P.clP12);
+			}
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '3' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			{
+				sscanf(&argv[i][7], "%lf", &P.clP13);
+			}
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '4' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			{
+				sscanf(&argv[i][7], "%lf", &P.clP14);
+			}
+			else if (argv[i][1] == 'C' && argv[i][2] == 'L' && argv[i][3] == 'P' && argv[i][4] == '1' && argv[i][5] == '5' && argv[i][6] == ':') // generic command line specified param - matched to #8 in param file
+			{
+				sscanf(&argv[i][7], "%lf", &P.clP15);
+			}
+
 
 			else if(argv[i][1]=='C' && argv[i][2]=='C' && argv[i][3]=='1' && argv[i][4]==':') //added contact tracing capacity scaling
 				{
@@ -1427,7 +1444,7 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 		P.CurrIndMeanTimeToHosp=0;
 
 		//
-		GetInputParameter(dat, dat2, "Proportion of cases seeking care before outbreak declared", "%lf", (void*) &P.PropHospSeekPreOutbreak, 1, 1, 0);
+		if(!GetInputParameter2(dat, dat2, "Proportion of cases seeking care before outbreak declared", "%lf", (void*) &P.PropHospSeekPreOutbreak, 1, 1, 0)) P.PropHospSeekPreOutbreak=0.5;
 		if (!GetInputParameter2(dat, dat2, "Relative change in care seeking behaviour after outbreak declared", "%lf", (void*)&P.RelChangeHospSeekPostOutbreak, 1, 1, 0)) P.RelChangeHospSeekPostOutbreak = 1;
 
 		// Currently commented this out in order to make 
@@ -1826,6 +1843,8 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 			if(!GetInputParameter2(dat,dat2,"Minimum vaccination age","%i",(void *) &(P.MinVaccAge),1,1,0)) P.MinVaccAge=0;
 		}
 	}
+	if (!GetInputParameter2(dat, dat2, "Days with no cases after which capacity is removed", "%lf", (void*)&(P.DaysToRemoveCapacity), 1, 1, 0)) P.DaysToRemoveCapacity = USHRT_MAX / P.TimeStepsPerDay;
+	
 	if(!GetInputParameter2(dat,dat2,"Vaccination start time","%lf",(void *) &(P.VaccTimeStartBase),1,1,0)) P.VaccTimeStartBase=USHRT_MAX/P.TimeStepsPerDay;
 	if(!GetInputParameter2(dat,dat2,"Proportion of population vaccinated","%lf",(void *) &(P.VaccProp),1,1,0)) P.VaccProp=0;
 	if(!GetInputParameter2(dat,dat2,"Time taken to reach max vaccination coverage (in years)","%lf",(void *) &(P.VaccCoverageIncreasePeriod),1,1,0)) P.VaccCoverageIncreasePeriod=0;
@@ -1856,6 +1875,7 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 	if(!GetInputParameter2(dat,dat2,"Minimum radius from case to vaccinate","%lf",(void *) &(P.VaccMinRadius),1,1,0)) P.VaccMinRadius=0;
 	if(!GetInputParameter2(dat,dat2,"Maximum number of vaccine courses available","%lf",(void *) &(P.VaccMaxCoursesBase),1,1,0)) P.VaccMaxCoursesBase=1e20;
 	if(!GetInputParameter2(dat,dat2,"Start time of additional vaccine production","%lf",(void *) &(P.VaccNewCoursesStartTimeBase),1,1,0)) P.VaccNewCoursesStartTimeBase=USHRT_MAX/P.TimeStepsPerDay;
+	if (!GetInputParameter2(dat, dat2, "Start time of boosted vaccine production", "%lf", (void*)&(P.VaccNewCoursesBoostStartTimeBase), 1, 1, 0)) P.VaccNewCoursesBoostStartTimeBase = USHRT_MAX / P.TimeStepsPerDay;
 	if(!GetInputParameter2(dat,dat2,"End time of additional vaccine production","%lf",(void *) &(P.VaccNewCoursesEndTime),1,1,0)) P.VaccNewCoursesEndTime=USHRT_MAX/P.TimeStepsPerDay;
 	if(!GetInputParameter2(dat, dat2, "Do daily vaccine replenishment", "%i", (void*)&(P.DoVaccDailyReplenishment), 1, 1, 0)) P.DoVaccDailyReplenishment = 0;
 	if (P.DoVaccDailyReplenishment)
@@ -1866,8 +1886,11 @@ out of WAIFW_matrix and put in Age dep infectiousness/susceptibility for efficie
 	if (!GetInputParameter2(dat, dat2, "Do bulk vaccine replenishment", "%i", (void*)&(P.DoVaccBulkReplenishment), 1, 1, 0)) P.DoVaccBulkReplenishment = 0;
 	if (P.DoVaccBulkReplenishment)
 	{
-		if (!GetInputParameter2(dat, dat2, "Number of vaccine doses per delivery", "%lf", (void*)&(P.VaccNewCoursesBulk), 1, 1, 0)) P.VaccNewCoursesBulk = 0;
-		if (!GetInputParameter2(dat, dat2, "Time between vaccine doses deliveries (in days)", "%lf", (void*)&(P.VaccNewCoursesDelay), 1, 1, 0)) P.VaccNewCoursesDelay = 0;
+		if (!GetInputParameter2(dat, dat2, "Init fraction of vaccine doses per delivery", "%lf", (void*)&(P.VaccNewCoursesInitFracBulk), 1, 1, 0)) P.VaccNewCoursesInitFracBulk = 0;
+		P.VaccNewCoursesInitBulk = P.VaccNewCoursesInitFracBulk*P.VaccMaxCoursesBase;
+		if (!GetInputParameter2(dat, dat2, "Init time between vaccine doses deliveries (in days)", "%lf", (void*)&(P.VaccNewCoursesInitDelay), 1, 1, 0)) P.VaccNewCoursesInitDelay = 0;
+		if (!GetInputParameter2(dat, dat2, "Boosted number of vaccine doses per delivery", "%lf", (void*)&(P.VaccNewCoursesBulk), 1, 1, 0)) P.VaccNewCoursesBulk = 0;
+		if (!GetInputParameter2(dat, dat2, "Boosted time between vaccine doses deliveries (in days)", "%lf", (void*)&(P.VaccNewCoursesDelay), 1, 1, 0)) P.VaccNewCoursesDelay = 0;
 	}
 	if(!GetInputParameter2(dat,dat2,"Apply mass rather than reactive vaccination","%i",(void *) &(P.DoMassVacc),1,1,0)) P.DoMassVacc=0;
 	if(!GetInputParameter2(dat,dat2,"Priority age range for mass vaccination","%i",(void *) P.VaccPriorityGroupAge,2,1,0)) {P.VaccPriorityGroupAge[0]=1;P.VaccPriorityGroupAge[1]=0;}
@@ -7027,6 +7050,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 			AdUnits[i].currentETUBeds=0; //reset occupied beds to zero;
 			AdUnits[i].ETUbedsActive = 0;
 			AdUnits[i].totalETUBeds = 0;
+			AdUnits[i].lastCaseDay= 0;
 			//added this for reactive hospital beds
 			if ((P.DoReactETUBeds))//&&(P.StartTimeReactiveBeds<1))
 			{
@@ -7271,7 +7295,11 @@ void InitModel(int run) //passing run number so we can save run number in the in
 //	if(P.DoMassVacc)
 //		P.VaccTimeStart=P.VaccTimeStartBase;
 //	else
+	P.DayExtinct = 0;
 	P.VaccTimeStart = 1e10;
+	P.VaccNewCoursesStartTime = 1e10;
+	P.VaccNewCoursesEndTime = 1e10;
+	P.VaccNewCoursesBoostStartTime = 1e10;
 	P.MoveRestrTimeStart=1e10;
 	P.PlaceCloseTimeStart=1e10;
 	P.PlaceCloseTimeStart2=1e10;
@@ -7288,7 +7316,6 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.TreatMaxCourses=P.TreatMaxCoursesBase;
 	P.VaccMaxCourses=P.VaccMaxCoursesBase;
 	P.PlaceCloseDuration=P.PlaceCloseDurationBase;
-	P.VaccNewCoursesStartTime = 1e10;
 	//if do hospitalisation, reset a couple of hospitalisation parameters
 	P.CurrIndETUBeds=0;
 	P.CurrIndMeanTimeToHosp=0;
@@ -7500,8 +7527,8 @@ int CalcSeedResist(void)
 void RunModel(int run) //added run number as parameter
 {
 	int i,j,k,l,fs,fs2,ni,i2,nu,in;
-	double ir,t,cI,lcI,t2;
-	unsigned short int ts;
+	double ir,t,cI,lcI,t2,vaccUsed;
+	unsigned short int ts, ts_prev;
 	int continueEvents=1;
 
 	lcI=1;
@@ -7544,7 +7571,7 @@ void RunModel(int run) //added run number as parameter
 				UpdateSDB(t);
 			}
 			//update vaccination parameters at the beginning of every time step
-			if ((P.DoRingVaccination)&&(t>P.RingVaccTimeStart))
+			if (((P.DoRingVaccination)&&(t>P.VaccTimeStart))||((P.DoGeoVaccination) && (t > P.VaccTimeStart)))
 			{
 				UpdateVaccination(t,ns-1);
 			}
@@ -7690,8 +7717,29 @@ void RunModel(int run) //added run number as parameter
 				}
 				else if (P.DoVaccBulkReplenishment)
 				{
-					P.VaccMaxCourses += P.VaccNewCoursesBulk;
-					P.VaccNewCoursesStartTime += P.VaccNewCoursesDelay;
+					if (t > P.VaccNewCoursesBoostStartTime)
+					{
+						
+						P.VaccMaxCourses += P.VaccNewCoursesBulk;
+						P.VaccNewCoursesBoostStartTime += P.VaccNewCoursesDelay;
+						
+					}
+					else if(t > P.VaccNewCoursesStartTime)
+					{
+						if ((P.VaccNewCoursesStartTime - P.VaccNewCoursesInitDelay) < 0)
+						{
+							vaccUsed = 0;
+
+						}
+						else
+						{
+							vaccUsed = ((TimeSeries[(int)(P.VaccNewCoursesStartTime)].cumV + TimeSeries[(int)(P.VaccNewCoursesStartTime)].cumVG) - (TimeSeries[(int)(P.VaccNewCoursesStartTime - P.VaccNewCoursesInitDelay)].cumV + TimeSeries[(int)(P.VaccNewCoursesStartTime - P.VaccNewCoursesInitDelay)].cumVG));
+
+						}
+						//vaccUsed = ((TimeSeries[(int)(P.VaccNewCoursesStartTime)].cumV + TimeSeries[(int)(P.VaccNewCoursesStartTime)].cumVG) - (TimeSeries[(int)(P.VaccNewCoursesStartTime-P.VaccNewCoursesInitDelay)].cumV + TimeSeries[(int)(P.VaccNewCoursesStartTime-P.VaccNewCoursesInitDelay)].cumVG));
+						P.VaccMaxCourses += min(P.VaccNewCoursesInitBulk, vaccUsed);
+						P.VaccNewCoursesStartTime += P.VaccNewCoursesInitDelay;
+					}
 				}
 			}
 			cI=((double) (State.S))/((double) P.N);
@@ -7949,7 +7997,7 @@ void SaveResults(void)
 	fprintf(dat,"t,S,L,I,R,D,incI,incR,incFC,incFI,incC,incDC,incD,incDD,incSDB,incTC,incETU,incH,incCT,incCC,cumT,cumTP,cumV,capV,cumVG,capVG,nBeds,Extinct,Detected,rmsRad,maxRad\n");//\t\t%lg\t%lg\t%lg\n",P.R0household,P.R0places,P.R0spatial);
 	for(i=0;i<P.NumSamples;i++)
 		{
-		fprintf(dat,"%lg,%lf,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg\n",
+		fprintf(dat,"%lg,%lf,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg\n",
 			TimeSeries[i].t,TimeSeries[i].S,TimeSeries[i].L,TimeSeries[i].I,
 			TimeSeries[i].R,TimeSeries[i].D,TimeSeries[i].incI,
 			TimeSeries[i].incR,TimeSeries[i].incFC,TimeSeries[i].incFI,TimeSeries[i].incC,TimeSeries[i].incDC, TimeSeries[i].incD, TimeSeries[i].incDD, TimeSeries[i].incSDB,TimeSeries[i].incTC,TimeSeries[i].incETU,TimeSeries[i].incH,TimeSeries[i].incCT,TimeSeries[i].incCC, //added incidence funeral transmissions and hospitalisation
@@ -11299,6 +11347,17 @@ void UpdateHospitals(double t)
 		}
 	}
 
+	// something to get rid of capacity
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		//check to see if new beds should be added
+		if ((AdUnits[i].lastCaseDay > 0) && ((t - AdUnits[i].lastCaseDay) > P.DaysToRemoveCapacity))
+		{
+			AdUnits[i].totalETUBeds = 0;
+			State.NumBeds -= AdUnits[i].totalETUBeds;
+			State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
+		}
+	}
 
 	//Commented this out as we're changing to reactive provisioning of beds
 
@@ -11394,6 +11453,16 @@ void UpdateContactTracing(double t)
 			}
 		}
 	}
+
+	// something to get rid of capacity
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		//check to see if new beds should be added
+		if ((AdUnits[i].lastCaseDay > 0) && ((t - AdUnits[i].lastCaseDay) > P.DaysToRemoveCapacity))
+		{
+			AdUnits[i].contactTraceCapacity = 0;
+		}
+	}
 }
 
 /*
@@ -11440,6 +11509,16 @@ void UpdateSDB(double t)
 			}
 		}
 	}
+
+	// something to get rid of capacity
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		//check to see if new beds should be added
+		if ((AdUnits[i].lastCaseDay > 0) && ((t - AdUnits[i].lastCaseDay) > P.DaysToRemoveCapacity))
+		{
+			AdUnits[i].maxSDB = 0;
+		}
+	}
 }
 
 /*
@@ -11475,7 +11554,7 @@ void UpdateVaccination(double t,int n)
 
 	//update vacc dose per day
 	//first find total number of detected cases over the past 7 days
-	if (P.UpdateVaccDosePerDay)
+	if ((t>= P.VaccTimeStart) && (P.UpdateVaccDosePerDay))
 	{
 		weeklyDC = 0;
 		for (i = max(n - 6,0); i <= n; i++)
@@ -11492,9 +11571,19 @@ void UpdateVaccination(double t,int n)
 		if (P.VaccDosePerDay > P.MaxVaccDosePerDay)
 		{
 			P.VaccDosePerDay = P.MaxVaccDosePerDay;
-			P.MaxVaccDosePerDay = P.MaxVaccGeoDosePerDay;
+			P.VaccGeoDosePerDay = P.MaxVaccGeoDosePerDay;
 			P.UpdateVaccDosePerDay = 0;
 		}
+	}
+
+
+	// something to get rid of capacity
+
+	//check to see if new beds should be added
+	if ((P.DayExtinct > 0) && ((t - P.DayExtinct) > P.DaysToRemoveCapacity))
+	{
+		P.VaccDosePerDay = 0;
+		P.VaccGeoDosePerDay = 0;
 	}
 
 
@@ -11828,7 +11917,7 @@ int TreatSweep(double t)
 						}
 					}
 					trig_thresh=(P.DoPerCapitaTriggers)?((int) ceil(((double) (Mcells[b].n*P.VaccCellIncThresh))/P.IncThreshPop)):P.VaccCellIncThresh;
-					if (P.LimitGeoVaccDosesPerCase)
+					if ((P.LimitGeoVaccDosesPerCase)&&(P.DoGeoVaccination))
 					{
 						if ((!P.DoMassVacc) && (P.VaccRadius2 > 0) && (t >= P.VaccTimeStart) && (Mcells[b].vacc != 2) && (((Mcells[b].vacc_trig >= trig_thresh) && (!P.DoGlobalTriggers) && (State.cumV < P.VaccMaxCourses)) || (global_trig >= P.VaccCellIncThresh))) //changed from VaccTimeStart to VaccTimeStarGeo
 						{
@@ -12683,6 +12772,11 @@ void RecordSample(double t,int n)
 	TimeSeries[n].rmsRad=(State.cumI>0) ? sqrt(State.sumRad2/((double)State.cumI)):0;
 	TimeSeries[n].maxRad=sqrt(State.maxRad2);
 	TimeSeries[n].extinct=((((P.SmallEpidemicCases>=0)&&(State.R<=P.SmallEpidemicCases))||(P.SmallEpidemicCases<0))&&(State.I+State.L==0))?1:0;
+	if ((TimeSeries[n].extinct == 1) && (P.DayExtinct == 0))
+	{
+		P.DayExtinct = (double)n;
+		P.VaccNewCoursesEndTime = (double)n;
+	}
 	TimeSeries[n].detected = P.OutbreakDetected;
 	for(i=0;i<NUM_AGE_GROUPS;i++)
 		{
@@ -12842,6 +12936,7 @@ void RecordSample(double t,int n)
 				if (P.VaccNewCoursesStartTime >= 1e10)
 				{
 					P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
+					P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase;
 				}
 				}
 			if(D>=P.SocDistCellIncThresh)
@@ -12913,6 +13008,7 @@ void RecordSample(double t,int n)
 			if (P.VaccNewCoursesStartTime >= 1e10)
 			{
 				P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
+				P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase;
 			}
 			if(P.SocDistTimeStart>=1e10) P.SocDistTimeStart=t+P.SocDistTimeStartBase;
 			if(P.PlaceCloseTimeStart>=1e10) P.PlaceCloseTimeStart=t+P.PlaceCloseTimeStartBase;
@@ -13722,6 +13818,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 	if (P.DoAdUnits)
 	{
 		StateT[tn].cumDC_adunit[Mcells[a->mcell].adunit]++;
+		AdUnits[Mcells[a->mcell].adunit].lastCaseDay = t;
 	}
 	StateT[tn].cumDCa[age]++; //added detected case by age: ggilani 22/02/22
 	Hosts[ai].dayDetected = (int)t;
@@ -13793,7 +13890,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 
 
 	//Add my ring vaccination code here similar to DoDetectedCase code - ggilani 15/02/17
-	if ((Hosts[ai].detected) && (Hosts[ai].vacc_accept<P.ProbEstablishRing) && ((P.DoRingVaccination&&(t>=P.RingVaccTimeStart)) || (P.DoContactTracing&&(t>=P.ContactTracingTimeStart))))
+	if ((Hosts[ai].detected) && (Hosts[ai].vacc_accept<P.ProbEstablishRing) && ((P.DoRingVaccination&&(t>=P.VaccTimeStart)) || (P.DoContactTracing&&(t>=P.ContactTracingTimeStart))))
 	{
 		nActiveCases = State.cumDC_adunit[Mcells[Hosts[ai].mcell].adunit];// -(State.cumDD_adunit[Mcells[Hosts[ai].mcell].adunit] + State.cumDR_adunit[Mcells[Hosts[ai].mcell].adunit]);
 		//first check to see if we've reached the threshold to start contact tracing in the admin unit of the initial case
@@ -13804,7 +13901,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 			AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceStartDay = (int)t;
 		}
 
-		if (((t >= P.RingVaccTimeStart) && (State.cumV < P.VaccMaxCourses)) || AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceThresholdCrossed == 1) //modified this to include criteria for having to be past contact tracing threshold
+		if (((t >= P.VaccTimeStart) && (State.cumV < P.VaccMaxCourses)) || AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceThresholdCrossed == 1) //modified this to include criteria for having to be past contact tracing threshold
 		{
 			
 			if (P.DoContactTracing && (AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceThresholdCrossed == 1))
@@ -13857,7 +13954,7 @@ void DoDetectedCase(int ai,double t,unsigned short int ts,int tn)
 				}
 			}
 
-			if ((State.cumV < P.VaccMaxCourses) && (t >= P.RingVaccTimeStart))
+			if ((State.cumV < P.VaccMaxCourses) && (t >= P.VaccTimeStart))
 			{
 				//set current ring to 1
 				currentRing = 1;
@@ -15647,6 +15744,46 @@ int GetInputParameter3(FILE* dat, const char* SItemName, const char* ItemType, v
 						*((double*)ItemPtr) = P.clP11;
 					else if (n == 2)
 						*((int*)ItemPtr) = (int)P.clP11;
+					else if (n == 3)
+						sscanf(match, "%s", (char*)ItemPtr);
+				}
+				else if ((match[0] == '#') && (match[1] == '1') && (match[2] == '2'))
+				{
+					FindFlag++;
+					if (n == 1)
+						*((double*)ItemPtr) = P.clP12;
+					else if (n == 2)
+						*((int*)ItemPtr) = (int)P.clP12;
+					else if (n == 3)
+						sscanf(match, "%s", (char*)ItemPtr);
+				}
+				else if ((match[0] == '#') && (match[1] == '1') && (match[2] == '3'))
+				{
+					FindFlag++;
+					if (n == 1)
+						*((double*)ItemPtr) = P.clP13;
+					else if (n == 2)
+						*((int*)ItemPtr) = (int)P.clP13;
+					else if (n == 3)
+						sscanf(match, "%s", (char*)ItemPtr);
+				}
+				else if ((match[0] == '#') && (match[1] == '1') && (match[2] == '4'))
+				{
+					FindFlag++;
+					if (n == 1)
+						*((double*)ItemPtr) = P.clP14;
+					else if (n == 2)
+						*((int*)ItemPtr) = (int)P.clP14;
+					else if (n == 3)
+						sscanf(match, "%s", (char*)ItemPtr);
+				}
+				else if ((match[0] == '#') && (match[1] == '1') && (match[2] == '5'))
+				{
+					FindFlag++;
+					if (n == 1)
+						*((double*)ItemPtr) = P.clP15;
+					else if (n == 2)
+						*((int*)ItemPtr) = (int)P.clP15;
 					else if (n == 3)
 						sscanf(match, "%s", (char*)ItemPtr);
 				}
