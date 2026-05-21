@@ -11,9 +11,9 @@ It includes a range of interventions, including contact tracing, hospitals and E
 ### Input files
 
 In the most minimal form, the simulation needs 7 input parameters:
-- a parameter file (identified by the prefix 'P/:')
-- an output path and file name (identified by 'O/:')
-- a density file, providing information of the population of each cell in the simulation (identified by 'D/:')
+- a parameter file (identified by the prefix '/P:')
+- an output path and file name (identified by '/O:')
+- a density file, providing information of the population of each cell in the simulation (identified by '/D:')
 - four seeds, which are used to seed the random number generator in the set-up and running phases
 
 If fewer than 7 inputs are provided, the model will show an error message indicating the required syntax. Note that the four seeds should always be the final inputs
@@ -61,7 +61,7 @@ After scanning in the command line parameters and setting up the threads (for pa
 
 Within the `ReadParams` file, the code looks for names of parameters in the parameter and pre-parameter files, and if found, assigns it to the relevant variable in the global parameter struct.
 
-**More details here soon!**
+For more information on parameter files, see [Parameters and parameter files](docs/paramfiles.md)
 
 ### Set up the model
 
@@ -70,7 +70,7 @@ Within the `ReadParams` file, the code looks for names of parameters in the para
 1. Read in the density file, determine the bounding box for the simulation space and the number of cells
 2. Set up the population
 3. Allocate memory for outputs
-4. Initialise the spatial kernel (`Init
+4. Initialise the spatial kernel (`InitKernel`)
 5. Assign the population to places (or load in a network file)
 6. Stratify the population within places
 7. Allocate key workers
