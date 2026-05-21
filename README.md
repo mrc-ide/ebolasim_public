@@ -29,7 +29,9 @@ Other optional input files and parameters can also be provided and specified bef
 #### Density files
 
 The first time the simulation is run, a population density text file is used as the input. Each line of the text file contains the following information for each cell:
-> latitude, longitude, population, country, admin code
+
+`1atitude, longitude, population, country, admin code`
+
 The name of the .txt file is put after the '/D:' and in addition, a '/M:' flag can be specified to a filename to save the population density information in a .bin binary file. Once the binary file has been generated, this can be used as the input as it loads faster.
 
 #### Network files
@@ -49,4 +51,71 @@ Additional files can also be output, including:
 - infection trees
 as well as a few more (infection types, interventions etc.) that can be turned on or off in the pre-parameter file but predate ebolasim and have not been used with or updated for ebolasim. 
 
-### 
+## What the model does
+
+This is a brief overview of the key functions called in `main()`. I will try and add further details in separate doc pages soon - both on function and on editing.
+
+### Read in parameter files
+
+After scanning in the command line parameters and setting up the threads (for parallelisation), the next function that is called is `ReadParams`. The purpose of this function is fairly self-explanatory as it reads in all of the parameters specified in both files. If one of the parameter values listed in the parameter files is `#n`, where n is a number between 1 and 14, the code will assign the corresponding `CLP#n` that was specified in the command line.
+
+Within the `ReadParams` file, the code looks for names of parameters in the parameter and pre-parameter files, and if found, assigns it to the relevant variable in the global parameter struct.
+
+**More details here soon!**
+
+### Set up the model
+
+`SetupModel` performs several key functions that only need to be performed once:
+
+1. Read in the density file, determine the bounding box for the simulation space and the number of cells
+2. Set up the population
+3. Allocate memory for outputs
+4. Initialise the spatial kernel (`Init
+5. Assign the population to places (or load in a network file)
+6. Stratify the population within places
+7. Allocate key workers
+8. Calibrate the infectiousness in the system and values of beta (i.e. infectiousness) in households, places and community transmission
+
+#### Set up the population
+
+#### Assign the population to places
+
+#### Calibrate the infectiousness of the system
+
+### Within a loop over the number of realisations specified in the parameter file...
+
+### Initialise the model
+
+`InitModel` (re)initialises parameters that change over the course of a single realisation and need to reset before the next realisation begins. This includes bookkeeping variables for counting cases, deaths, vaccine doses etc., and intervention capacities, such as ETU beds available per admin unit and number of cases that can be contact traced per day. It also resets variables associated with individuals (time of infection, outcome, time of outcome etc), households, etc.
+
+**More details here soon!**
+
+### Run the model
+
+`RunModel` runs the main simulation loop. The model records samples at the frequency specified in the parameter file, but we pretty much always have more than one timestep per sample.
+
+For each sample, the code:
+
+1.	Records a sample
+2. 	Updates some intervention parameters
+3. 	For every timestep within a sample:
+	-	Checks for new importation/infection seeding events
+	-	Calls `InfectionSweep` (**super important function for transmission events**)
+	- 	Calls `IncubRecoverySweep` (transfers individuals from infected to infectious, and from infectious to outcome)
+	- 	Depending on interventions used: 
+		-	Calls `HospitalSweep` (to admit/discharge individuals from hosptials and ETUs, if available)
+		-	Calls `ContactTracingSweep` (to add/remove individuals from contact tracing lists)
+		-	Calls `VaccSweep` (to vaccinated individuals in the queue if there are enough doses available)
+	-	Calls `TreatSweep` - note that this was originally more of a legacy function in ebolasim as when we first started developing it. At the time, cell-based interventions wer not particularly relevant and it made more sense to link contact tracing and ring vaccination to individuals rather than geographical cells. This has slightly changed over time as we now also include geographically targeted vaccination, and could be updated in future.
+	- Calls `TravelReturnSweep` - this (currently) isn't used in ebolasim
+4. Calls  `RecordInfTypes` - this can be used to track where infections were made, but needs more documentation
+
+**More details here soon!**
+
+### Save model outputs
+
+`SaveResults` writes all specified results to file, such as the aggregated case numbers, spatially-aggregated case numbers, age-aggregated case numbers.
+
+After all realisations have run, `SaveSummaryResults` calculates the mean and variance of output parameters for extinct and non-extinct realisations, and saves mean results to file.
+
+**More details here soon!**
