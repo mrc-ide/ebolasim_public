@@ -13,6 +13,7 @@ To avoid individual parameter files becoming extremely long, we split them up in
 The structure of the pre-parameter and parameter files is:
 
 > \[Parameter name\]
+
 > parameter_value
 
 ## Linking the parameter file and struct - `ReadParams()`
