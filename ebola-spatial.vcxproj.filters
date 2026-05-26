@@ -24,6 +24,39 @@
     <ClCompile Include="SpatialSim.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="updates.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sweeps.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="calcs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="save_fns_model.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="events.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bitmap_fns.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="spatial_fns.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="init_model.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="setup_model.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="load_input_files.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="random_gen.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="avi_utils.h">
@@ -32,7 +65,19 @@
     <ClInclude Include="binio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SpatialSim.h">
+    <ClInclude Include="model_constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model_fns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model_globals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model_structs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model_globals_ext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
