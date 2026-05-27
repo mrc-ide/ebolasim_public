@@ -784,8 +784,8 @@ void ReadParams(char *ParamFile,char *PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Output country file", "%i", (void*)&(P.DoCountryOutput), 1, 1, 0)) P.DoCountryOutput = 0;
 	if(P.DoAdUnits)
 		{
-		if(!(AdunitNames=(char **) malloc(3*ADUNIT_LOOKUP_SIZE*sizeof(char *)))) ERR_CRITICAL("Unable to allocate temp storage\n");
-		if(!(AdunitNamesBuf=(char *) malloc(3*ADUNIT_LOOKUP_SIZE*360*sizeof(char)))) ERR_CRITICAL("Unable to allocate temp storage\n");
+		if(!(AdunitNames=(char **) malloc(3*ADUNIT_LOOKUP_SIZE*sizeof(char *)))) ERR_CRITICAL("Unable to allocate adunit names temp storage\n");
+		if(!(AdunitNamesBuf=(char *) malloc(3*ADUNIT_LOOKUP_SIZE*360*sizeof(char)))) ERR_CRITICAL("Unable to allocate adunit names buf temp storage\n");
 
 		for(i=0;i<ADUNIT_LOOKUP_SIZE;i++) 
 			{
@@ -853,7 +853,7 @@ void ReadParams(char *ParamFile,char *PreParamFile)
 			free(AdunitNamesBuf);
 			}
 		if(!GetInputParameter2(dat,dat2,"Output incidence by administrative unit","%i",(void *) &(P.DoAdunitOutput),1,1,0)) P.DoAdunitOutput=0;
-		if(!GetInputParameter2(dat,dat2,"Draw administrative unit boundaries on maps","%i",(void *) &(P.DoAdunitBoundaryOutput),1,1,0)) P.DoAdunitBoundaryOutput=0;
+		if(!GetInputParameter2(dat,dat2,"Draw administrative unit boundaries on maps","%i",(void *) &(P.DoAdunitBoundaryOutput),1,1,0)) P.DoAdunitBoundaryOutput=1;
 		if(!GetInputParameter2(dat,dat2,"Correct administrative unit populations","%i",(void *) &(P.DoCorrectAdunitPop),1,1,0)) P.DoCorrectAdunitPop=0;
 		if(!GetInputParameter2(dat,dat2,"Fix population size at specified value","%i",(void *) &(P.DoSpecifyPop),1,1,0)) P.DoSpecifyPop=0;
 		fprintf(stderr,"Using %i administrative units\n",P.NumAdunits);
@@ -2723,7 +2723,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 				{
 				if(P.DoBin==0)
 					{
-					sscanf(buf,"%lg,%lg,%lg,%i,%i",&x,&y,&t,&i2,&l);
+					sscanf(buf,"%lg\t%lg\t%lg\t%i\t%i",&x,&y,&t,&i2,&l);
 					if(l/P.CountryDivisor!=i2) //temporarily changed this to 10000 from 100 to work with new admin codes - ggilani 30/05/2018, now changed to CountryDivisor - ggilani 13/05/2019
 					{
 						//fprintf(stderr,"# %lg %lg %lg %i %i\n",x,y,t,i2,l);
@@ -3519,7 +3519,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 					rec=BF[rn];
 					}
 				else
-					sscanf(buf,"%lg,%lg,%lg,%i,%i",&x,&y,&t,&i2,&j2);
+					sscanf(buf,"%lg\t%lg\t%lg\t%i\t%i",&x,&y,&t,&i2,&j2);
 				m=(j2%P.AdunitLevel1Mask)/P.AdunitLevel1Divisor;
 				if(P.DoAdunitBoundaries)
 					{

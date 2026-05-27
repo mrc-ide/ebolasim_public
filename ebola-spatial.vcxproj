@@ -114,7 +114,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>COUNTRY_UK</PreprocessorDefinitions>
+      <PreprocessorDefinitions>COUNTRY_WA</PreprocessorDefinitions>
       <OpenMPSupport>true</OpenMPSupport>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
