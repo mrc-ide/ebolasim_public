@@ -114,7 +114,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>COUNTRY_UK</PreprocessorDefinitions>
+      <PreprocessorDefinitions>COUNTRY_WA</PreprocessorDefinitions>
       <OpenMPSupport>true</OpenMPSupport>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
@@ -126,12 +126,27 @@
   <ItemGroup>
     <ClCompile Include="avi_utils.cpp" />
     <ClCompile Include="binio.cpp" />
+    <ClCompile Include="bitmap_fns.c" />
+    <ClCompile Include="calcs.c" />
+    <ClCompile Include="events.c" />
+    <ClCompile Include="init_model.c" />
+    <ClCompile Include="load_input_files.c" />
+    <ClCompile Include="random_gen.c" />
+    <ClCompile Include="save_fns_model.c" />
+    <ClCompile Include="setup_model.c" />
     <ClCompile Include="SpatialSim.c" />
+    <ClCompile Include="spatial_fns.c" />
+    <ClCompile Include="sweeps.c" />
+    <ClCompile Include="updates.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="avi_utils.h" />
     <ClInclude Include="binio.h" />
-    <ClInclude Include="SpatialSim.h" />
+    <ClInclude Include="model_constants.h" />
+    <ClInclude Include="model_fns.h" />
+    <ClInclude Include="model_globals.h" />
+    <ClInclude Include="model_globals_ext.h" />
+    <ClInclude Include="model_structs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

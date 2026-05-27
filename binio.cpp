@@ -1,10 +1,9 @@
-#include "SpatialSim.h"
+#include <stdio.h>
 #include "binio.h"
 /*#include "..\miniz_v111b\miniz.c"
 */
 #define COMP_LEVEL 1
 
-extern param P;
 
 size_t fwrite_big(void *buffer,size_t size,size_t count, FILE *stream)
 {
