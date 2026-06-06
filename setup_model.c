@@ -57,7 +57,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 				{
 				if(P.DoBin==0)
 					{
-					sscanf(buf,"%lg,%lg,%lg,%i,%i",&x,&y,&t,&i2,&l);
+					sscanf(buf,"%lg\t%lg\t%lg\t%i\t%i",&x,&y,&t,&i2,&l);
 					if(l/P.CountryDivisor!=i2) //temporarily changed this to 10000 from 100 to work with new admin codes - ggilani 30/05/2018, now changed to CountryDivisor - ggilani 13/05/2019
 					{
 						//fprintf(stderr,"# %lg %lg %lg %i %i\n",x,y,t,i2,l);
@@ -743,7 +743,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 					rec=BF[rn];
 					}
 				else
-					sscanf(buf,"%lg,%lg,%lg,%i,%i",&x,&y,&t,&i2,&j2);
+					sscanf(buf,"%lg\t%lg\t%lg\t%i\t%i",&x,&y,&t,&i2,&j2);
 				m=(j2%P.AdunitLevel1Mask)/P.AdunitLevel1Divisor;
 				if(P.DoAdunitBoundaries)
 					{
@@ -785,7 +785,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 					}
 				else
 					{
-					sscanf(buf,"%lg %lg %lg %i",&x,&y,&t,&i2);
+					sscanf(buf,"%lg\t%lg\t%lg\t%i",&x,&y,&t,&i2);
 					j2=0;
 					rec.x=x;rec.y=y;rec.pop=t;rec.cnt=i2;rec.ad=j2;
 					}
@@ -3348,8 +3348,8 @@ void StratifyPlaces(void)
 			{
 				//first, calculate expected number of hcws and flws for the place, based on place size and hcws/flws ratios
 
-				nhcws = (int)(((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.HCWPerThousand);
-				nflws = (int)(((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.FLWPerThousand);
+				nhcws = (int)min((((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.HCWPerThousand),1); //added min to ensure we don't have zero hcws/flws
+				nflws = (int)min((((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.FLWPerThousand),1);
 
 				//assign healthcare workers and rearrange
 				for (j = 0; j < nhcws;)
