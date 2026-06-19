@@ -3348,8 +3348,8 @@ void StratifyPlaces(void)
 			{
 				//first, calculate expected number of hcws and flws for the place, based on place size and hcws/flws ratios
 
-				nhcws = (int)min((((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.HCWPerThousand),1); //added min to ensure we don't have zero hcws/flws
-				nflws = (int)min((((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.FLWPerThousand),1);
+				nhcws = (int)max((((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.HCWPerThousand),1); //added min to ensure we don't have zero hcws/flws
+				nflws = (int)max((((double)Places[P.HospPlaceTypeNum][i].n / (double)1000) * P.FLWPerThousand),1);
 
 				//assign healthcare workers and rearrange
 				for (j = 0; j < nhcws;)
