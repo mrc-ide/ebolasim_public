@@ -461,6 +461,13 @@ int main(int argc,char *argv[])
 		SaveOriginDestMatrix();
 	}
 
+	//Calculate origin destination matrix if needed
+	if ((P.DoAdUnits) && (P.DoPlaceMatrix))
+	{
+		CalcPlaceMatrix();
+		SavePlaceMatrix();
+	}
+
 	P.NRactual=P.NRactNE;
 	TSMean=TSMeanNE;TSVar=TSVarNE;
 	if((P.DoRecordInfEvents)&&(P.RecordInfEventsPerRun==0))

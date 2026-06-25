@@ -1477,6 +1477,8 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	}
 	//Add origin-destination matrix parameter
 	if (!GetInputParameter2(dat, dat2, "Output origin destination matrix", "%i", (void*)&(P.DoOriginDestinationMatrix), 1, 1, 0)) P.DoOriginDestinationMatrix = 0;
+	//Add origin-destination matrix parameter
+	if (!GetInputParameter2(dat, dat2, "Output place matrix", "%i", (void*)&(P.DoPlaceMatrix), 1, 1, 0)) P.DoPlaceMatrix = 0;
 	//Some parameters relating to road networks: ggilani 12/02/15
 	if (P.DoRoadNetwork)
 	{

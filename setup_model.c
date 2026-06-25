@@ -1496,6 +1496,29 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		}
 	}
 
+	//If outputting place network, set up storage for links between 
+	if ((P.DoAdUnits) && (P.DoPlaceMatrix))
+	{
+		for (i = 0;i < P.NumAdunits;i++)
+		{
+			if (!(AdUnits[i].place_net = (double**)malloc(P.PlaceTypeNum * sizeof(double*)))) ERR_CRITICAL("Unable to allocate place network storage\n");
+
+			for (j = 0; j < P.PlaceTypeNum; j++)
+			{
+				if (!(AdUnits[i].place_net[j] = (double*)malloc(P.NumAdunits * sizeof(double)))) ERR_CRITICAL("Unable to allocate place network storage\n");
+			}
+			
+			for (j = 0; j < P.PlaceTypeNum; j++) 
+			{
+				for (k = 0;k < P.NumAdunits;k++)
+				{
+					AdUnits[i].place_net[j][k] = 0.0;
+				}
+			}
+			
+		}
+	}
+
 	for(i=0;i<P.NC;i++)
 		{
 		Cells[i].cumTC=0;

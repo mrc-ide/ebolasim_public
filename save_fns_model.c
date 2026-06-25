@@ -884,6 +884,65 @@ void CalcOriginDestMatrix_adunit()
  //
  //}
 
+/** function: CalcPlaceMatrix()
+ *
+ * purpose: For calculate the proportion of people in each adunit
+ *
+ * parameters: none
+ *
+ * returns: none
+ *
+ * author: ggilani, date: 28/01/15
+ */
+void CalcPlaceMatrix()
+{
+	int i, j, k; //for counting
+	int home_adunit, place_adunit; //for storing relevant home and place mcells for each person
+	double NAdPlace[NUM_PLACE_TYPES][MAX_ADUNITS]; //to count the number of people from each adunit in each place for later normalisation
+
+	//initialise NAdPlace to zero
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		for (j = 0; j < P.PlaceTypeNum; j++)
+		{
+			NAdPlace[j][i] = 0;
+		}
+	}
+
+	//for each person, find their home adunit and place adunits and increment
+	for (i = 0; i < P.N; i++)
+	{
+		//get home adunit
+		home_adunit = Mcells[Hosts[i].mcell].adunit;
+
+		for (j = 0; j < P.PlaceTypeNum; j++)
+		{
+			if (Hosts[i].PlaceLinks[j])
+			{
+				//find place adunit
+				place_adunit = Mcells[Places[j][Hosts[i].PlaceLinks[j]].mcell].adunit;
+				//increment number of people from that home adunit whose place is in that place adunit
+				AdUnits[home_adunit].place_net[j][place_adunit] += 1.0; 
+				//increment number of people in that home adunit who have that place type
+				NAdPlace[j][home_adunit] += 1.0;
+			}
+		}
+	}
+
+	//normalise by number of people in that adunit who have that place type
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		for (j = 0; j < P.PlaceTypeNum; j++)
+		{
+			for (k = 0; k < P.NumAdunits; k++)
+			{
+				AdUnits[i].place_net[j][k] /= NAdPlace[j][i];
+			}
+		}
+	}
+
+}
+
 
 
 void SaveAgeDistrib(void)
@@ -1021,11 +1080,11 @@ void SaveOriginDestMatrix(void)
 	sprintf(outname, "%s.origdestmat.csv", OutFile);
 	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
 	fprintf(dat, "0,");
-	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "%i,", (AdUnits[i].id % P.AdunitLevel1Mask) / P.AdunitLevel1Divisor);
+	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "%s,", AdUnits[i].ad_name);
 	fprintf(dat, "\n");
 	for (i = 0; i < P.NumAdunits; i++)
 	{
-		fprintf(dat, "%i,", (AdUnits[i].id % P.AdunitLevel1Mask) / P.AdunitLevel1Divisor);
+		fprintf(dat, "%s,", AdUnits[i].ad_name);
 		for (j = 0; j < P.NumAdunits; j++)
 		{
 			fprintf(dat, "%lg,", AdUnits[i].origin_dest[j]);
@@ -1033,6 +1092,43 @@ void SaveOriginDestMatrix(void)
 		fprintf(dat, "\n");
 	}
 	fclose(dat);
+}
+
+/** function: SavePlaceMatrix
+ *
+ * purpose: to save the calculated place matrix(ces) to file
+ * parameters: none
+ * returns: none
+ *
+ * author: ggilani, 25/06/26
+ */
+
+void SavePlaceMatrix(void)
+{
+	int i, j, k;
+	FILE* dat;
+	char outname[1024];
+
+	for (i = 0; i < P.PlaceTypeNum; i++)
+	{
+		sprintf(outname, "%s.placenet_placetype%i.csv", OutFile, i);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		fprintf(dat, "0,");
+
+		for (j = 0; j < P.NumAdunits; j++) fprintf(dat, "%s,", AdUnits[j].ad_name);
+		fprintf(dat, "\n");
+		for (j = 0; j < P.NumAdunits; j++)
+		{
+			fprintf(dat, "%s,", AdUnits[j].ad_name);
+			for (k = 0; k < P.NumAdunits; k++)
+			{
+				fprintf(dat, "%lg,", AdUnits[j].place_net[i][k]);
+			}
+			fprintf(dat, "\n");
+		}
+		fclose(dat);
+
+	}
 }
 
 void SaveResults(void)

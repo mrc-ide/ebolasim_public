@@ -67,6 +67,11 @@ void DoInfect(int ai, double t, int tn, int run) //added int as argument to DoIn
 		if (P.DoAdUnits)
 		{
 			StateT[tn].cumI_adunit[Mcells[a->mcell].adunit]++;
+			if (Mcells[a->mcell].adunit == 502520)
+			{
+				fprintf(stderr, "infectee in Yahuma\n");
+			}
+
 		}
 		////Add some case detection code here which determines whether someone will be detected as soon has they become infected - however, we still have some
 		////case detection code in DoCase, to ensure that they are added to the detected cases at the right time.
