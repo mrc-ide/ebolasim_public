@@ -742,6 +742,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 				GetInputParameter(dat, dat2, "Relative suspectibility of FLWs", "%lf", (void*)&(P.RelSuscFLW), 1, 1, 0);
 			}
 			if (!GetInputParameter2(dat, dat2, "Relative susceptibility of HCWs and FLWs due to PPE post outbreak detection", "%lf", (void*&)P.RelSuscPPE, 1, 1, 0)) P.RelSuscPPE = 1;
+			if (!GetInputParameter2(dat, dat2, "Assign to hospital in same adunit", "%i", (void*)&P.DoHospInSameAdUnit, 1, 1, 0)) P.DoHospInSameAdUnit = 0;
 		}
 
 		if (!GetInputParameter2(dat, dat2, "Relative infectiousness of an ETU case", "%lf", (void*)&(P.RelativeInfectiousnessETU), 1, 1, 0)) P.RelativeInfectiousnessETU = 1;
@@ -1476,9 +1477,20 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		P.PropCrossBorderInf *= P.BC_scale; //scale cross border contact if necessary
 	}
 	//Add origin-destination matrix parameter
-	if (!GetInputParameter2(dat, dat2, "Output origin destination matrix", "%i", (void*)&(P.DoOriginDestinationMatrix), 1, 1, 0)) P.DoOriginDestinationMatrix = 0;
-	//Add origin-destination matrix parameter
-	if (!GetInputParameter2(dat, dat2, "Output place matrix", "%i", (void*)&(P.DoPlaceMatrix), 1, 1, 0)) P.DoPlaceMatrix = 0;
+	if (P.DoAdUnits) 
+	{
+		if (!GetInputParameter2(dat, dat2, "Output origin destination matrix", "%i", (void*)&(P.DoOriginDestinationMatrix), 1, 1, 0)) P.DoOriginDestinationMatrix = 0;
+		if (P.DoPlaces)
+		{
+			if (!GetInputParameter2(dat, dat2, "Output place matrix", "%i", (void*)&(P.DoPlaceMatrix), 1, 1, 0)) P.DoPlaceMatrix = 0;
+			if (P.IncludeHospitalPlaceType)
+			{
+				if (!GetInputParameter2(dat, dat2, "Output hospital details", "%i", (void*)&(P.DoOutputHosp), 1, 1, 0)) P.DoOutputHosp = 0;
+			}
+		}
+	}
+	
+
 	//Some parameters relating to road networks: ggilani 12/02/15
 	if (P.DoRoadNetwork)
 	{

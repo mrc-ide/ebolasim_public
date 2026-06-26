@@ -455,17 +455,23 @@ int main(int argc,char *argv[])
 	sprintf(OutFile,"%s",OutFileBase);
 	
 	//Calculate origin destination matrix if needed
-	if((P.DoAdUnits)&&(P.DoOriginDestinationMatrix))
+	if( P.DoAdUnits && P.DoOriginDestinationMatrix)
 	{
 		CalcOriginDestMatrix_adunit();
 		SaveOriginDestMatrix();
 	}
 
 	//Calculate origin destination matrix if needed
-	if ((P.DoAdUnits) && (P.DoPlaceMatrix))
+	if (P.DoAdUnits && P.DoPlaces && P.DoPlaceMatrix)
 	{
 		CalcPlaceMatrix();
 		SavePlaceMatrix();
+	}
+
+	//Calculate origin destination matrix if needed
+	if (P.DoAdUnits && P.DoPlaces && P.DoOutputHosp)
+	{
+		SaveHospDist(P.HospPlaceTypeNum);
 	}
 
 	P.NRactual=P.NRactNE;

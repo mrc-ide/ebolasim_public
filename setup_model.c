@@ -1502,14 +1502,16 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		for (i = 0;i < P.NumAdunits;i++)
 		{
 			if (!(AdUnits[i].place_net = (double**)malloc(P.PlaceTypeNum * sizeof(double*)))) ERR_CRITICAL("Unable to allocate place network storage\n");
+			if (!(AdUnits[i].place_dist = (double*)malloc(P.PlaceTypeNum * sizeof(double*)))) ERR_CRITICAL("Unable to allocate place network storage\n");
 
 			for (j = 0; j < P.PlaceTypeNum; j++)
 			{
-				if (!(AdUnits[i].place_net[j] = (double*)malloc(P.NumAdunits * sizeof(double)))) ERR_CRITICAL("Unable to allocate place network storage\n");
+				if (!(AdUnits[i].place_net[j] = (double*)calloc(P.NumAdunits, sizeof(double)))) ERR_CRITICAL("Unable to allocate place network storage\n");
 			}
 			
 			for (j = 0; j < P.PlaceTypeNum; j++) 
 			{
+				AdUnits[i].place_dist[j] = 0.0;
 				for (k = 0;k < P.NumAdunits;k++)
 				{
 					AdUnits[i].place_net[j][k] = 0.0;
@@ -2688,7 +2690,7 @@ void AssignHouseholdAges(int n, int pers,int tn)
 
 void AssignPeopleToPlaces(void)
 {
-	int i, i2, j, j2, k, k2, l, m, m2, tp, f, f2, f3, f4, ic, mx, my, a, cnt, tn, ca, nt, nn;
+	int i, i2, j, j2, k, k2, l, m, m2, tp, f, f2, f3, f4, ic, mx, my, a, cnt, tn, ca, nt, nn, checkcell;
 	int *PeopleArray;
 	int *NearestPlaces[MAX_NUM_THREADS];
 	double s, t, s2, *NearestPlacesProb[MAX_NUM_THREADS];
@@ -2699,6 +2701,7 @@ void AssignPeopleToPlaces(void)
 	int g, g1, g2, maxph; //added this variables to keep track of place variables when assigning members of the same household to the same place - ggilani 13/02/17
 
 	npt = NUM_PLACE_TYPES;
+
 
 	if (P.DoPlaces)
 	{
@@ -2974,7 +2977,16 @@ void AssignPeopleToPlaces(void)
 									if ((mx >= 0) && (my >= 0) && (mx < P.nmcw) && (my < P.nmch))
 									{
 										ic = mx * P.nmch + my;
-										if (Mcells[ic].country == Mcells[Hosts[i].mcell].country)
+										
+										if (P.IncludeHospitalPlaceType && (tp == P.HospPlaceTypeNum) && P.DoHospInSameAdUnit)
+										{
+											checkcell = (int)(Mcells[ic].adunit == Mcells[Hosts[i].mcell].adunit);
+										}
+										else
+										{
+											checkcell = (int)(Mcells[ic].country == Mcells[Hosts[i].mcell].country);
+										}
+										if (checkcell)
 										{
 											for (cnt = 0; cnt < Mcells[ic].np[tp]; cnt++)
 											{

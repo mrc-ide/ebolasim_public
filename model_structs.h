@@ -89,7 +89,8 @@ typedef struct RESULTS {
 // Added Events struct to allow us to log and write out infection events: ggilani 10/10/14
 typedef struct EVENTS {
 	double infectee_x, infectee_y,t, t_infector,infector_x,infector_y;
-	int run, infectee_ind, infector_ind, type, infectee_adunit,listpos,infectee_cell,infector_cell,thread;
+	int run, infectee_ind, infector_ind, type, infectee_adunit, infector_adunit, listpos,infectee_cell,infector_cell,thread, same_hh, infectee_hcw, infector_hcw;
+	int same_place[NUM_PLACE_TYPES];
 } events;
 
 /*
@@ -202,8 +203,8 @@ typedef struct ADMINUNIT {
   int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDBf; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
   int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
-  double *origin_dest; //storage for origin-destination matrix between admin units: ggilani 28/01/15, 
-  double** place_net; //storage for place networks: gnedjati 25/06/26
+  double *origin_dest, *place_dist; //storage for origin-destination matrix between admin units: ggilani 28/01/15, 
+  double **place_net; //storage for place networks: gnedjati 25/06/26
   double caseDetectRate; //case detection rate: ggilani 03/02/15
   double caseDetectInit;
 } adminunit;
@@ -349,7 +350,7 @@ typedef struct PARAM {
   double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, CapacityToMoreSDB,DelayToSDB;
   //Parameters for hospitalisation/treatment centres: ggilani - 28/10/2014
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
-  int IncludeHospitalPlaceType, HospPlaceTypeNum, IncludeFLWs, HospCaseCapacity, DayHCWFLWVacc;
+  int IncludeHospitalPlaceType, HospPlaceTypeNum, IncludeFLWs, HospCaseCapacity, DayHCWFLWVacc, DoHospInSameAdUnit;
   double HCWPerThousand, PropHCWFLWVacc, FLWPerThousand, RelSuscFLW, RelSuscPPE;
   double HospitalisationTime,hospital_icdf[CDF_RES+1],RelativeInfectiousnessETU,HospWaitingTime,HospitalisationTime_contactTrace; //added time to hospitalisation for a hospitalised case - ggilani 05/07/17
   int CurrIndMeanTimeToHosp,CurrIndETUBeds,CurrIndMeanTimeToHospCT;
@@ -372,7 +373,7 @@ typedef struct PARAM {
   int DoPrevDependTrans, DoPrevDepTransTotalCases, DoPrevDepTransCurrInf;
   double PrevDependTransThresh, PrevDependRelativeSusc;
   //origin destination matrix on or off
-  int DoOriginDestinationMatrix, DoPlaceMatrix; //added: ggilani 28/01/15
+  int DoOriginDestinationMatrix, DoPlaceMatrix, DoOutputHosp; //added: ggilani 28/01/15
   //case detection parameters: 03/02/15 ggilani
   int DoCaseDetection,DoCaseDetectionAdunit,DoClusterCaseDetection;
   double CaseDetectionRate;

@@ -42,6 +42,7 @@ void SaveAgeDistrib(void);
 void SaveDistribs(void);
 void SaveOriginDestMatrix(void); //added function to save origin destination matrix so it can be done separately to the main results: ggilani - 13/02/15
 void SavePlaceMatrix(void); //added function to save place matrix: ggilani - 25/06/26
+void SaveHospDist(int); //added function to save hospital information: ggilani - 26/06/2026
 void SaveResults(void);
 void SaveSummaryResults(void);
 void SaveRandomSeeds(void); //added this function to save random seeds for each run: ggilani - 09/03/17
