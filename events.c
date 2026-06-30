@@ -19,6 +19,11 @@ void DoInfect(int ai, double t, int tn, int run) //added int as argument to DoIn
 
 	a = Hosts + ai;
 
+	if (ai == 8)
+	{
+		fprintf(stderr, "infector 10\n");
+	}
+
 	if (a->inf == 0)
 	{
 		ts = (unsigned short int) (P.TimeStepsPerDay * t);

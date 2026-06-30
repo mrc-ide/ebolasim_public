@@ -646,6 +646,7 @@ void RecordEvent(double t, int ai, int run, int type, int tn) //added int as arg
 		InfEventLog[*nEvents].infectee_y = Households[Hosts[ai].hh].loc_y + P.SpatialBoundingBox[1];
 		InfEventLog[*nEvents].listpos = Hosts[ai].listpos;
 		InfEventLog[*nEvents].infectee_cell = Hosts[ai].pcell;
+		InfEventLog[*nEvents].infectee_cell_n = Cells[Hosts[ai].pcell].n;
 		InfEventLog[*nEvents].thread = tn;
 		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].keyworker;
 		if (type == 0) //infection event - record time of onset of infector and infector
@@ -669,6 +670,7 @@ void RecordEvent(double t, int ai, int run, int type, int tn) //added int as arg
 			{
 				InfEventLog[*nEvents].t_infector = (int)(Hosts[bi].infection_time / P.TimeStepsPerDay);
 				InfEventLog[*nEvents].infector_cell = Hosts[bi].pcell;
+				InfEventLog[*nEvents].infector_cell_n = Cells[Hosts[bi].pcell].n;
 				InfEventLog[*nEvents].infector_adunit = AdUnits[Mcells[Hosts[bi].mcell].adunit].id;
 				InfEventLog[*nEvents].infector_x = Households[Hosts[bi].hh].loc_x + P.SpatialBoundingBox[0];
 				InfEventLog[*nEvents].infector_y = Households[Hosts[bi].hh].loc_y + P.SpatialBoundingBox[1];
@@ -925,6 +927,7 @@ void CalcPlaceMatrix()
 {
 	int i, j, k; //for counting
 	int home_adunit, place_adunit; //for storing relevant home and place mcells for each person
+	double dist;
 	double NAdPlace[NUM_PLACE_TYPES][MAX_ADUNITS]; //to count the number of people from each adunit in each place for later normalisation
 
 	//initialise NAdPlace to zero
@@ -952,7 +955,16 @@ void CalcPlaceMatrix()
 				AdUnits[home_adunit].place_net[j][place_adunit] += 1.0; 
 				//increment number of people in that home adunit who have that place type
 				NAdPlace[j][home_adunit] += 1.0;
-				AdUnits[home_adunit].place_dist[j] += sqrt(dist2_raw(Households[Hosts[i].hh].loc_x, Households[Hosts[i].hh].loc_y, Places[j][Hosts[i].PlaceLinks[j]].loc_x, Places[j][Hosts[i].PlaceLinks[j]].loc_y));
+				dist = sqrt(dist2_raw(Households[Hosts[i].hh].loc_x, Households[Hosts[i].hh].loc_y, Places[j][Hosts[i].PlaceLinks[j]].loc_x, Places[j][Hosts[i].PlaceLinks[j]].loc_y));
+				AdUnits[home_adunit].place_dist[j] += dist;
+				if (dist > AdUnits[home_adunit].max_place_dist[j])
+				{
+					AdUnits[home_adunit].max_place_dist[j] = dist;
+				}
+				if (dist < AdUnits[home_adunit].min_place_dist[j])
+				{
+					AdUnits[home_adunit].min_place_dist[j] = dist;
+				}
 			}
 		}
 	}
@@ -1159,12 +1171,25 @@ void SavePlaceMatrix(void)
 
 		sprintf(outname, "%s.placedist_placetype%i.csv", OutFile, i);
 		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open Place Dist file\n");
-
+		fprintf(dat, "Adunit,");
 		for (j = 0; j < P.NumAdunits; j++) fprintf(dat, "%s,", AdUnits[j].ad_name);
 		fprintf(dat, "\n");
+		fprintf(dat, "Mean,");
 		for (j = 0; j < P.NumAdunits; j++)
 		{
 			fprintf(dat, "%lg,", AdUnits[j].place_dist[i]);
+		}
+		fprintf(dat, "\n");
+		fprintf(dat, "Min,");
+		for (j = 0; j < P.NumAdunits; j++)
+		{
+			fprintf(dat, "%lg,", AdUnits[j].min_place_dist[i]);
+		}
+		fprintf(dat, "\n");
+		fprintf(dat, "Max,");
+		for (j = 0; j < P.NumAdunits; j++)
+		{
+			fprintf(dat, "%lg,", AdUnits[j].max_place_dist[i]);
 		}
 		fprintf(dat, "\n");
 		fclose(dat);
@@ -2097,7 +2122,7 @@ void SaveEvents(void)
 
 	sprintf(outname, "%s.infevents.csv", OutFile);
 	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-	fprintf(dat, "type,thread,infectee_t,infectee,infectee_adunit,infectee_hcw,infectee_x,infectee_y,infector_t,infector,infector_adunit,infector_hcw,infector_x,infector_y,same_household");
+	fprintf(dat, "type,thread,infectee_t,infectee,infectee_cell,infectee_cell_n,infectee_adunit,infectee_hcw,infectee_x,infectee_y,infector_t,infector,infector_cell,infector_cell_n,infector_adunit,infector_hcw,infector_x,infector_y,same_household");
 	if (P.DoPlaces) 
 	{
 		for (j = 0; j < P.PlaceTypeNum; j++)
@@ -2109,7 +2134,7 @@ void SaveEvents(void)
 	
 	for (i = 0; i < *nEvents; i++)
 	{
-		fprintf(dat, "%i,%i,%lg,%i,%i,%i,%lg,%lg,%lg,%i,%i,%i,%lg,%lg,%i", InfEventLog[i].type, InfEventLog[i].thread, InfEventLog[i].t, InfEventLog[i].infectee_ind, InfEventLog[i].infectee_adunit, InfEventLog[i].infectee_hcw, InfEventLog[i].infectee_x, InfEventLog[i].infectee_y, InfEventLog[i].t_infector, InfEventLog[i].infector_ind, InfEventLog[i].infector_adunit, InfEventLog[i].infector_hcw, InfEventLog[i].infector_x, InfEventLog[i].infector_y, InfEventLog[i].same_hh);
+		fprintf(dat, "%i,%i,%lg,%i,%i,%i,%i,%i,%lg,%lg,%lg,%i,%i,%i,%i,%i,%lg,%lg,%i", InfEventLog[i].type, InfEventLog[i].thread, InfEventLog[i].t, InfEventLog[i].infectee_ind, InfEventLog[i].infectee_cell, InfEventLog[i].infectee_cell_n, InfEventLog[i].infectee_adunit, InfEventLog[i].infectee_hcw, InfEventLog[i].infectee_x, InfEventLog[i].infectee_y, InfEventLog[i].t_infector, InfEventLog[i].infector_ind, InfEventLog[i].infector_cell, InfEventLog[i].infector_cell_n,  InfEventLog[i].infector_adunit, InfEventLog[i].infector_hcw, InfEventLog[i].infector_x, InfEventLog[i].infector_y, InfEventLog[i].same_hh);
 		if (P.DoPlaces)
 		{
 			for (j = 0; j < P.PlaceTypeNum; j++)

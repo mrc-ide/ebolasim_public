@@ -208,6 +208,13 @@ void RunModel(int run) //added run number as parameter
 				}
 			}
 			cI = ((double)(State.S)) / ((double)P.N);
+
+			if (((lcI - cI) > 0.2) && (!P.DoSIS))
+			{
+				lcI = cI;
+				UpdateProbs(0);
+				DoInitUpdateProbs = 1;
+			}
 		}
 
 	}
@@ -767,6 +774,10 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 						if (f) { s3 *= P.PlaceCloseHouseholdRelContact; }/* NumPCD++;}*/
 						for (i3 = l; i3 < m; i3++)
 						{
+							if (i3 == 10)
+							{
+								fprintf(stderr, "Infectee 10\n");
+							}
 							if ((Hosts[i3].inf == 0) && (!(Hosts[i3].nc_plus_hh_disabled & HH_DISABLED)) && (!Hosts[i3].Travelling))
 							{
 								s = s3 * CalcHouseSusc(i3, ts, ci, tn);
@@ -783,6 +794,11 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 											Hosts[i3].infect_type = 1 + INFECT_TYPE_MASK * (1 + si->infect_type / INFECT_TYPE_MASK);
 										}
 										StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]++] = i3;
+										if (run == 44 && ts >= 416 && ts < 424)
+										{
+											
+											fprintf(stderr, "household: thread: %i, queue: %i, number:%i, max number in queue: %i, individual: %i\n", 4, 2, 0, StateT[4].n_queue[2], StateT[4].inf_queue[2][0]);
+										}
 									}
 								}
 							}
@@ -875,6 +891,10 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 										{
 											i3 = Places[k][l].members[Places[k][l].group_start[i2] + SamplingQueue[tn][m]];
 										}
+										if (i3 == 10)
+										{
+											fprintf(stderr, "Infectee 10\n");
+										}
 										if ((Hosts[i3].inf == 0) && (!HOST_ABSENT(i3)))
 										{
 											mt = Mcells + Hosts[i3].mcell;
@@ -901,6 +921,11 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 														Hosts[i3].infect_type = 2 + k + INFECT_TYPE_MASK * (1 + si->infect_type / INFECT_TYPE_MASK);
 													}
 													StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]++] = i3;
+													if (run == 44 && ts >= 416 && ts < 424)
+													{
+
+														fprintf(stderr, "place: thread: %i, queue: %i, number:%i, max number in queue: %i, individual: %i\n", 4, 2, 0, StateT[4].n_queue[2], StateT[4].inf_queue[2][0]);
+													}
 												}
 											}
 										}
@@ -922,6 +947,10 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 									for (m = 0; m < n; m++)
 									{
 										i3 = Places[k][l].members[SamplingQueue[tn][m]];
+										/*if (i3 == 10)
+										{
+											fprintf(stderr, "Infectee 10\n");
+										}*/
 										if ((Hosts[i3].inf == 0) && (!HOST_ABSENT(i3)))
 										{
 											mt = Mcells + Hosts[i3].mcell;
@@ -948,6 +977,11 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 														Hosts[i3].infect_type = 2 + k + NUM_PLACE_TYPES + INFECT_TYPE_MASK * (1 + si->infect_type / INFECT_TYPE_MASK);
 													}
 													StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]++] = i3;
+													if (run == 44 && ts >= 416 && ts < 424)
+													{
+
+														fprintf(stderr, "hotel: thread: %i, queue: %i, number:%i, max number in queue: %i, individual: %i\n", 4, 2, 0, StateT[4].n_queue[2], StateT[4].inf_queue[2][0]);
+													}
 												}
 											}
 										}
@@ -1046,6 +1080,10 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 						ct = CellLookup[l];
 						m = (int)(ranf_mt(tn) * ((double)ct->S0));
 						i3 = ct->susceptible[m];
+						if (i3 == 8)
+						{
+							fprintf(stderr, "Infectee 10\n");
+						}
 						s2 = dist2(Hosts + i3, Hosts + ci);
 						s = numKernel(s2) / c->max_trans[l];
 						//alter acceptance probability for cross border effect here: testing the cross border effect - ggilani 19/01/15
@@ -1100,7 +1138,30 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 											Hosts[i3].infector = ci;
 											Hosts[i3].infect_type = 2 + 2 * NUM_PLACE_TYPES + INFECT_TYPE_MASK * (1 + si->infect_type / INFECT_TYPE_MASK);
 										}
-										StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]++] = i3;
+										if (i3 == 8)
+										{
+											fprintf(stderr, "Infectee 8\n");
+										}
+										if (i3 == 32842730)
+										{
+											fprintf(stderr, "pause here\n");
+										}
+
+										if (tn == 3 && cq == 2)
+										{
+											fprintf(stderr, "pause here\n");
+										}
+										StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]] = i3;
+										if (run == 44 && ts >= 416 && ts < 424)
+										{
+											fprintf(stderr, "spatial. thread: %i, queue: %i, number:%i, individual: %i\n", tn, cq, StateT[tn].n_queue[cq], i3);
+										}
+										
+										if (StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]] == 8)
+										{
+											fprintf(stderr, "Argghhhh!\n");
+										}
+										StateT[tn].n_queue[cq]++;
 									}
 								}
 							}
@@ -1110,6 +1171,14 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 			}
 		}
 
+		if (run == 44 && ts >= 416 && ts < 424 )
+		{
+			k = 4;
+			j = 2;
+			i = 0;
+			fprintf(stderr, "infecting: thread: %i, queue: %i, number:%i, max number in queue: %i, individual: %i\n", k, j, i, StateT[k].n_queue[j], StateT[k].inf_queue[j][i]);
+		}
+		
 
 #pragma omp parallel for private(i,k) schedule(static,1)
 	for (j = 0; j < P.NumThreads; j++)
@@ -1121,7 +1190,18 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 				if (Hosts[StateT[k].inf_queue[j][i]].infect_type == -1)
 					DoFalseCase(StateT[k].inf_queue[j][i], t, ts, j);
 				else
+				{
+					
+					if (run == 44 && ts >= 416 && ts < 424)
+					{
+						fprintf(stderr, "2. thread: %i, queue: %i, number:%i, max number in queue: %i, individual: %i\n", k, j, i, StateT[k].n_queue[j], StateT[k].inf_queue[j][i]);
+					}
+					if (StateT[k].inf_queue[j][i] == 10)
+					{
+						fprintf(stderr, "Infectee 10\n");
+					}
 					DoInfect(StateT[k].inf_queue[j][i], t, j, run);
+				}
 			}
 			StateT[k].n_queue[j] = 0;
 		}

@@ -1502,7 +1502,6 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		for (i = 0;i < P.NumAdunits;i++)
 		{
 			if (!(AdUnits[i].place_net = (double**)malloc(P.PlaceTypeNum * sizeof(double*)))) ERR_CRITICAL("Unable to allocate place network storage\n");
-			if (!(AdUnits[i].place_dist = (double*)malloc(P.PlaceTypeNum * sizeof(double*)))) ERR_CRITICAL("Unable to allocate place network storage\n");
 
 			for (j = 0; j < P.PlaceTypeNum; j++)
 			{
@@ -1512,6 +1511,8 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 			for (j = 0; j < P.PlaceTypeNum; j++) 
 			{
 				AdUnits[i].place_dist[j] = 0.0;
+				AdUnits[i].min_place_dist[j] = 1e9;
+				AdUnits[i].max_place_dist[j] = 0;
 				for (k = 0;k < P.NumAdunits;k++)
 				{
 					AdUnits[i].place_net[j][k] = 0.0;
