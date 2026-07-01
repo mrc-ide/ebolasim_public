@@ -329,6 +329,7 @@ int main(int argc,char *argv[])
 	if(P.NumThreads>MAX_NUM_THREADS)
 		{
 		fprintf(stderr,"Assigned number of threads > MAX_NUM_THREADS\n");
+		P.NumThreads = MAX_NUM_THREADS;
 		omp_set_num_threads(MAX_NUM_THREADS);
 		}
 	else
