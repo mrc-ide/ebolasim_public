@@ -439,7 +439,7 @@ void SeedInfection(double t, int* nsi, int rf, int run) //adding run number to p
 				{
 					l = (int)(ranf() * ((double)P.N));
 					j = Hosts[l].mcell;
-					//fprintf(stderr,"%i ",AdUnits[Mcells[j].adunit].id);
+					
 				} while ((Mcells[j].n < nsi[i]) || (Mcells[j].n > P.MaxPopDensForInitialInfection)
 					|| (Mcells[j].n < P.MinPopDensForInitialInfection) || (((int)(AdUnits[Mcells[j].adunit].id / P.CountryDivisor) != P.TargetCountry) && (P.TargetCountry >= 0)) // from Mcells[j].country to Mcells[j].adunit/P.CountryDivisor
 					|| ((P.InitialInfectionsAdminUnit[i] > 0) && ((AdUnits[Mcells[j].adunit].id % P.AdunitLevel1Mask) / P.AdunitLevel1Divisor != (P.InitialInfectionsAdminUnit[i] % P.AdunitLevel1Mask) / P.AdunitLevel1Divisor)));
@@ -479,7 +479,7 @@ void SeedInfection(double t, int* nsi, int rf, int run) //adding run number to p
 				{
 					l = (int)(ranf() * ((double)P.N));
 					j = Hosts[l].mcell;
-					//fprintf(stderr,"%i ",AdUnits[Mcells[j].adunit].id);
+					
 				} while ((Mcells[j].n == 0) || (Mcells[j].n > P.MaxPopDensForInitialInfection)
 					|| (Mcells[j].n < P.MinPopDensForInitialInfection) || (((int)(AdUnits[Mcells[j].adunit].id / P.CountryDivisor) != P.TargetCountry) && (P.TargetCountry >= 0)) // from Mcells[j].country to Mcells[j].adunit/P.CountryDivisor
 					|| ((P.InitialInfectionsAdminUnit[i] > 0) && ((AdUnits[Mcells[j].adunit].id % P.AdunitLevel1Mask) / P.AdunitLevel1Divisor != (P.InitialInfectionsAdminUnit[i] % P.AdunitLevel1Mask) / P.AdunitLevel1Divisor)));

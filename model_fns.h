@@ -41,6 +41,8 @@ void UpdateCaseDetection(double); //added function to update vaccination paramet
 void SaveAgeDistrib(void);
 void SaveDistribs(void);
 void SaveOriginDestMatrix(void); //added function to save origin destination matrix so it can be done separately to the main results: ggilani - 13/02/15
+void SavePlaceMatrix(void); //added function to save place matrix: ggilani - 25/06/26
+void SaveHospDist(int); //added function to save hospital information: ggilani - 26/06/2026
 void SaveResults(void);
 void SaveSummaryResults(void);
 void SaveRandomSeeds(void); //added this function to save random seeds for each run: ggilani - 09/03/17
@@ -70,6 +72,7 @@ int DoVacc(int, int, int);
 void DoVaccNoDelay(int, int);
 double CalcPrevalenceDepTransmission(int);
 void CalcOriginDestMatrix_adunit(void); //added function to calculate origin destination matrix: ggilani 28/01/15
+void CalcPlaceMatrix(void); //added function to calculate place matrix: ggilani 25/06/26
 int BedsAvailablePerAdUnit(double, int); //added function to check current number of beds available in an admin unit
 void DetermineCellsWithCapitalCities(void); //added function to quickly check capital cities
 double ExpKernel(double);

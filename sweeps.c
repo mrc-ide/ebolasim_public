@@ -208,6 +208,13 @@ void RunModel(int run) //added run number as parameter
 				}
 			}
 			cI = ((double)(State.S)) / ((double)P.N);
+
+			if (((lcI - cI) > 0.2) && (!P.DoSIS))
+			{
+				lcI = cI;
+				UpdateProbs(0);
+				DoInitUpdateProbs = 1;
+			}
 		}
 
 	}
@@ -729,7 +736,6 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 	microcell* mi, * mt, * mp;
 	unsigned short int ts;
 	person* si;
-
 	if (!P.DoSeasonality)
 		seasonality = 1.0;
 	else
@@ -739,6 +745,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 	sbeta = seasonality * fp * P.LocalBeta;
 	hbeta = (P.DoHouseholds) ? (seasonality * fp * P.HouseholdTrans) : 0;
 	bm = ((P.DoBlanketMoveRestr) && (t >= P.MoveRestrTimeStart) && (t < P.MoveRestrTimeStart + P.MoveRestrDuration));
+
 #pragma omp parallel for private(j,k,l,m,n,i2,b,i3,f,f2,s,s2,s3,s4,s5,c,ct,mi,mt,mp,cq,ci,si,contact_scale) schedule(static,1)
 	for (tn = 0; tn < P.NumThreads; tn++)
 		for (b = tn; b < P.NCP; b += P.NumThreads)
@@ -767,6 +774,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 						if (f) { s3 *= P.PlaceCloseHouseholdRelContact; }/* NumPCD++;}*/
 						for (i3 = l; i3 < m; i3++)
 						{
+							
 							if ((Hosts[i3].inf == 0) && (!(Hosts[i3].nc_plus_hh_disabled & HH_DISABLED)) && (!Hosts[i3].Travelling))
 							{
 								s = s3 * CalcHouseSusc(i3, ts, ci, tn);
@@ -906,7 +914,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 										}
 									}
 								}
-								if ((k == HOTEL_PLACE_TYPE) || (!si->Travelling))
+								if ((k == HOTEL_PLACE_TYPE) || (!si->Travelling)) // figure out this.....
 								{
 									s3 *= P.PlaceTypePropBetweenGroupLinks[k] * P.PlaceTypeGroupSizeParam1[k] / ((double)Places[k][l].n);
 									if (s3 < 0)
@@ -1046,6 +1054,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 						ct = CellLookup[l];
 						m = (int)(ranf_mt(tn) * ((double)ct->S0));
 						i3 = ct->susceptible[m];
+						
 						s2 = dist2(Hosts + i3, Hosts + ci);
 						s = numKernel(s2) / c->max_trans[l];
 						//alter acceptance probability for cross border effect here: testing the cross border effect - ggilani 19/01/15
@@ -1100,7 +1109,9 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 											Hosts[i3].infector = ci;
 											Hosts[i3].infect_type = 2 + 2 * NUM_PLACE_TYPES + INFECT_TYPE_MASK * (1 + si->infect_type / INFECT_TYPE_MASK);
 										}
-										StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]++] = i3;
+										
+										StateT[tn].inf_queue[cq][StateT[tn].n_queue[cq]] = i3;
+										StateT[tn].n_queue[cq]++;
 									}
 								}
 							}
@@ -1109,7 +1120,6 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 				}
 			}
 		}
-
 
 #pragma omp parallel for private(i,k) schedule(static,1)
 	for (j = 0; j < P.NumThreads; j++)
@@ -1121,11 +1131,14 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 				if (Hosts[StateT[k].inf_queue[j][i]].infect_type == -1)
 					DoFalseCase(StateT[k].inf_queue[j][i], t, ts, j);
 				else
+				{
 					DoInfect(StateT[k].inf_queue[j][i], t, j, run);
+				}
 			}
 			StateT[k].n_queue[j] = 0;
 		}
 	}
+
 }
 
 void IncubRecoverySweep(double t, int run)
