@@ -401,6 +401,7 @@ typedef struct PARAM {
   int CaseThresholdUntilUpdateCaseDetection,UpdateCaseDetectionByCasesFlag;
   double CaseDetectionRateAfterThresholdReached;
   double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],DetectTime,PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
+  double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
 
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput;
 
