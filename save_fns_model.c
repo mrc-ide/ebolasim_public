@@ -642,7 +642,7 @@ void RecordEvent(double t, int ai, int run, int tn) //added int as argument to R
 		InfEventLog[*nEvents].infectee_ind = ai;
 		InfEventLog[*nEvents].age = Hosts[ai].age;
 		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].hcw;
-		InfEventLog[*nEvents].infectee_adunit = AdUnits[Mcells[Hosts[ai].mcell].adunit].id;
+		InfEventLog[*nEvents].infectee_adunit = Mcells[Hosts[ai].mcell].adunit;
 		InfEventLog[*nEvents].infection_time = (int)((double) Hosts[ai].infection_time / P.TimeStepsPerDay);
 		InfEventLog[*nEvents].latent_time = (int)((double) Hosts[ai].latent_time / P.TimeStepsPerDay);
 		// set hospital and etu times to negative values
@@ -677,7 +677,7 @@ void RecordEvent(double t, int ai, int run, int tn) //added int as argument to R
 		else
 		{
 			InfEventLog[*nEvents].t_infector = (int)((double) Hosts[bi].infection_time / P.TimeStepsPerDay);
-			InfEventLog[*nEvents].infector_adunit = AdUnits[Mcells[Hosts[bi].mcell].adunit].id;
+			InfEventLog[*nEvents].infector_adunit = Mcells[Hosts[bi].mcell].adunit;
 		}
 
 
@@ -2152,28 +2152,31 @@ void SaveEvents(void)
 	FILE* dat;
 	char outname[1024];
 
-	sprintf(outname, "%s.infevents.csv", OutFile);
+	sprintf(outname, "%s.linelist.csv", OutFile);
 	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-	fprintf(dat, "type,thread,infectee_t,infectee,infectee_cell,infectee_cell_n,infectee_adunit,infectee_hcw,infectee_x,infectee_y,infector_t,infector,infector_cell,infector_cell_n,infector_adunit,infector_hcw,infector_x,infector_y,same_household");
-	if (P.DoPlaces) 
+	fprintf(dat, "Run, Thread, Infectee_ID, Infectee_age, Is_HCW, Infectee_adunit, Infection_day, Onset_day, ETU_admissmion_day, Hosp_admission_day, Detected, Detection_day, Death, Outcome_day, Safe_burial, Listed_as_contact, Infector, Infector_infection_day, Infector_adunit");
+	/*if (P.DoPlaces)
 	{
 		for (j = 0; j < P.PlaceTypeNum; j++)
 		{
 			fprintf(dat, ",sameplace%i", j);
 		}
-	}
+	}*/
 	fprintf(dat, "\n");
 	
 	for (i = 0; i < *nEvents; i++)
 	{
-		fprintf(dat, "%i,%i,%lg,%i,%i,%i,%i,%i,%lg,%lg,%lg,%i,%i,%i,%i,%i,%lg,%lg,%i", InfEventLog[i].type, InfEventLog[i].thread, InfEventLog[i].t, InfEventLog[i].infectee_ind, InfEventLog[i].infectee_cell, InfEventLog[i].infectee_cell_n, InfEventLog[i].infectee_adunit, InfEventLog[i].infectee_hcw, InfEventLog[i].infectee_x, InfEventLog[i].infectee_y, InfEventLog[i].t_infector, InfEventLog[i].infector_ind, InfEventLog[i].infector_cell, InfEventLog[i].infector_cell_n,  InfEventLog[i].infector_adunit, InfEventLog[i].infector_hcw, InfEventLog[i].infector_x, InfEventLog[i].infector_y, InfEventLog[i].same_hh);
-		if (P.DoPlaces)
+		fprintf(dat, "%i, %i, %i, %i, %i, %s, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %s", 
+			InfEventLog[i].run, InfEventLog[i].thread, InfEventLog[i].infectee_ind, InfEventLog[i].age, InfEventLog[i].infectee_hcw, AdUnits[InfEventLog[i].infectee_adunit].ad_name, InfEventLog[i].infection_time,
+			InfEventLog[i].latent_time, InfEventLog[i].etu_time, InfEventLog[i].hospital_time, InfEventLog[i].detected, InfEventLog[i].detection_time, InfEventLog[i].to_die, InfEventLog[i].recovery_time, 
+			InfEventLog[i].safe_burial, InfEventLog[i].contact, InfEventLog[i].infector_ind, InfEventLog[i].t_infector, AdUnits[InfEventLog[i].infector_adunit].ad_name);
+		/*if (P.DoPlaces)
 		{
 			for (j = 0; j < P.PlaceTypeNum; j++)
 			{
 				fprintf(dat, ",%i", InfEventLog[i].same_place[j]);
 			}
-		}
+		}*/
 		fprintf(dat, "\n");
 	}
 	fclose(dat);
