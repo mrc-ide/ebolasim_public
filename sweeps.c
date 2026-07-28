@@ -1247,6 +1247,7 @@ void IncubRecoverySweep(double t, int run)
 								//if in hospital, they definitely have a safe burial
 								StateT[tn].cumSDB++;
 								if (P.DoAdUnits) StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+								si->safeBurial = 1;
 							}
 						}
 						else if (si->detected)
@@ -1261,6 +1262,7 @@ void IncubRecoverySweep(double t, int run)
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
 								StateT[tn].cumSDB++;
 								if (P.DoAdUnits) StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+								si->safeBurial = 1;
 							}
 						}
 						//if undetected, they don't have a safe burial
@@ -1268,7 +1270,6 @@ void IncubRecoverySweep(double t, int run)
 						{
 							//alter host's infectiousness
 							si->infectiousMult = P.RelativeInfectiousnessFuneral;
-							si->safeBurial = 0;
 						}
 						//}
 

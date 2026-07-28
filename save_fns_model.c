@@ -660,7 +660,11 @@ void RecordEvent(double t, int ai, int run, int tn) //added int as argument to R
 		InfEventLog[*nEvents].detected = Hosts[ai].detected;
 		if (Hosts[ai].detected)
 		{
-			InfEventLog[*nEvents].detection_time = Hosts[ai].dayDetected; // check this. or detection_time?
+			InfEventLog[*nEvents].detection_time = (int)((double) Hosts[ai].detect_time / P.TimeStepsPerDay); // check this. or detection_time?
+		}
+		else
+		{
+			InfEventLog[*nEvents].detection_time = -1;
 		}
 		InfEventLog[*nEvents].to_die = Hosts[ai].to_die;
 		InfEventLog[*nEvents].recovery_time = (int)((double) Hosts[ai].recovery_time / P.TimeStepsPerDay);
