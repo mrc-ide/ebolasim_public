@@ -1260,7 +1260,7 @@ void DoRecover(int ai, int run, int tn)
 	{
 		if(*nEvents<P.MaxInfEvents)
 		{
-			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,3); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 		}
 	}
 }
@@ -1320,7 +1320,7 @@ void DoDeath(int ai, int tn, int run)
 	{
 		if(*nEvents<P.MaxInfEvents)
 		{
-			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,2); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 		}
 	}
 }

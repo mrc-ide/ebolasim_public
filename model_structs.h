@@ -88,9 +88,9 @@ typedef struct RESULTS {
 
 // Added Events struct to allow us to log and write out infection events: ggilani 10/10/14
 typedef struct EVENTS {
-	double infectee_x, infectee_y,t, t_infector,infector_x,infector_y;
-	int run, infectee_ind, infector_ind, type, infectee_adunit, infector_adunit, listpos,infectee_cell,infector_cell,infectee_cell_n,infector_cell_n,thread, same_hh, infectee_hcw, infector_hcw;
-	unsigned short int age, to_die, infection_time, latent_time, recovery_time, hospital_time, etu_time, detection_time, detected, safe_burial, contact;
+	double infectee_x, infectee_y, t ,infector_x, infector_y;
+	int run, infectee_ind, infector_ind, infectee_adunit, infector_adunit, listpos,infectee_cell,infector_cell,infectee_cell_n,infector_cell_n,thread, same_hh, infectee_hcw, infector_hcw;
+	unsigned short int age, to_die, infection_time, latent_time, recovery_time, hospital_time, etu_time, detection_time, detected, safe_burial, contact, t_infector;
 	int same_place[NUM_PLACE_TYPES];
 } events;
 

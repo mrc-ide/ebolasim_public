@@ -627,7 +627,7 @@ void RecordInfTypes(void)
  *
  * Author: ggilani, Date: 10/10/2014
  */
-void RecordEvent(double t, int ai, int run, int type, int tn) //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+void RecordEvent(double t, int ai, int run, int tn) //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 {
 	//Declare int to store infector's index
 	int bi, i;
@@ -638,17 +638,49 @@ void RecordEvent(double t, int ai, int run, int type, int tn) //added int as arg
 #pragma omp critical (inf_event)
 	{
 		InfEventLog[*nEvents].run = run;
-		InfEventLog[*nEvents].type = type;
-		InfEventLog[*nEvents].t = t;
-		InfEventLog[*nEvents].infectee_ind = ai;
-		InfEventLog[*nEvents].infectee_adunit = AdUnits[Mcells[Hosts[ai].mcell].adunit].id;
-		InfEventLog[*nEvents].infectee_x = Households[Hosts[ai].hh].loc_x + P.SpatialBoundingBox[0];
-		InfEventLog[*nEvents].infectee_y = Households[Hosts[ai].hh].loc_y + P.SpatialBoundingBox[1];
-		InfEventLog[*nEvents].listpos = Hosts[ai].listpos;
-		InfEventLog[*nEvents].infectee_cell = Hosts[ai].pcell;
-		InfEventLog[*nEvents].infectee_cell_n = Cells[Hosts[ai].pcell].n;
 		InfEventLog[*nEvents].thread = tn;
-		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].keyworker;
+		InfEventLog[*nEvents].infectee_ind = ai;
+		InfEventLog[*nEvents].age = Hosts[ai].age;
+		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].hcw;
+		InfEventLog[*nEvents].infectee_adunit = AdUnits[Mcells[Hosts[ai].mcell].adunit].id;
+		InfEventLog[*nEvents].infection_time = (int)((double) Hosts[ai].infection_time / P.TimeStepsPerDay);
+		InfEventLog[*nEvents].latent_time = (int)((double) Hosts[ai].latent_time / P.TimeStepsPerDay);
+		// set hospital and etu times to negative values
+		InfEventLog[*nEvents].etu_time = -1;
+		InfEventLog[*nEvents].hospital_time = -1;
+		if (Hosts[ai].etu)
+		{
+			InfEventLog[*nEvents].etu_time = (int)((double) Hosts[ai].hospital_time / P.TimeStepsPerDay);
+		}
+		else if (Hosts[ai].hospitalised)
+		{
+			InfEventLog[*nEvents].hospital_time = (int)((double) Hosts[ai].hospital_time / P.TimeStepsPerDay);
+		}
+		// detection values
+		InfEventLog[*nEvents].detected = Hosts[ai].detected;
+		if (Hosts[ai].detected)
+		{
+			InfEventLog[*nEvents].detection_time = Hosts[ai].dayDetected; // check this. or detection_time?
+		}
+		InfEventLog[*nEvents].to_die = Hosts[ai].to_die;
+		InfEventLog[*nEvents].recovery_time = (int)((double) Hosts[ai].recovery_time / P.TimeStepsPerDay);
+		InfEventLog[*nEvents].safe_burial = Hosts[ai].safeBurial;
+		InfEventLog[*nEvents].contact = Hosts[ai].contactTraced;
+
+		InfEventLog[*nEvents].infector_ind = bi;
+		if (bi < 0)
+		{
+			
+			InfEventLog[*nEvents].t_infector = -1;
+			InfEventLog[*nEvents].t_infector = -1;
+		}
+		else
+		{
+			InfEventLog[*nEvents].t_infector = (int)((double) Hosts[bi].infection_time / P.TimeStepsPerDay);
+			InfEventLog[*nEvents].infector_adunit = AdUnits[Mcells[Hosts[bi].mcell].adunit].id;
+		}
+
+
 		//if (type == 0) //infection event - record time of onset of infector and infector
 		//{
 		//	InfEventLog[*nEvents].infector_ind = bi;
@@ -656,7 +688,7 @@ void RecordEvent(double t, int ai, int run, int type, int tn) //added int as arg
 		//	{
 		//		InfEventLog[*nEvents].t_infector = -1;
 		//		InfEventLog[*nEvents].infector_cell = -1;
-		//		InfEventLog[*nEvents].infector_adunit = -1;
+		//		InfEventLog[*nEvents].t_infector = -1;
 		//		InfEventLog[*nEvents].infector_x = -1;
 		//		InfEventLog[*nEvents].infector_y = -1;
 		//		InfEventLog[*nEvents].infector_hcw = -1;
