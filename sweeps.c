@@ -556,7 +556,7 @@ void HospitalSweepAdunits(double t)
 				{
 					if (Hosts[StateT[j].hd_queue[i][k]].etu)
 					{
-						Hosts[StateT[j].hd_queue[i][k]].etu = 0;
+						//Hosts[StateT[j].hd_queue[i][k]].etu = 0;
 						//if host was hospitalised in the same admin unit of which they are a residence, we reduce the number of currently in-use within admin unit beds in the current admin unit
 						AdUnits[i].currentETUBeds--;
 						StateT[j].ETU_adunit[i]--;
@@ -609,6 +609,7 @@ void HospitalSweepAdunits(double t)
 							{
 								age = HOST_AGE_GROUP(AdUnits[i].h_queue[SamplingQueue[tn][j]]);
 								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].etu = Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].recovery_time;
+								Hosts[k].hospital_time = ts;
 								//Hosts[AdUnits[i].h_queue[j]].hospitalised=Hosts[AdUnits[i].h_queue[j]].recovery_time;
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -636,7 +637,7 @@ void HospitalSweepAdunits(double t)
 				k = Places[P.HospPlaceTypeNum][i].members[j];
 				if (Hosts[k].hospitalised == ts)
 				{
-					Hosts[k].hospitalised = 0;
+					//Hosts[k].hospitalised = 0;
 					//StateT[j].H_adunit[i]--; - not currently working as not threaded by adunit
 					//if host was hospitalised in the same admin unit of which they are a residence, we reduce the number of currently in-use within admin unit beds in the current admin unit
 					Places[P.HospPlaceTypeNum][i].n_current--;
@@ -669,6 +670,7 @@ void HospitalSweepAdunits(double t)
 							}
 							Places[P.HospPlaceTypeNum][Hosts[k].PlaceLinks[P.HospPlaceTypeNum]].n_current++;
 							Hosts[k].hospitalised = Hosts[k].recovery_time;
+							Hosts[k].hospital_time = ts;
 							age = HOST_AGE_GROUP(AdUnits[i].h_queue[j]);
 							//StateT[tn].H_adunit[i]++;
 							StateT[tn].cumH_adunit[i]++;
@@ -1193,10 +1195,6 @@ void IncubRecoverySweep(double t, int run)
 				tc = si->latent_time + ((int)(P.LatentToSymptDelay / P.TimeStep));
 				if ((P.DoSymptoms) && (ts == tc))
 					DoCase(ci, t, ts, tn);
-				if ((ts == si->detect_time) && (si->detected))
-				{
-					DoDetectedCase(ci, t, ts, tn);
-				}
 
 				//Now considered which of infected have reached time to hospitalisation
 				if ((P.DoHospitalisation) && ((ts >= si->hospital_time) && (ts < (si->hospital_time + (int)(P.HospWaitingTime * P.TimeStepsPerDay)))) && (abs(si->inf) != 6) && (!si->hospitalised) && (!si->etu) && (si->detected))
@@ -1211,6 +1209,11 @@ void IncubRecoverySweep(double t, int run)
 					{
 						StateT[tn].h_queue[0][StateT[tn].nh_queue[0]++] = ci;
 					}
+				}
+
+				if ((ts == si->detect_time) && (si->detected))
+				{
+					DoDetectedCase(ci, t, ts, tn);
 				}
 
 
