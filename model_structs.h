@@ -378,6 +378,7 @@ typedef struct PARAM {
   int DoOriginDestinationMatrix, DoPlaceMatrix, DoOutputHosp; //added: ggilani 28/01/15
   //case detection parameters: 03/02/15 ggilani
   int DoCaseDetection,DoCaseDetectionAdunit,DoClusterCaseDetection;
+  double ProbDetectCommunity, ProbDetectHosp; //probability of detection in community and hospital
   double CaseDetectionRate;
   double RR1,RR2,RR3; //reporting rate scalings for Guinea, Liberia, Sierra Leone
   double RRAlt; //**separate reporting rate for individual admin units** - ggilani 18/06/2015
@@ -400,7 +401,8 @@ typedef struct PARAM {
   int DoUpdateCaseDetection,NUpdateCaseDetection, CurrIndUpdateCaseDetect,DoUpdateCaseDetectionByTime,DoUpdateCaseDetectionByCases; //separating update case detection by time or cases - ggilani 08/03/23
   int CaseThresholdUntilUpdateCaseDetection,UpdateCaseDetectionByCasesFlag;
   double CaseDetectionRateAfterThresholdReached;
-  double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],DetectTime,PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
+  double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
+  double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact; // detection delays for contact, etu, hospital, community
   double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
 
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput;

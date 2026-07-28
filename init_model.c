@@ -289,7 +289,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	}
 
 	SeedInfection(0, P.NumInitialInfections, 0, run);
-	P.ControlPropCasesId = P.PostAlertControlPropCasesId;
+	//P.ControlPropCasesId = P.PostAlertControlPropCasesId;
 	//P.ControlPropCasesId=P.PreAlertControlPropCasesId;
 	P.TreatTimeStart = 1e10;
 

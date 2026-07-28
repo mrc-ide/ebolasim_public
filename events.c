@@ -1076,13 +1076,13 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 					a->hospital_time = a->recovery_time - 1;
 				}
 			}
-			else if (Hosts[ai].rep_rate < P.ProbDetectionCommunity)
+			else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
 			{
 				//see if a community case who doesn't go to hospital is going to be detected, because they won't be detected in the hospital sweep
 				Hosts[ai].detected = 1;
 			}
 		}
-		else if (Hosts[ai].rep_rate < P.ProbDetectionCommunity)
+		else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
 		{
 			//see if a community case who doesn't go to hospital is going to be detected, because they won't be detected in the hospital sweep
 			Hosts[ai].detected = 1;
@@ -1114,13 +1114,14 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 				}
 				else
 				{
-					Hosts[ai].detect_time = Hosts[ai].latent_time + ((int)(P.LatentToSymptDelay / P.TimeStep)); //if contact traced, detected immediately, set detect_time to be the same time
+					Hosts[ai].detect_time = Hosts[ai].latent_time + (unsigned short int)((P.DetectTimeContact * P.TimeStepsPerDay) + (P.LatentToSymptDelay / P.TimeStep)); //if contact traced, detected immediately, set detect_time to be the same time
 				}
 			}
 			else
 			{
-				Hosts[ai].detect_time = Hosts[ai].latent_time + ((int)(P.LatentToSymptDelay / P.TimeStep)); //if detected immediately, set detect_time to be the same time
+				Hosts[ai].detect_time = Hosts[ai].latent_time + ((unsigned short int)(P.LatentToSymptDelay / P.TimeStep)); //if detected immediately, set detect_time to be the same time
 			}
+		}
 
 		//****COMMENTED THIS 28/07/26
 

@@ -881,8 +881,11 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 
 
 	if (!GetInputParameter2(dat, dat2, "Number of sampling intervals over which cumulative incidence measured for global trigger", "%i", (void*)&(P.TriggersSamplingInterval), 1, 1, 0)) P.TriggersSamplingInterval = 10000000;
+	
+	if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.ProbDetectCommunity), 1, 1, 0)) P.ProbDetectCommunity = 0;
+	if (!GetInputParameter2(dat, dat2, "Proportion of hospital cases detected", "%lf", (void*)&(P.ProbDetectHosp), 1, 1, 0)) P.ProbDetectHosp = 1;
 	//if (!GetInputParameter2(dat, dat2, "Number of undetected infections before first case detected", "%i", (void*)&(P.NumUndetectedInfPreOutbreakAlert), 1, 1, 0)) P.NumUndetectedInfPreOutbreakAlert = 0;
-	if (!GetInputParameter2(dat, dat2, "Proportion of cases detected after surveillance alert", "%lf", (void*)&(P.PostAlertControlPropCasesId), 1, 1, 0)) P.PostAlertControlPropCasesId = 1;
+	//if (!GetInputParameter2(dat, dat2, "Proportion of cases detected after surveillance alert", "%lf", (void*)&(P.PostAlertControlPropCasesId), 1, 1, 0)) P.PostAlertControlPropCasesId = 1;
 	//if(!GetInputParameter2(dat,dat2,"Proportion of cases detected before surveillance alert","%lf",(void *) &(P.PreAlertControlPropCasesId),1,1,0)) P.PreAlertControlPropCasesId=1;
 	//if(P.PreControlClusterIdCaseThreshold==0)
 	//	{
@@ -1151,7 +1154,10 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Do clustered case detection by household", "%i", (void*)&(P.DoClusterCaseDetection), 1, 1, 0)) P.DoClusterCaseDetection = 0;
 	if (P.DoDetectDelay)
 	{
-		if (!GetInputParameter2(dat, dat2, "Mean detection delay", "%lf", (void*)&(P.DetectTime), 1, 1, 0)) P.DetectTime = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay in community", "%lf", (void*)&(P.DetectTime), 1, 1, 0)) P.DetectTime = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay for community contact traced case", "%lf", (void*)&(P.DetectTimeContact), 1, 1, 0)) P.DetectTimeContact = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay in hospital", "%lf", (void*)&(P.DetectTimeHosp), 1, 1, 0)) P.DetectTimeHosp = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay in ETU", "%lf", (void*)&(P.DetectTimeETU), 1, 1, 0)) P.DetectTimeETU = 0;
 	}
 	//Case detection - horrible and hard coded at the moment: ggilani 03/02/15
 	//if(!GetInputParameter2(dat,dat2,"Include case detection","%i",(void *) &(P.DoCaseDetection),1,1,0)) P.DoCaseDetection=0;

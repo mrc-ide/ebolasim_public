@@ -208,7 +208,6 @@ void RunModel(int run) //added run number as parameter
 				}
 			}
 			cI = ((double)(State.S)) / ((double)P.N);
-
 			if (((lcI - cI) > 0.2) && (!P.DoSIS))
 			{
 				lcI = cI;
@@ -593,6 +592,11 @@ void HospitalSweepAdunits(double t)
 							{
 								age = HOST_AGE_GROUP(AdUnits[i].h_queue[j]);
 								Hosts[AdUnits[i].h_queue[j]].etu = Hosts[AdUnits[i].h_queue[j]].recovery_time;
+								//actual time they go into ETU
+								Hosts[AdUnits[i].h_queue[j]].hospital_time = ts;
+								//all cases in ETUs are detected
+								Hosts[AdUnits[i].h_queue[j]].detected = 1;
+								Hosts[AdUnits[i].h_queue[j]].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
 								//set the admin unit identifier in which they are hospitalised
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -609,7 +613,10 @@ void HospitalSweepAdunits(double t)
 							{
 								age = HOST_AGE_GROUP(AdUnits[i].h_queue[SamplingQueue[tn][j]]);
 								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].etu = Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].recovery_time;
-								Hosts[k].hospital_time = ts;
+								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].hospital_time = ts;
+								//all cases in ETUs are detected
+								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].detected = 1;
+								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
 								//Hosts[AdUnits[i].h_queue[j]].hospitalised=Hosts[AdUnits[i].h_queue[j]].recovery_time;
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -671,6 +678,12 @@ void HospitalSweepAdunits(double t)
 							Places[P.HospPlaceTypeNum][Hosts[k].PlaceLinks[P.HospPlaceTypeNum]].n_current++;
 							Hosts[k].hospitalised = Hosts[k].recovery_time;
 							Hosts[k].hospital_time = ts;
+							// patients in regular hospitals detected with hospital detection probability
+							if (ranf_mt(tn) < P.ProbDetectHosp)
+							{
+								Hosts[k].detected = 1;
+								Hosts[k].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeHosp);
+							}
 							age = HOST_AGE_GROUP(AdUnits[i].h_queue[j]);
 							//StateT[tn].H_adunit[i]++;
 							StateT[tn].cumH_adunit[i]++;
@@ -1197,7 +1210,7 @@ void IncubRecoverySweep(double t, int run)
 					DoCase(ci, t, ts, tn);
 
 				//Now considered which of infected have reached time to hospitalisation
-				if ((P.DoHospitalisation) && ((ts >= si->hospital_time) && (ts < (si->hospital_time + (int)(P.HospWaitingTime * P.TimeStepsPerDay)))) && (abs(si->inf) != 6) && (!si->hospitalised) && (!si->etu) && (si->detected))
+				if ((P.DoHospitalisation) && ((ts >= si->hospital_time) && (ts < (si->hospital_time + (int)(P.HospWaitingTime * P.TimeStepsPerDay)))) && (abs(si->inf) != 6) && (!si->hospitalised) && (!si->etu))// && (si->detected))
 					//A lot of conditions! To enter loop, we must be doing hospitalisation by admin unit, the host must be within their waiting hospitalisation time, not already hospitalised and not dead but infectious! Must also be detected case
 				{
 					//mark someone to be admitted
