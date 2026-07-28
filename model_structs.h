@@ -159,8 +159,8 @@ typedef struct CELL {
   //int nn,*NeighboursIndexRad,*InvCDFLookupRad;
   //float TotProbRad,*CumProbRad;
   //for roads
-  int road_connection;
-  double road_access;
+  int road_connection, n_friction; //add n_friction to count the number of microcells contributing to overall friction for that cell
+  double road_access, friction; // added friction value to cell: ggilani 17/07/26
   //for capital city only effect
   int capital_city;
 } cell;
@@ -385,7 +385,7 @@ typedef struct PARAM {
   int DoRadiationMobility;
   double KernelRadiusMax,KernelRadiusMax2,PropWithinCellTransmission;
   //variables relevant to reading in and using road networks: ggilani 12/11/15
-  int DoRoadNetwork,MaxRoadType,DoRoadDistanceEffect,DoRoadPopEffect,MaxRoadNeighbour;
+  int DoRoadNetwork,MaxRoadType,DoRoadDistanceEffect,DoRoadPopEffect,MaxRoadNeighbour,DoFrictionMap; //added DoFrictionMap to scale kernel
   double RoadAccessDistance,RoadAccessPop;
   //for capital city effect: ggilani - 26/02/15
   int DoCapitalCityEffect,DoCapitalCityDistanceEffect,DoCapitalCityPopEffect,DoCapitalCityAddEffect;

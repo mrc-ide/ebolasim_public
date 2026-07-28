@@ -8,7 +8,7 @@
 #include "binio.h"
 
 
-void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegDemogFile)
+void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegDemogFile, char *FrictionFile)
 {
 	int i,j,k,l,m,i2,j2,l2,m2,tn,BedCapacity; //added tn as variable for multi-threaded loops: 28/11/14
 	unsigned int rn;
@@ -58,10 +58,10 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 				if(P.DoBin==0)
 					{
 					sscanf(buf,"%lg\t%lg\t%lg\t%i\t%i",&x,&y,&t,&i2,&l);
-					if(l/P.CountryDivisor!=i2) //temporarily changed this to 10000 from 100 to work with new admin codes - ggilani 30/05/2018, now changed to CountryDivisor - ggilani 13/05/2019
-					{
+					//if(l/P.CountryDivisor!=i2) //temporarily changed this to 10000 from 100 to work with new admin codes - ggilani 30/05/2018, now changed to CountryDivisor - ggilani 13/05/2019
+					//{
 						//fprintf(stderr,"# %lg %lg %lg %i %i\n",x,y,t,i2,l);
-					}
+					//}
 					//if(i2==P.TargetCountry)
 					//{
 					//	fprintf(stderr,"# %lg %lg %lg %i %i\n",x,y,t,i2,l);
@@ -241,8 +241,19 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 
 	P.CellPop2=((double) P.N)*((double) P.N)/(((double) P.NC)*((double) P.NC));
 	//SaveAgeDistrib();
-
-	if((P.DoCapitalCityEffect)&&(P.DoAdUnits)) //if including a capital city effect, determine whether a cell contains a capital city or not before initialising the kernel
+	
+	// adding this to read 
+	if (P.DoFrictionMap)
+	{
+		SetupFrictionMap(FrictionFile);
+		fprintf(stderr, "Friction map read in and set up\n");
+	}
+	else if (P.DoRoadNetwork) // moved this this: marks cells with road networks. old code from west africa, but moved here 
+	{
+		SetupRoads();
+		fprintf(stderr, "Roads assigned to microcells\n");
+	}
+	else if((P.DoCapitalCityEffect)&&(P.DoAdUnits)) //if including a capital city effect, determine whether a cell contains a capital city or not before initialising the kernel
 	{
 		DetermineCellsWithCapitalCities();
 	}
@@ -1203,16 +1214,8 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 	fprintf(stderr,"Ages/households assigned\n");
 
 
-	//adding some code to call set up road networks, if including the roads network file: ggilani 12/02/15
-	if(P.DoRoadNetwork)
-	{
-		SetupRoads();
-		fprintf(stderr,"Roads assigned to microcells\n");
-	}
-
-
 	if(!P.DoRandomInitialInfectionLoc)
-		{
+	{
 		k=(int) (P.LocationInitialInfection[0][0]/P.mcwidth);
 		l=(int) (P.LocationInitialInfection[0][1]/P.mcheight);
 		j=k*P.nmch+l;
@@ -1239,7 +1242,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		}
 		if(Mcells[j].n<P.NumInitialInfections[0])
 			ERR_CRITICAL("Too few people in seed microcell to start epidemic with required number of initial infectionz.\n");
-		}
+	}
 	fprintf(stderr,"Checking cells...\n");
 	maxd=0;last_i=0;
 	for(i=0;i<P.NMC;i++)
@@ -2115,6 +2118,111 @@ void SetupRoads(void)
 	free(X_Coords);
 	free(Y_Coords);
 	free(RoadType);
+
+}
+
+/** function: SetupFrictionMap(void)
+ *
+ * purpose: to read in the friction file and aggregate friction values at the microcell level to cell level
+ *
+ * parameters: none
+ *
+ * returns: none
+ *
+ * author: ggilani, 17/07/2026
+ */
+void SetupFrictionMap(char* FrictionFile)
+{
+	FILE* dat;
+	char buf[2048];
+	int i, j, k, l, mc_ind, c_ind, cell_x, cell_y, ind, country, adunit, nFrictionCells{};
+	double x, y, friction;
+	double* X_Coords, * Y_Coords, * Friction;
+	int* adunit_id;
+	int maxRows = UINT_MAX - 1;
+
+	if (!(dat = fopen(FrictionFile, "r"))) ERR_CRITICAL("Unable to open friction file!\n");
+	for(i = 0; i < maxRows; i++)
+	{
+		(void)fscanf(dat, "%lf %lf %lf %i %i", &x, &y, &friction, &country, &adunit);
+		fgets(buf, 2047, dat);
+		if (feof(dat))
+		{
+			nFrictionCells = i;
+			i = maxRows;
+		}
+
+	}
+	fclose(dat);
+	
+	//allocate temporary storage to hold coordinates and road types: can't be more than the number of microcells
+	if (!(X_Coords = (double*)malloc(nFrictionCells * sizeof(double)))) ERR_CRITICAL("Unable to allocate storage for friction map coordinates\n");
+	if (!(Y_Coords = (double*)malloc(nFrictionCells * sizeof(double)))) ERR_CRITICAL("Unable to allocate storage for friction map coordinates\n");
+	if (!(Friction = (double*)malloc(nFrictionCells * sizeof(double)))) ERR_CRITICAL("Unable to allocate storage for friction values\n");
+	if (!(adunit_id = (int*)malloc(nFrictionCells * sizeof(int)))) ERR_CRITICAL("Unable to allocate storage for adunit ids\n");
+
+	if (!(dat = fopen(FrictionFile, "r"))) ERR_CRITICAL("Unable to open friction file!\n");
+	for(i = 0; i < nFrictionCells; i++)
+	{
+		(void)fscanf(dat, "%lf %lf %lf %i %i", &x, &y, &friction, &country, &adunit);
+		X_Coords[i] = x;
+		Y_Coords[i] = y;
+		Friction[i] = friction;
+		adunit_id[i] = adunit;
+		i++;
+	}
+	fclose(dat);
+
+	nFrictionCells = i;
+
+	//go through cells first to set up initial states
+	for (i = 0; i < P.NC; i++)
+	{
+		Cells[i].friction = 0.0;
+		Cells[i].n_friction = 0;
+	}
+
+	//now go through list of road coordinates, find the associated microcell and cell and assign it a road type
+	for (i = 0; i < nFrictionCells; i++)
+	{
+		//check to see whether segment of road is with the simulation area, and if it's within the range of road types we are considering
+		if ((X_Coords[i] >= P.SpatialBoundingBox[0]) && (Y_Coords[i] >= P.SpatialBoundingBox[1]) && (X_Coords[i] < P.SpatialBoundingBox[2]) && (Y_Coords[i] < P.SpatialBoundingBox[3]))
+		{
+			j = (int)floor((X_Coords[i] - P.SpatialBoundingBox[0]) / P.mcwidth);
+			k = (int)floor((Y_Coords[i] - P.SpatialBoundingBox[1]) / P.mcheight);
+			//actual index of microcell
+			mc_ind = j * P.nmch + k;
+
+			if (P.AdunitLevel1Lookup[AdUnits[Mcells[mc_ind].adunit].id] >= 0)
+			{		
+				//get cell index
+				cell_x = (int)floor((X_Coords[i] - P.SpatialBoundingBox[0]) / P.cwidth);
+				cell_y = (int)floor((Y_Coords[i] - P.SpatialBoundingBox[1]) / P.cheight);
+				c_ind = cell_x * P.nch + cell_y;
+
+				//add friction to cell friction value and increment the number of microcells contributing to friction value
+				Cells[c_ind].friction += Friction[i];
+				Cells[c_ind].n_friction++;
+
+			} //cell matches target country
+
+		}
+	}
+
+	//Average friction over cell
+	for (i = 0; i < P.NC; i++)
+	{
+		if (Cells[i].n_friction) 
+		{
+			Cells[i].friction /= (double)Cells[i].n_friction;
+		}
+	}
+
+	//free memory used to temporarily store road properties
+	free(X_Coords);
+	free(Y_Coords);
+	free(Friction);
+	free(adunit_id);
 
 }
 

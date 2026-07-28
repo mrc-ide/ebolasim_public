@@ -11,7 +11,7 @@
 
 int main(int argc,char *argv[])
 {
-	char ParamFile[1024],DensityFile[1024],NetworkFile[1024],AirTravelFile[1024],SchoolFile[1024],RegDemogFile[1024],InterventionFile[MAXINTFILE][1024],PreParamFile[1024],buf[2048],*sep;
+	char ParamFile[1024],DensityFile[1024],NetworkFile[1024],AirTravelFile[1024],SchoolFile[1024],RegDemogFile[1024],InterventionFile[MAXINTFILE][1024],PreParamFile[1024],FrictionFile[1024],buf[2048],*sep;
 	int i,j,k,GotP,GotPP,GotO,GotD,GotL,GotS,GotA,GotScF,GotIF,Perr,cl;
 	double t,t2;
 
@@ -45,7 +45,7 @@ int main(int argc,char *argv[])
 		P.VaccPropScale=1.0; //added scaling factors for ring vaccination so that they can be set from the command line.
 		P.VaccEffTimeScale=1.0;
 		P.VaccDelayScale=1.0;
-		P.DoSaveSnapshot=P.DoLoadSnapshot=P.DoRadiationMobility=P.DoRoadNetwork=0; //also set radiation mobility and road network to zero initially: ggilani 09/02/15
+		P.DoSaveSnapshot=P.DoLoadSnapshot=P.DoRadiationMobility=P.DoRoadNetwork=P.DoFrictionMap=0; //also set radiation mobility and road network to zero initially: ggilani 09/02/15, also add Friction map: ggilani 17/07/26
 		for(i=1;i<argc-4;i++)
 			{
 			if((argv[i][0]!='/') && ((argv[i][2]!=':')&&(argv[i][3]!=':'))) Perr=1;
@@ -317,7 +317,14 @@ int main(int argc,char *argv[])
 				P.DoRoadNetwork=1;
 				sscanf(&argv[i][4],"%s",RoadNetworkFile);
 				}
+			//adding this to take in a friction file showing inverse speed it takes to cross a microcell in minutes
+			else if (argv[i][1] == 'F' && argv[i][2] == ':')
+				{
+				P.DoFrictionMap = 1;
+				sscanf(&argv[i][3], "%s", FrictionFile);
+				}
 			}
+
 		if(((GotS)&&(GotL))||(!GotP)||(!GotO)) Perr=1;
 		}
 	sprintf(OutFile,"%s",OutFileBase);
@@ -363,7 +370,7 @@ int main(int argc,char *argv[])
 	count_ranf=0;
 	count_ranfmt=0;
 
-	SetupModel(DensityFile,NetworkFile,SchoolFile,RegDemogFile);
+	SetupModel(DensityFile,NetworkFile,SchoolFile,RegDemogFile,FrictionFile);
 
 
 //	signal(SIGABRT,HandleBreak);
