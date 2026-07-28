@@ -2,10 +2,11 @@ void ReadParams(char*, char*);
 void ReadInterventions(char*);
 int GetXMLNode(FILE*, char*, char*, char*, int);
 void ReadAirTravel(char*);
-void SetupModel(char*, char*, char*, char*);
+void SetupModel(char*, char*, char*, char*, char*);
 void SetupPopulation(char*, char*, char*);
 void SetupAirports(void);
 void SetupRoads(void); //added new function to take care of roads: ggilani - 12/02/15
+void SetupFrictionMap(char*); //added function to read in friction file and assign values to cells: ggilani - 17/07/26
 void InitKernel(int, double);
 void AssignHouseholdAges(int, int, int);
 void AssignPeopleToPlaces(void);
