@@ -567,6 +567,13 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 				if (!GetInputParameter2(dat, dat2, "Proportion of cases dying", "%lf", (void*)&(P.DiseaseMortality), 1, 1, 0)) P.DiseaseMortality = 0;
 			}
 		}
+		// added this to detect some undetected community cases at death
+		if (!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropUndetectedCommunityCasesDetectedAtDeath), 1, 1, 0)) P.PropUndetectedCommunityCasesDetectedAtDeath = 0;
+		if (P.PropUndetectedCommunityCasesDetectedAtDeath)
+		{
+			// then what is the delay to reporting?
+			if (!GetInputParameter2(dat, dat2, "Reporting delay for community case detected at death", "%lf", (void*)&(P.DelayCommunityCasesDetectedAtDeath), 1, 1, 0)) P.DelayCommunityCasesDetectedAtDeath = 0.0;
+		}
 	}
 	if (!GetInputParameter2(dat, dat2, "Include funeral transmission", "%i", (void*)&(P.DoFuneralTransmission), 1, 1, 0)) P.DoFuneralTransmission = 0;
 	if (P.DoFuneralTransmission) //Funeral transmission parameters: ggilani - 26/10/14

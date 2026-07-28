@@ -1265,6 +1265,27 @@ void IncubRecoverySweep(double t, int run)
 								si->safeBurial = 1;
 							}
 						}
+						//add this to allow undetected cases in the community to be detected at death and have a safe funeral
+						else if ((si->detected == 0) && (ranf_mt(tn) < P.PropUndetectedCommunityCasesDetectedAtDeath))
+						{
+							si->detected = 1; //change status to detected
+							si->detect_time = ts + (unsigned short int) (P.DelayCommunityCasesDetectedAtDeath*P.TimeStepsPerDay); //select detected time to date of death
+							StateT[tn].cumDD++; //increment detected deaths overall... 
+							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
+							// also add this as a detected case retrospectively to count towards detection
+							StateT[tn].cumDC++;
+							if (P.DoAdUnits) StateT[tn].cumDC_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
+
+							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							{
+								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
+								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
+								StateT[tn].cumSDB++;
+								if (P.DoAdUnits) StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+								si->safeBurial = 1;
+							}
+						}
 						//if undetected, they don't have a safe burial
 						else
 						{
