@@ -649,55 +649,55 @@ void RecordEvent(double t, int ai, int run, int type, int tn) //added int as arg
 		InfEventLog[*nEvents].infectee_cell_n = Cells[Hosts[ai].pcell].n;
 		InfEventLog[*nEvents].thread = tn;
 		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].keyworker;
-		if (type == 0) //infection event - record time of onset of infector and infector
-		{
-			InfEventLog[*nEvents].infector_ind = bi;
-			if (bi < 0)
-			{
-				InfEventLog[*nEvents].t_infector = -1;
-				InfEventLog[*nEvents].infector_cell = -1;
-				InfEventLog[*nEvents].infector_adunit = -1;
-				InfEventLog[*nEvents].infector_x = -1;
-				InfEventLog[*nEvents].infector_y = -1;
-				InfEventLog[*nEvents].infector_hcw = -1;
-				InfEventLog[*nEvents].same_hh = -1;
-				for (i = 0; i < P.PlaceTypeNum; i++)
-				{
-					InfEventLog[*nEvents].same_place[i] = -1;
-				}
-			}
-			else
-			{
-				InfEventLog[*nEvents].t_infector = (int)(Hosts[bi].infection_time / P.TimeStepsPerDay);
-				InfEventLog[*nEvents].infector_cell = Hosts[bi].pcell;
-				InfEventLog[*nEvents].infector_cell_n = Cells[Hosts[bi].pcell].n;
-				InfEventLog[*nEvents].infector_adunit = AdUnits[Mcells[Hosts[bi].mcell].adunit].id;
-				InfEventLog[*nEvents].infector_x = Households[Hosts[bi].hh].loc_x + P.SpatialBoundingBox[0];
-				InfEventLog[*nEvents].infector_y = Households[Hosts[bi].hh].loc_y + P.SpatialBoundingBox[1];
-				InfEventLog[*nEvents].infector_hcw = Hosts[bi].keyworker;
-				InfEventLog[*nEvents].same_hh = (Hosts[ai].hh == Hosts[bi].hh);
-				for (i = 0; i < P.PlaceTypeNum; i++)
-				{
-					if (Hosts[ai].PlaceLinks[i] == Hosts[bi].PlaceLinks[i])
-					{
-						InfEventLog[*nEvents].same_place[i] = 1;
-					}
-					else
-					{
-						InfEventLog[*nEvents].same_place[i] = 0;
-					}
+		//if (type == 0) //infection event - record time of onset of infector and infector
+		//{
+		//	InfEventLog[*nEvents].infector_ind = bi;
+		//	if (bi < 0)
+		//	{
+		//		InfEventLog[*nEvents].t_infector = -1;
+		//		InfEventLog[*nEvents].infector_cell = -1;
+		//		InfEventLog[*nEvents].infector_adunit = -1;
+		//		InfEventLog[*nEvents].infector_x = -1;
+		//		InfEventLog[*nEvents].infector_y = -1;
+		//		InfEventLog[*nEvents].infector_hcw = -1;
+		//		InfEventLog[*nEvents].same_hh = -1;
+		//		for (i = 0; i < P.PlaceTypeNum; i++)
+		//		{
+		//			InfEventLog[*nEvents].same_place[i] = -1;
+		//		}
+		//	}
+		//	else
+		//	{
+		//		InfEventLog[*nEvents].t_infector = (int)(Hosts[bi].infection_time / P.TimeStepsPerDay);
+		//		InfEventLog[*nEvents].infector_cell = Hosts[bi].pcell;
+		//		InfEventLog[*nEvents].infector_cell_n = Cells[Hosts[bi].pcell].n;
+		//		InfEventLog[*nEvents].infector_adunit = AdUnits[Mcells[Hosts[bi].mcell].adunit].id;
+		//		InfEventLog[*nEvents].infector_x = Households[Hosts[bi].hh].loc_x + P.SpatialBoundingBox[0];
+		//		InfEventLog[*nEvents].infector_y = Households[Hosts[bi].hh].loc_y + P.SpatialBoundingBox[1];
+		//		InfEventLog[*nEvents].infector_hcw = Hosts[bi].keyworker;
+		//		InfEventLog[*nEvents].same_hh = (Hosts[ai].hh == Hosts[bi].hh);
+		//		for (i = 0; i < P.PlaceTypeNum; i++)
+		//		{
+		//			if (Hosts[ai].PlaceLinks[i] == Hosts[bi].PlaceLinks[i])
+		//			{
+		//				InfEventLog[*nEvents].same_place[i] = 1;
+		//			}
+		//			else
+		//			{
+		//				InfEventLog[*nEvents].same_place[i] = 0;
+		//			}
 
-				}
-			}
-		}
-		else if (type == 1) //onset event - record infectee's onset time
-		{
-			InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].infection_time / P.TimeStepsPerDay);
-		}
-		else if ((type == 2) || (type == 3)) //recovery or death event - record infectee's onset time
-		{
-			InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].latent_time / P.TimeStepsPerDay);
-		}
+		//		}
+		//	}
+		//}
+		//else if (type == 1) //onset event - record infectee's onset time
+		//{
+		//	InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].infection_time / P.TimeStepsPerDay);
+		//}
+		//else if ((type == 2) || (type == 3)) //recovery or death event - record infectee's onset time
+		//{
+		//	InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].latent_time / P.TimeStepsPerDay);
+		//}
 
 		//increment the index of the infection event
 		(*nEvents)++;

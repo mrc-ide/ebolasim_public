@@ -106,14 +106,14 @@ void DoInfect(int ai, double t, int tn, int run) //added int as argument to DoIn
 				}
 			}
 		}
-		//added this to record event if flag is set to 1 : ggilani - 10/10/2014
-		if (P.DoRecordInfEvents)
-		{
-			if (*nEvents < P.MaxInfEvents)
-			{
-				RecordEvent(t, ai, run, 0, tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-			}
-		}
+		////added this to record event if flag is set to 1 : ggilani - 10/10/2014
+		//if (P.DoRecordInfEvents)
+		//{
+		//	if (*nEvents < P.MaxInfEvents)
+		//	{
+		//		RecordEvent(t, ai, run, 0, tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		//	}
+		//}
 		if ((t > 0) && (P.DoOneGen))
 		{
 			DoIncub(ai, ts, tn, run);
@@ -1256,13 +1256,13 @@ void DoRecover(int ai, int run, int tn)
 		}
 	}
 	//added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
-	//if(P.DoRecordInfEvents)
-	//{
-	//	if(*nEvents<P.MaxInfEvents)
-	//	{
-	//		RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,3); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-	//	}
-	//}
+	if(P.DoRecordInfEvents)
+	{
+		if(*nEvents<P.MaxInfEvents)
+		{
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,3); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		}
+	}
 }
 
 void DoDeath(int ai, int tn, int run)
@@ -1315,14 +1315,14 @@ void DoDeath(int ai, int tn, int run)
 			}
 		}
 	}
-	////added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
-	//if(P.DoRecordInfEvents)
-	//{
-	//	if(*nEvents<P.MaxInfEvents)
-	//	{
-	//		RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,2); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-	//	}
-	//}
+	//added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
+	if(P.DoRecordInfEvents)
+	{
+		if(*nEvents<P.MaxInfEvents)
+		{
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,2); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		}
+	}
 }
 
 void DoTreatCase(int ai, unsigned short int ts, int tn)
