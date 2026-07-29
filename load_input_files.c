@@ -588,6 +588,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Delay to increase burial capacity", "%lf", (void*)&(P.DelayToSDB), 1, 1, 0)) P.DelayToSDB = 0;
 		if (!GetInputParameter2(dat, dat2, "Capacity when burial capacity increases", "%lf", (void*)&(P.CapacityToMoreSDB), 1, 1, 0)) P.CapacityToMoreSDB = 1;
 		if (!GetInputParameter2(dat, dat2, "Increase in burial capacity", "%i", (void*)&(P.incCapacitySDB), 1, 1, 0)) P.incCapacitySDB = 1;
+		if (!GetInputParameter2(dat, dat2, "Maximum burial capacity per day", "%i", (void*)&(P.MaxSDBPerDay), 1, 1, 0)) P.MaxSDBPerDay = 10000;
 
 		//if(!GetInputParameter2(dat,dat2,"Funeral controls by admin unit","%i",(void *) &(P.DoFuneralByAdUnit),1,1,0)) P.DoFuneralByAdUnit=0;
 		//if((P.DoFuneralByAdUnit)&&(P.DoAdUnits))
@@ -722,6 +723,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 					if (!GetInputParameter2(dat, dat2, "Hospital capacity reached before increasing ETU bed numbers", "%lf", (void*)&(P.CapacityToMoreETUBeds), 1, 1, 0)) P.CapacityToMoreETUBeds = 0;
 					if (!GetInputParameter2(dat, dat2, "Subsequent time to install ETU beds", "%lf", (void*)&(P.SubDelayToETUBeds), 1, 1, 0)) P.SubDelayToETUBeds = 0;
 					if (!GetInputParameter2(dat, dat2, "Subsequent number of additional ETU beds", "%i", (void*)&(P.SubNumETUBeds), 1, 1, 0)) P.SubNumETUBeds = 0;
+					if (!GetInputParameter2(dat, dat2, "Maximum number of ETU beds", "%i", (void*)&(P.MaxNumETUBeds), 1, 1, 0)) P.MaxNumETUBeds = 100000;
 				}
 				if (!GetInputParameter2(dat, dat2, "Output ETU capacity", "%i", (void*)&(P.DoOutputETUCapacity), 1, 1, 0)) P.DoOutputETUCapacity = 0;
 			}
@@ -1265,6 +1267,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 			if (!GetInputParameter2(dat, dat2, "Contact tracing increased capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacityInc), 1, 1, 0)) P.AdunitCTCapacityInc = 0;
 			if (!GetInputParameter2(dat, dat2, "Contact tracing capacity reached before increasing teams", "%lf", (void*)&(P.CapacityToMoreCT), 1, 1, 0)) P.CapacityToMoreCT = 1;
 			if (!GetInputParameter2(dat, dat2, "Subsequent time to increase teams", "%lf", (void*)&(P.DelayToCT), 1, 1, 0)) P.DelayToCT = 0;
+			if (!GetInputParameter2(dat, dat2, "Maximum contact tracing capacity", "%lf", (void*)&(P.MaxCTCapacity), 1, 1, 0)) P.MaxCTCapacity = 100000;
 
 			for (i = 0; i < P.NumAdunits; i++)
 			{
