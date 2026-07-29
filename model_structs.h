@@ -201,7 +201,7 @@ typedef struct ADMINUNIT {
   int caseDetPreFuneralControl;
   double delayDetFuneralControl,initPropSafeFunerals,secPropSafeFunerals,initRelInfSafeFuneral,secRelInfSafeFuneral; //admin unit level funeral controls: ggilani 10/11/14
   double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB, lastCaseDay; //admin unit level funeral controls: ggilani 10/11/14
-  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDBf; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
+  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDB; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
   int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
   double *origin_dest; //storage for origin-destination matrix between admin units: ggilani 28/01/15, 
@@ -348,7 +348,7 @@ typedef struct PARAM {
   int DoMortality;
   double RecoveryAmp,RecoveryShape,RecoveryScale,RecoveryProb[RECOVERY_RES];
   //Parameters for funeral transmission
-  int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB;
+  int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB, MaxSDBPerDay;
   double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, CapacityToMoreSDB,DelayToSDB;
   //Parameters for hospitalisation/treatment centres: ggilani - 28/10/2014
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
@@ -358,12 +358,12 @@ typedef struct PARAM {
   int CurrIndMeanTimeToHosp,CurrIndETUBeds,CurrIndMeanTimeToHospCT;
   int NETUBeds,NMeanTimeToHosp, NMeanTimeToHospCT,ETUBeds[MAX_CHANGE_POINTS];
   double ChangePointMeanTimeToHosp[MAX_CHANGE_POINTS], ChangePointMeanTimeToHospCT[MAX_CHANGE_POINTS],ChangePointETUBeds[MAX_CHANGE_POINTS],MeanTimeToHosp[MAX_CHANGE_POINTS], MeanTimeToHospCT[MAX_CHANGE_POINTS];
-  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017
+  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
   double InitDelayToETUBeds,SubDelayToETUBeds, StartTimeReactiveETUBeds,CapacityToMoreETUBeds; //added these variable for reactive provisioning of beds: ggilani 30/03/2017
   double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
   //Pseudo contact tracing parameters: ggilani 13/11/14
   int DoContactTracing,contactTraceCapacity,contactTraceCaseThreshold,contactTraceCaseThresholdInc,DoNewContactTracing; //added DoNewContactTracing - 06/06/17
-  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT;
+  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT,MaxCTCapacity;
   int CT_scale1, CT_scale2; //scaling factors for contact tracing capacity
   int CT_thresh1, CT_thresh2; //scaling for different contact tracing thresholds
   int CTinc_scale1, CTinc_scale2; //scaling for increased capacity
