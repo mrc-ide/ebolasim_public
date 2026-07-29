@@ -723,7 +723,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 					if (!GetInputParameter2(dat, dat2, "Hospital capacity reached before increasing ETU bed numbers", "%lf", (void*)&(P.CapacityToMoreETUBeds), 1, 1, 0)) P.CapacityToMoreETUBeds = 0;
 					if (!GetInputParameter2(dat, dat2, "Subsequent time to install ETU beds", "%lf", (void*)&(P.SubDelayToETUBeds), 1, 1, 0)) P.SubDelayToETUBeds = 0;
 					if (!GetInputParameter2(dat, dat2, "Subsequent number of additional ETU beds", "%i", (void*)&(P.SubNumETUBeds), 1, 1, 0)) P.SubNumETUBeds = 0;
-					if (!GetInputParameter2(dat, dat2, "Maximum number of ETU beds", "%i", (void*)&(P.SubNumETUBeds), 1, 1, 0)) P.MaxNumETUBeds = 100000;
+					if (!GetInputParameter2(dat, dat2, "Maximum number of ETU beds", "%i", (void*)&(P.MaxNumETUBeds), 1, 1, 0)) P.MaxNumETUBeds = 100000;
 				}
 				if (!GetInputParameter2(dat, dat2, "Output ETU capacity", "%i", (void*)&(P.DoOutputETUCapacity), 1, 1, 0)) P.DoOutputETUCapacity = 0;
 			}
