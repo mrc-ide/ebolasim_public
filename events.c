@@ -106,14 +106,14 @@ void DoInfect(int ai, double t, int tn, int run) //added int as argument to DoIn
 				}
 			}
 		}
-		//added this to record event if flag is set to 1 : ggilani - 10/10/2014
-		if (P.DoRecordInfEvents)
-		{
-			if (*nEvents < P.MaxInfEvents)
-			{
-				RecordEvent(t, ai, run, 0, tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-			}
-		}
+		////added this to record event if flag is set to 1 : ggilani - 10/10/2014
+		//if (P.DoRecordInfEvents)
+		//{
+		//	if (*nEvents < P.MaxInfEvents)
+		//	{
+		//		RecordEvent(t, ai, run, 0, tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		//	}
+		//}
 		if ((t > 0) && (P.DoOneGen))
 		{
 			DoIncub(ai, ts, tn, run);
@@ -1256,13 +1256,13 @@ void DoRecover(int ai, int run, int tn)
 		}
 	}
 	//added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
-	//if(P.DoRecordInfEvents)
-	//{
-	//	if(*nEvents<P.MaxInfEvents)
-	//	{
-	//		RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,3); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-	//	}
-	//}
+	if(P.DoRecordInfEvents)
+	{
+		if(*nEvents<P.MaxInfEvents)
+		{
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		}
+	}
 }
 
 void DoDeath(int ai, int tn, int run)
@@ -1273,17 +1273,6 @@ void DoDeath(int ai, int tn, int run)
 	a = Hosts + ai;
 	if ((abs(a->inf) == 2) || (abs(a->inf) == 6)) //added infection status of 6 as well, as this also needs to deal with 'dead' infectious individuals: ggilani 25/10/14
 	{
-		a->inf = 5 * a->inf / abs(a->inf);
-		Cells[a->pcell].D++;
-		Cells[a->pcell].I--;
-		if (Cells[a->pcell].I > 0)
-		{
-			Cells[a->pcell].susceptible[a->listpos] = Cells[a->pcell].infected[Cells[a->pcell].I];
-			Hosts[Cells[a->pcell].susceptible[a->listpos]].listpos = a->listpos;
-		}
-		a->listpos = Cells[a->pcell].S + Cells[a->pcell].L + Cells[a->pcell].I;
-		Cells[a->pcell].susceptible[a->listpos] = ai;
-		/*		a->listpos=-1; */
 		if (abs(a->inf) != 6) //if if is someone who is infectious after death, we'll do this bit of accounting in IncubRecoverySweep to make sure their death is recorded on the right day, even though they will stay in the infectious list
 		{
 			StateT[tn].cumD++;
@@ -1295,6 +1284,24 @@ void DoDeath(int ai, int tn, int run)
 			}
 			StateT[tn].cumD_keyworker[a->keyworker]++;
 		}
+		else
+		{
+			// do this to get their death day back to the 'right' day for the linelist
+			a->recovery_time -= (unsigned short int)(P.FuneralTransmissionDuration * P.TimeStepsPerDay);
+		}
+		
+		a->inf = 5 * a->inf / abs(a->inf);
+		Cells[a->pcell].D++;
+		Cells[a->pcell].I--;
+		if (Cells[a->pcell].I > 0)
+		{
+			Cells[a->pcell].susceptible[a->listpos] = Cells[a->pcell].infected[Cells[a->pcell].I];
+			Hosts[Cells[a->pcell].susceptible[a->listpos]].listpos = a->listpos;
+		}
+		a->listpos = Cells[a->pcell].S + Cells[a->pcell].L + Cells[a->pcell].I;
+		Cells[a->pcell].susceptible[a->listpos] = ai;
+		/*		a->listpos=-1; */
+		
 		if (P.OutputBitmap)
 		{
 			if ((P.OutputBitmapDetected == 0) || ((P.OutputBitmapDetected == 1) && (Hosts[ai].detected == 1)))
@@ -1315,14 +1322,14 @@ void DoDeath(int ai, int tn, int run)
 			}
 		}
 	}
-	////added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
-	//if(P.DoRecordInfEvents)
-	//{
-	//	if(*nEvents<P.MaxInfEvents)
-	//	{
-	//		RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,2); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-	//	}
-	//}
+	//added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
+	if(P.DoRecordInfEvents)
+	{
+		if(*nEvents<P.MaxInfEvents)
+		{
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		}
+	}
 }
 
 void DoTreatCase(int ai, unsigned short int ts, int tn)

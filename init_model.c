@@ -154,7 +154,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 					Hosts[k].to_die = 0;
 					Hosts[k].Travelling = 0;
 					Hosts[k].detected = 0; //set detected to zero initially: ggilani - 19/02/15
-					Hosts[k].dayDetected = USHRT_MAX - 1; //set day on which each case is detected to zero initially: ggilani - 23/06/15
+					Hosts[k].dayDetected = 0; //set day on which each ase is detected to zero initially: ggilani - 23/06/15
 					Hosts[k].inf = 0;
 					Hosts[k].listpos = j;
 					Hosts[k].treat_stop_time = Hosts[k].num_treats = Hosts[k].contactTraced_end_time = 0;
@@ -169,6 +169,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 					Hosts[k].infector = -1;
 					Hosts[k].infect_type = 0;
 					Hosts[k].infectiousMult = 1; //reset to 1 - this is changed when funeral transmission temporarily increases infectiousness
+					Hosts[k].safeBurial = 0; 
 
 				}
 				// Next loop needs to count down for DoImmune host list reordering to work
