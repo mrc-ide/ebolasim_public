@@ -322,7 +322,7 @@ void RecordSample(double t, int n)
 	{
 		if (P.OutbreakDetected == 0)
 		{
-			P.OutbreakDetected = 1; //mart outbreak as detected
+			P.OutbreakDetected = 1; //mark outbreak as detected
 			P.PropHospSeek *= P.RelChangeHospSeekPostOutbreak;
 		}
 		if (P.DoGlobalTriggers)
