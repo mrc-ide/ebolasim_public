@@ -83,7 +83,8 @@ void InitModel(int run) //passing run number so we can save run number in the in
 			AdUnits[i].contactTraceStartDay = 1e6;
 			AdUnits[i].contactTraceCapacity = P.AdunitCTCapacity;
 			AdUnits[i].nextTimeToSDB = 0;
-			AdUnits[i].maxSDB = P.AdunitSDBCapacity;
+			AdUnits[i].maxSDB = 0;
+			AdUnits[i].SDBActive = 0;
 		}
 	for (j = 0; j < MAX_NUM_THREADS; j++)
 	{
