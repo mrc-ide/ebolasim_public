@@ -425,7 +425,7 @@ void UpdateContactTracing(double t)
  */
 void UpdateSDB(double t)
 {
-	int i, j, totalSDB_allAdUnits;
+	int i, j, totalSDB_allAdUnits, nCases;
 	double capacityFlag;
 	//pop=P.N;
 
@@ -435,29 +435,46 @@ void UpdateSDB(double t)
 	{
 		totalSDB_allAdUnits += AdUnits[i].maxSDB;
 	}
+
+
 	// added this to cap SDBs per day across all outbreaks
 	if ((t >= P.FuneralControlTimeStart) && (totalSDB_allAdUnits < P.MaxSDBPerDay))
 	{
 		//code to see if contact tracing capacity should be increased
 		for (i = 0; i < P.NumAdunits; i++)
 		{
-			if (AdUnits[i].nextTimeToSDB < t)
+			// go through each admin unit in term to see if we've passed the first threshold - based on active cases
+			nCases = State.cumDC_adunit[i]; //calculated current number of active cases
+			if (nCases >= P.InitCasesToSDB)
 			{
-				capacityFlag = (double)(State.cumSDB_adunit[i]) / (double)(AdUnits[i].maxSDB);
-				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding burials again)
-				if (capacityFlag > P.CapacityToMoreSDB) //we also can't add more burials until we've added the last set
+				if (AdUnits[i].SDBActive == 0)
 				{
-					//set time for next burial capacity to be added
-					AdUnits[i].nextTimeToSDB = t + P.DelayToSDB;
+					//this means we have only reached the first threshold - set time to increase number of beds and number of beds
+					AdUnits[i].nextTimeToSDB = t + P.FuneralControlTimeStartBase;
+					AdUnits[i].SDBActive = 1;
 				}
-			}
-		}
-		// check to see if more burial capacity should be allocated
-		for (i = 0; i < P.NumAdunits; i++)
-		{
-			if ((int)t == (int)AdUnits[i].nextTimeToSDB)
-			{
-				AdUnits[i].maxSDB += P.incCapacitySDB;
+				else if ((AdUnits[i].SDBActive) && (AdUnits[i].nextTimeToSDB < t))
+				{
+					capacityFlag = (double)(AdUnits[i].currentSDB) / (double)(AdUnits[i].maxSDB);
+					//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding burials again)
+					if (capacityFlag > P.CapacityToMoreSDB) //we also can't add more burials until we've added the last set
+					{
+						//set time for next burial capacity to be added
+						AdUnits[i].nextTimeToSDB = t + P.DelayToSDB;
+					}
+				}
+				//check to see if new beds should be added
+				if (((int)t == (int)AdUnits[i].nextTimeToSDB) && (AdUnits[i].SDBActive == 1))
+				{
+					if (AdUnits[i].maxSDB == 0)
+					{
+						AdUnits[i].maxSDB = P.AdunitSDBCapacity;
+					}
+					else
+					{
+						AdUnits[i].maxSDB += P.incCapacitySDB;
+					}
+				}
 			}
 		}
 	}

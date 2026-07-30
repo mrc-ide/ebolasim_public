@@ -1191,6 +1191,23 @@ void IncubRecoverySweep(double t, int run)
 			}
 		}
 	}
+	//if doing funeral transmission, first find the number of safe burials per day per adunit so far
+	if (P.DoFuneralTransmission)
+	{
+		//set current value per admin unit to zero
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			AdUnits[i].currentSDB = 0;
+		}
+		//now sum over threads to find no of safe burials that have been done so far in this recording interval
+		for (i = 0; i < P.NumAdunits; i++)
+		{
+			for (j = 0; j < P.NumThreads; j++)
+			{
+				AdUnits[i].currentSDB += StateT[j].cumSDB_adunit[i];
+			}
+		}
+	}
 
 #pragma omp parallel for private(j,k,l,b,c,tn,tc,ci,si,day) schedule(static,1)
 	for (tn = 0; tn < P.NumThreads; tn++)
@@ -1251,12 +1268,12 @@ void IncubRecoverySweep(double t, int run)
 						// set recovery time to current recovery time plus length of funeral transmission duration
 						si->recovery_time += (unsigned short int)(P.FuneralTransmissionDuration * P.TimeStepsPerDay);
 
-						if ((P.DoHospitalisation) && ((si->hospitalised) || (si->etu))) //this is regardless of whether we are considering hospitalisation by admin unit or place
+						if ((P.DoHospitalisation) && (si->etu)) //this is regardless of whether we are considering hospitalisation by admin unit or place
 						{
 							//if in hospital, they are definitely detected when they die
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
-							if ((t >= P.FuneralControlTimeStart) && (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (AdUnits[i].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if someone has died in hospital, we assumed that they will have a safe burial
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
@@ -1272,7 +1289,7 @@ void IncubRecoverySweep(double t, int run)
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[i].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);
@@ -1293,7 +1310,7 @@ void IncubRecoverySweep(double t, int run)
 							if (P.DoAdUnits) StateT[tn].cumDC_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
 
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (State.cumSDB_adunit[Mcells[si->mcell].adunit] < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[i].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								si->infectiousMult = (P.RelativeInfectiousnessFuneral * P.RelInfSafeFuneral);

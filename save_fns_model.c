@@ -379,7 +379,7 @@ void RecordSample(double t, int n)
 			{
 				if (P.FuneralControlTimeStart >= 1e10)
 				{
-					P.FuneralControlTimeStart = t + P.FuneralControlTimeStartBase;
+					P.FuneralControlTimeStart = t;
 				}
 			}
 
@@ -424,7 +424,7 @@ void RecordSample(double t, int n)
 			if (P.PlaceCloseTimeStart >= 1e10) P.PlaceCloseTimeStart = t + P.PlaceCloseTimeStartBase;
 			if (P.MoveRestrTimeStart >= 1e10) P.MoveRestrTimeStart = t + P.MoveRestrTimeStartBase;
 			if (P.KeyWorkerProphTimeStart >= 1e10) P.KeyWorkerProphTimeStart = t + P.KeyWorkerProphTimeStartBase;
-			if (P.FuneralControlTimeStart >= 1e10) P.FuneralControlTimeStart = t + P.FuneralControlTimeStartBase;
+			if (P.FuneralControlTimeStart >= 1e10) P.FuneralControlTimeStart = t;
 			if (P.ContactTracingTimeStart >= 1e10) P.ContactTracingTimeStart = t + P.ContactTracingTimeStartBase;
 			//if (P.GeoVaccTimeStart >= 1e10) P.GeoVaccTimeStart = t + P.GeoVaccTimeStartBase;
 			//if (P.RingVaccTimeStart >= 1e10) P.RingVaccTimeStart = t + P.RingVaccTimeStartBase;
@@ -1357,12 +1357,12 @@ void SaveResults(void)
 		if (P.DoFuneralTransmission)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "SDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
 		}
 
 		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
 		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
+			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "ETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
 			if (P.DoOutputETUCapacity)
@@ -1376,7 +1376,7 @@ void SaveResults(void)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCC_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of cases who are contacts
 
 			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CTC_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
@@ -1411,14 +1411,14 @@ void SaveResults(void)
 			{
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incSDB_adunit[j]); //added safe burials: ggilani 05/10/23
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+				//for (j = 0; j < P.NumAdunits; j++)
+				//	fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
 			}
 
 			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
 			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
+				//for (j = 0; j < P.NumAdunits; j++)
+				//	fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
 				for (j = 0; j < P.NumAdunits; j++)
@@ -1439,8 +1439,8 @@ void SaveResults(void)
 					fprintf(dat, "%lg,", TimeSeries[i].incCT_adunit[j]); //"\t%lg" //added contact tracing
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].CT_adunit[j]); //"\t%lg" //added contact tracing
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
+				//for (j = 0; j < P.NumAdunits; j++)
+				//	fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incCC_adunit[j]); //"\t%lg" //added cases who are contacts
 				//for (j = 0; j < P.NumAdunits; j++)
@@ -1460,6 +1460,55 @@ void SaveResults(void)
 		}
 		fclose(dat);
 	}
+
+	//adding a file to track capacities only
+	if ((P.DoAdUnits) && (P.DoInterventionCapacityOutput))
+	{
+		sprintf(outname, "%s.int_capacity.csv", OutFile); //modifying to csv file
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		fprintf(dat, "t,");
+
+		//headers
+		if (P.DoFuneralTransmission)
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+		}
+		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
+		}
+		if (P.DoContactTracing)
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+
+		}
+		fprintf(dat, "\n");
+		//outputs
+		for (i = 0; i < P.NumSamples; i++)
+		{
+			fprintf(dat, "%lg,", TimeSeries[i].t);
+			if (P.DoFuneralTransmission)
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+			}
+			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
+			}
+			if (P.DoContactTracing)
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+						fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
+
+			}
+			fprintf(dat, "\n");
+		}
+
+		fclose(dat);
+	}
+
 	if (P.EvolResistNumTypes > 1)
 	{
 		sprintf(outname, "%s.resist.xls", OutFile);

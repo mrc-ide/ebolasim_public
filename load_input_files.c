@@ -584,6 +584,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Safe burial start time", "%lf", (void*)&(P.FuneralControlTimeStartBase), 1, 1, 0)) P.FuneralControlTimeStartBase = USHRT_MAX / P.TimeStepsPerDay;
 		if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a safe burial", "%lf", (void*)&(P.RelInfSafeFuneral), 1, 1, 0)) P.RelInfSafeFuneral = 1;
 		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely", "%lf", (void*)&(P.ProportionSafeFuneral), 1, 1, 0)) P.ProportionSafeFuneral = 1;
+		if (!GetInputParameter2(dat, dat2, "Initial number of detected cases to trigger SDB in an admin unit", "%i", (void*)&(P.InitCasesToSDB), 1, 1, 0))  P.InitCasesToSDB = 1;
 		if (!GetInputParameter2(dat, dat2, "Daily burials per admin unit", "%i", (void*)&(P.AdunitSDBCapacity), 1, 1, 0)) P.AdunitSDBCapacity = 0;
 		if (!GetInputParameter2(dat, dat2, "Delay to increase burial capacity", "%lf", (void*)&(P.DelayToSDB), 1, 1, 0)) P.DelayToSDB = 0;
 		if (!GetInputParameter2(dat, dat2, "Capacity when burial capacity increases", "%lf", (void*)&(P.CapacityToMoreSDB), 1, 1, 0)) P.CapacityToMoreSDB = 1;
@@ -880,6 +881,12 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Use global triggers for interventions", "%i", (void*)&(P.DoGlobalTriggers), 1, 1, 0)) P.DoGlobalTriggers = 0;
 	if (!GetInputParameter2(dat, dat2, "Divisor for per-capita area threshold (default 1000)", "%i", (void*)&(P.IncThreshPop), 1, 1, 0)) P.IncThreshPop = 1000;
 	if (!GetInputParameter2(dat, dat2, "Divisor for per-capita global threshold (default 1000)", "%i", (void*)&(P.GlobalIncThreshPop), 1, 1, 0)) P.GlobalIncThreshPop = 1000;
+
+	//add this for outputs - intervention capacities for adunit
+	if (P.DoAdUnits)
+	{
+		if (!GetInputParameter2(dat, dat2, "Output intervention capacities", "%i", (void*)&(P.DoInterventionCapacityOutput), 1, 1, 0)) P.DoInterventionCapacityOutput = 0;
+	}
 
 
 	if (!GetInputParameter2(dat, dat2, "Number of sampling intervals over which cumulative incidence measured for global trigger", "%i", (void*)&(P.TriggersSamplingInterval), 1, 1, 0)) P.TriggersSamplingInterval = 10000000;

@@ -201,7 +201,7 @@ typedef struct ADMINUNIT {
   int caseDetPreFuneralControl;
   double delayDetFuneralControl,initPropSafeFunerals,secPropSafeFunerals,initRelInfSafeFuneral,secRelInfSafeFuneral; //admin unit level funeral controls: ggilani 10/11/14
   double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB, lastCaseDay; //admin unit level funeral controls: ggilani 10/11/14
-  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDB; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
+  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDB,currentSDB, SDBActive; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
   int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
   double *origin_dest; //storage for origin-destination matrix between admin units: ggilani 28/01/15, 
@@ -348,7 +348,7 @@ typedef struct PARAM {
   int DoMortality;
   double RecoveryAmp,RecoveryShape,RecoveryScale,RecoveryProb[RECOVERY_RES];
   //Parameters for funeral transmission
-  int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB, MaxSDBPerDay;
+  int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB, MaxSDBPerDay, InitCasesToSDB;
   double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, CapacityToMoreSDB,DelayToSDB;
   //Parameters for hospitalisation/treatment centres: ggilani - 28/10/2014
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
@@ -405,7 +405,7 @@ typedef struct PARAM {
   double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact; // detection delays for contact, etu, hospital, community
   double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
 
-  int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput;
+  int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput; //added intervention capacities separate to adunit file file
 
   int DoInterruptIntervention,NDaysInterrupt,DaysInterruptIntervention[MAX_CHANGE_POINTS],InterruptIntervention; //extra parameters to model interruptions of intervention: ggilani 08/01/20
 } param;
