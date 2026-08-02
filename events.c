@@ -95,6 +95,7 @@ void DoInfect(int ai, double t, int tn, int run) //added int as argument to DoIn
 			{
 				x = ((int)(Households[a->hh].loc_x * P.scalex)) - P.bminx;
 				y = ((int)(Households[a->hh].loc_y * P.scaley)) - P.bminy;
+				y = ((int)(Households[a->hh].loc_y * P.scaley)) - P.bminy;
 				if ((x >= 0) && (x < P.bwidth) && (y >= 0) && (y < P.bheight))
 				{
 					j = y * bmh->width + x;
@@ -106,14 +107,14 @@ void DoInfect(int ai, double t, int tn, int run) //added int as argument to DoIn
 				}
 			}
 		}
-		//added this to record event if flag is set to 1 : ggilani - 10/10/2014
-		if (P.DoRecordInfEvents)
-		{
-			if (*nEvents < P.MaxInfEvents)
-			{
-				RecordEvent(t, ai, run, 0, tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-			}
-		}
+		////added this to record event if flag is set to 1 : ggilani - 10/10/2014
+		//if (P.DoRecordInfEvents)
+		//{
+		//	if (*nEvents < P.MaxInfEvents)
+		//	{
+		//		RecordEvent(t, ai, run, 0, tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		//	}
+		//}
 		if ((t > 0) && (P.DoOneGen))
 		{
 			DoIncub(ai, ts, tn, run);
@@ -1055,40 +1056,40 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 		//added some case detection code here: ggilani - 03/02/15, updated and moved: 11/05/22
 		//Add some case detection code here which determines whether someone will be detected once they have become a case, and determines the time point at which they will be detected
 		//based on an input distribution function. 
-		if (P.OutbreakDetected)
+		// 28/07/26: Updating again to allow care seeking to come first, then look at detection
+		
+		if (P.DoHospitalisation)
 		{
-			if (Hosts[ai].rep_rate < P.ControlPropCasesId || (Hosts[ai].contactTraced) || (Hosts[ai].hcw) || (Hosts[ai].flw)) //changed this to proportion seeking care
+			if (ranf_mt(tn) < P.PropHospSeek)
 			{
+				//this just sets hospitalisation time. detection now happens after hospitalisation
+				if (Hosts[ai].contactTraced == 0)
+				{
+					a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
+				}
+				else
+				{
+					a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+				}
+				// if for some reason, hospitalisation time is after recovery/death, set hospitalisation time to be just before recovery/death
+				if (a->hospital_time >= a->recovery_time)
+				{
+					a->hospital_time = a->recovery_time - 1;
+				}
+			}
+			else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
+			{
+				//see if a community case who doesn't go to hospital is going to be detected, because they won't be detected in the hospital sweep
 				Hosts[ai].detected = 1;
 			}
 		}
-		else
+		else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
 		{
-			if (Hosts[ai].rep_rate < (P.ControlPropCasesId * P.PropHospSeek))
-			{
-				Hosts[ai].detected = 1;
-			}
+			//see if a community case who doesn't go to hospital is going to be detected, because they won't be detected in the hospital sweep
+			Hosts[ai].detected = 1;
 		}
 
-		//if (P.DoCaseDetection)
-		//{
-		//	if ((P.DoCaseDetectionAdunit) && (P.DoAdUnits))
-		//	{
-		//		if ((Hosts[ai].rep_rate < AdUnits[Mcells[a->mcell].adunit].caseDetectRate) || (Hosts[ai].contactTraced > 0)) //add something to ensure that hosts who are being currently contact traced are always detected, changed ranf_mt(tn) to Hosts[ai].rep_rate 13/06/19
-		//		{
-		//			Hosts[ai].detected = 1;
-		//		}
-		//	}
-		//	else
-		//	{
-		//		if (Hosts[ai].rep_rate < P.CaseDetectionRate || (Hosts[ai].contactTraced > 0))
-		//		{
-		//			Hosts[ai].detected = 1;
-		//		}
-		//	}
-
-		//assign a time to detection, similar to code in DoInfect, when latent period is determined, but time to detection must be before time to recovery/death and then they
-		//leave the system and there's nothing we can do to train them and update the number of detected cases.
+		// if host is being detected here (in the community), set detection time
 		if (Hosts[ai].detected == 1)
 		{
 			if (P.DoDetectDelay)
@@ -1109,39 +1110,112 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 					}
 					else
 					{
-						Hosts[ai].detect_time = Hosts[ai].recovery_time; //if the delay to 
+						Hosts[ai].detect_time = Hosts[ai].recovery_time - 1; //if the delay to 
 					}
 				}
 				else
 				{
-
-					Hosts[ai].detect_time = Hosts[ai].latent_time + ((int)(P.LatentToSymptDelay / P.TimeStep)); //if contact traced, detected immediately, set detect_time to be the same time
+					Hosts[ai].detect_time = Hosts[ai].latent_time + (unsigned short int)((P.DetectTimeContact * P.TimeStepsPerDay) + (P.LatentToSymptDelay / P.TimeStep)); //if contact traced, detected immediately, set detect_time to be the same time
 				}
 			}
 			else
 			{
-				Hosts[ai].detect_time = Hosts[ai].latent_time + ((int)(P.LatentToSymptDelay / P.TimeStep)); //if detected immediately, set detect_time to be the same time
-			}
-
-			if ((P.DoHospitalisation))//&&(t>=P.ETUTimeStart))
-			{
-				if ((P.OutbreakDetected) && (ranf_mt(tn) < P.PropHospSeek))
-				{
-					if (Hosts[ai].contactTraced == 0)
-					{
-						a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
-					}
-					else
-					{
-						a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
-					}
-				}
-				else
-				{
-					a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
-				}
+				Hosts[ai].detect_time = Hosts[ai].latent_time + ((unsigned short int)(P.LatentToSymptDelay / P.TimeStep)); //if detected immediately, set detect_time to be the same time
 			}
 		}
+
+		//****COMMENTED THIS 28/07/26
+
+		//if (P.OutbreakDetected)
+		//{
+		//	if (Hosts[ai].rep_rate < P.ControlPropCasesId || (Hosts[ai].contactTraced) || (Hosts[ai].hcw) || (Hosts[ai].flw)) //changed this to proportion seeking care
+		//	{
+		//		Hosts[ai].detected = 1;
+		//	}
+		//}
+		//else
+		//{
+		//	if (Hosts[ai].rep_rate < (P.ControlPropCasesId * P.PropHospSeek))
+		//	{
+		//		Hosts[ai].detected = 1;
+		//	}
+		//}
+		//********
+		
+		//if (P.DoCaseDetection)
+		//{
+		//	if ((P.DoCaseDetectionAdunit) && (P.DoAdUnits))
+		//	{
+		//		if ((Hosts[ai].rep_rate < AdUnits[Mcells[a->mcell].adunit].caseDetectRate) || (Hosts[ai].contactTraced > 0)) //add something to ensure that hosts who are being currently contact traced are always detected, changed ranf_mt(tn) to Hosts[ai].rep_rate 13/06/19
+		//		{
+		//			Hosts[ai].detected = 1;
+		//		}
+		//	}
+		//	else
+		//	{
+		//		if (Hosts[ai].rep_rate < P.CaseDetectionRate || (Hosts[ai].contactTraced > 0))
+		//		{
+		//			Hosts[ai].detected = 1;
+		//		}
+		//	}
+
+		//**************************************COMMENTED OUT 28/07/26
+		//assign a time to detection, similar to code in DoInfect, when latent period is determined, but time to detection must be before time to recovery/death and then they
+		//leave the system and there's nothing we can do to train them and update the number of detected cases.
+		//if (Hosts[ai].detected == 1)
+		//{
+		//	if (P.DoDetectDelay)
+		//	{
+		//		//--> this bit is for distribution
+		//		//
+		//		//do
+		//		//{
+		//		//i = (int)floor((q = ranf_mt(tn) * CDF_RES));
+		//		//q -= ((double)i);
+		//		//Hosts[ai].detect_time = Hosts[ai].latent_time + (unsigned short int) floor(0.5 + (t - P.DetectTime * log(q * P.detect_icdf[i + 1] + (1.0 - q) * P.detect_icdf[i])) * P.TimeStepsPerDay);
+		//		//while(Hosts[ai].detect_time<=Hosts[ai].recoverytime);
+		//		if (Hosts[ai].contactTraced == 0)
+		//		{
+		//			if ((unsigned short int) (Hosts[ai].latent_time + (P.DetectTime * P.TimeStepsPerDay)) < Hosts[ai].recovery_time)
+		//			{
+		//				Hosts[ai].detect_time = (unsigned short int) (Hosts[ai].latent_time + (P.DetectTime * P.TimeStepsPerDay) + (P.LatentToSymptDelay / P.TimeStep)); //currently using a fixed delay
+		//			}
+		//			else
+		//			{
+		//				Hosts[ai].detect_time = Hosts[ai].recovery_time; //if the delay to 
+		//			}
+		//		}
+		//		else
+		//		{
+
+		//			Hosts[ai].detect_time = Hosts[ai].latent_time + ((int)(P.LatentToSymptDelay / P.TimeStep)); //if contact traced, detected immediately, set detect_time to be the same time
+		//		}
+		//	}
+		//	else
+		//	{
+		//		Hosts[ai].detect_time = Hosts[ai].latent_time + ((int)(P.LatentToSymptDelay / P.TimeStep)); //if detected immediately, set detect_time to be the same time
+		//	}
+
+		//	if ((P.DoHospitalisation))//&&(t>=P.ETUTimeStart))
+		//	{
+		//		if ((P.OutbreakDetected) && (ranf_mt(tn) < P.PropHospSeek))
+		//		{
+		//			if (Hosts[ai].contactTraced == 0)
+		//			{
+		//				a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
+		//			}
+		//			else
+		//			{
+		//				a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+		//			}
+		//		}
+		//		else
+		//		{
+		//			a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
+		//		}
+		//	}
+		//}
+		//*********************************
 		//}
 
 		if (P.DoAdUnits) StateT[tn].cumC_adunit[Mcells[a->mcell].adunit]++;
@@ -1256,13 +1330,13 @@ void DoRecover(int ai, int run, int tn)
 		}
 	}
 	//added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
-	//if(P.DoRecordInfEvents)
-	//{
-	//	if(*nEvents<P.MaxInfEvents)
-	//	{
-	//		RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,3); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-	//	}
-	//}
+	if(P.DoRecordInfEvents)
+	{
+		if(*nEvents<P.MaxInfEvents)
+		{
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		}
+	}
 }
 
 void DoDeath(int ai, int tn, int run)
@@ -1273,17 +1347,6 @@ void DoDeath(int ai, int tn, int run)
 	a = Hosts + ai;
 	if ((abs(a->inf) == 2) || (abs(a->inf) == 6)) //added infection status of 6 as well, as this also needs to deal with 'dead' infectious individuals: ggilani 25/10/14
 	{
-		a->inf = 5 * a->inf / abs(a->inf);
-		Cells[a->pcell].D++;
-		Cells[a->pcell].I--;
-		if (Cells[a->pcell].I > 0)
-		{
-			Cells[a->pcell].susceptible[a->listpos] = Cells[a->pcell].infected[Cells[a->pcell].I];
-			Hosts[Cells[a->pcell].susceptible[a->listpos]].listpos = a->listpos;
-		}
-		a->listpos = Cells[a->pcell].S + Cells[a->pcell].L + Cells[a->pcell].I;
-		Cells[a->pcell].susceptible[a->listpos] = ai;
-		/*		a->listpos=-1; */
 		if (abs(a->inf) != 6) //if if is someone who is infectious after death, we'll do this bit of accounting in IncubRecoverySweep to make sure their death is recorded on the right day, even though they will stay in the infectious list
 		{
 			StateT[tn].cumD++;
@@ -1295,6 +1358,24 @@ void DoDeath(int ai, int tn, int run)
 			}
 			StateT[tn].cumD_keyworker[a->keyworker]++;
 		}
+		else
+		{
+			// do this to get their death day back to the 'right' day for the linelist
+			a->recovery_time -= (unsigned short int)(P.FuneralTransmissionDuration * P.TimeStepsPerDay);
+		}
+		
+		a->inf = 5 * a->inf / abs(a->inf);
+		Cells[a->pcell].D++;
+		Cells[a->pcell].I--;
+		if (Cells[a->pcell].I > 0)
+		{
+			Cells[a->pcell].susceptible[a->listpos] = Cells[a->pcell].infected[Cells[a->pcell].I];
+			Hosts[Cells[a->pcell].susceptible[a->listpos]].listpos = a->listpos;
+		}
+		a->listpos = Cells[a->pcell].S + Cells[a->pcell].L + Cells[a->pcell].I;
+		Cells[a->pcell].susceptible[a->listpos] = ai;
+		/*		a->listpos=-1; */
+		
 		if (P.OutputBitmap)
 		{
 			if ((P.OutputBitmapDetected == 0) || ((P.OutputBitmapDetected == 1) && (Hosts[ai].detected == 1)))
@@ -1315,14 +1396,14 @@ void DoDeath(int ai, int tn, int run)
 			}
 		}
 	}
-	////added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
-	//if(P.DoRecordInfEvents)
-	//{
-	//	if(*nEvents<P.MaxInfEvents)
-	//	{
-	//		RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,2); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
-	//	}
-	//}
+	//added this to record event if flag is set to 1 and if host isn't initial seed, i.e. if Hosts[ai].infector>=0: ggilani - 10/10/2014
+	if(P.DoRecordInfEvents)
+	{
+		if(*nEvents<P.MaxInfEvents)
+		{
+			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+		}
+	}
 }
 
 void DoTreatCase(int ai, unsigned short int ts, int tn)

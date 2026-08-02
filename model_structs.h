@@ -88,8 +88,9 @@ typedef struct RESULTS {
 
 // Added Events struct to allow us to log and write out infection events: ggilani 10/10/14
 typedef struct EVENTS {
-	double infectee_x, infectee_y,t, t_infector,infector_x,infector_y;
-	int run, infectee_ind, infector_ind, type, infectee_adunit, infector_adunit, listpos,infectee_cell,infector_cell,infectee_cell_n,infector_cell_n,thread, same_hh, infectee_hcw, infector_hcw;
+	double infectee_x, infectee_y, t ,infector_x, infector_y;
+	int run, infectee_ind, infector_ind, infectee_adunit, infector_adunit, listpos,infectee_cell,infector_cell,infectee_cell_n,infector_cell_n,thread, same_hh, infectee_hcw, infector_hcw, age, to_die, contact, safe_burial, detected;
+	int infection_time, latent_time, recovery_time, hospital_time, etu_time, detection_time, t_infector;
 	int same_place[NUM_PLACE_TYPES];
 } events;
 
@@ -200,7 +201,7 @@ typedef struct ADMINUNIT {
   int caseDetPreFuneralControl;
   double delayDetFuneralControl,initPropSafeFunerals,secPropSafeFunerals,initRelInfSafeFuneral,secRelInfSafeFuneral; //admin unit level funeral controls: ggilani 10/11/14
   double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB, lastCaseDay; //admin unit level funeral controls: ggilani 10/11/14
-  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDBf; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
+  int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDB,currentSDB, SDBActive; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
   int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
   double *origin_dest; //storage for origin-destination matrix between admin units: ggilani 28/01/15, 
@@ -347,7 +348,7 @@ typedef struct PARAM {
   int DoMortality;
   double RecoveryAmp,RecoveryShape,RecoveryScale,RecoveryProb[RECOVERY_RES];
   //Parameters for funeral transmission
-  int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB;
+  int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB, MaxSDBPerDay, InitCasesToSDB;
   double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, CapacityToMoreSDB,DelayToSDB;
   //Parameters for hospitalisation/treatment centres: ggilani - 28/10/2014
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
@@ -357,12 +358,12 @@ typedef struct PARAM {
   int CurrIndMeanTimeToHosp,CurrIndETUBeds,CurrIndMeanTimeToHospCT;
   int NETUBeds,NMeanTimeToHosp, NMeanTimeToHospCT,ETUBeds[MAX_CHANGE_POINTS];
   double ChangePointMeanTimeToHosp[MAX_CHANGE_POINTS], ChangePointMeanTimeToHospCT[MAX_CHANGE_POINTS],ChangePointETUBeds[MAX_CHANGE_POINTS],MeanTimeToHosp[MAX_CHANGE_POINTS], MeanTimeToHospCT[MAX_CHANGE_POINTS];
-  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017
+  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
   double InitDelayToETUBeds,SubDelayToETUBeds, StartTimeReactiveETUBeds,CapacityToMoreETUBeds; //added these variable for reactive provisioning of beds: ggilani 30/03/2017
   double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
   //Pseudo contact tracing parameters: ggilani 13/11/14
   int DoContactTracing,contactTraceCapacity,contactTraceCaseThreshold,contactTraceCaseThresholdInc,DoNewContactTracing; //added DoNewContactTracing - 06/06/17
-  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT;
+  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT,MaxCTCapacity;
   int CT_scale1, CT_scale2; //scaling factors for contact tracing capacity
   int CT_thresh1, CT_thresh2; //scaling for different contact tracing thresholds
   int CTinc_scale1, CTinc_scale2; //scaling for increased capacity
@@ -377,6 +378,7 @@ typedef struct PARAM {
   int DoOriginDestinationMatrix, DoPlaceMatrix, DoOutputHosp; //added: ggilani 28/01/15
   //case detection parameters: 03/02/15 ggilani
   int DoCaseDetection,DoCaseDetectionAdunit,DoClusterCaseDetection;
+  double ProbDetectCommunity, ProbDetectHosp; //probability of detection in community and hospital
   double CaseDetectionRate;
   double RR1,RR2,RR3; //reporting rate scalings for Guinea, Liberia, Sierra Leone
   double RRAlt; //**separate reporting rate for individual admin units** - ggilani 18/06/2015
@@ -399,9 +401,11 @@ typedef struct PARAM {
   int DoUpdateCaseDetection,NUpdateCaseDetection, CurrIndUpdateCaseDetect,DoUpdateCaseDetectionByTime,DoUpdateCaseDetectionByCases; //separating update case detection by time or cases - ggilani 08/03/23
   int CaseThresholdUntilUpdateCaseDetection,UpdateCaseDetectionByCasesFlag;
   double CaseDetectionRateAfterThresholdReached;
-  double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],DetectTime,PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
+  double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
+  double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact; // detection delays for contact, etu, hospital, community
+  double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
 
-  int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput;
+  int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput; //added intervention capacities separate to adunit file file
 
   int DoInterruptIntervention,NDaysInterrupt,DaysInterruptIntervention[MAX_CHANGE_POINTS],InterruptIntervention; //extra parameters to model interruptions of intervention: ggilani 08/01/20
 } param;

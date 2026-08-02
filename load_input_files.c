@@ -567,6 +567,13 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 				if (!GetInputParameter2(dat, dat2, "Proportion of cases dying", "%lf", (void*)&(P.DiseaseMortality), 1, 1, 0)) P.DiseaseMortality = 0;
 			}
 		}
+		// added this to detect some undetected community cases at death
+		if (!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropUndetectedCommunityCasesDetectedAtDeath), 1, 1, 0)) P.PropUndetectedCommunityCasesDetectedAtDeath = 0;
+		if (P.PropUndetectedCommunityCasesDetectedAtDeath)
+		{
+			// then what is the delay to reporting?
+			if (!GetInputParameter2(dat, dat2, "Reporting delay for community case detected at death", "%lf", (void*)&(P.DelayCommunityCasesDetectedAtDeath), 1, 1, 0)) P.DelayCommunityCasesDetectedAtDeath = 0.0;
+		}
 	}
 	if (!GetInputParameter2(dat, dat2, "Include funeral transmission", "%i", (void*)&(P.DoFuneralTransmission), 1, 1, 0)) P.DoFuneralTransmission = 0;
 	if (P.DoFuneralTransmission) //Funeral transmission parameters: ggilani - 26/10/14
@@ -577,10 +584,12 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Safe burial start time", "%lf", (void*)&(P.FuneralControlTimeStartBase), 1, 1, 0)) P.FuneralControlTimeStartBase = USHRT_MAX / P.TimeStepsPerDay;
 		if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a safe burial", "%lf", (void*)&(P.RelInfSafeFuneral), 1, 1, 0)) P.RelInfSafeFuneral = 1;
 		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely", "%lf", (void*)&(P.ProportionSafeFuneral), 1, 1, 0)) P.ProportionSafeFuneral = 1;
+		if (!GetInputParameter2(dat, dat2, "Initial number of detected cases to trigger SDB in an admin unit", "%i", (void*)&(P.InitCasesToSDB), 1, 1, 0))  P.InitCasesToSDB = 1;
 		if (!GetInputParameter2(dat, dat2, "Daily burials per admin unit", "%i", (void*)&(P.AdunitSDBCapacity), 1, 1, 0)) P.AdunitSDBCapacity = 0;
 		if (!GetInputParameter2(dat, dat2, "Delay to increase burial capacity", "%lf", (void*)&(P.DelayToSDB), 1, 1, 0)) P.DelayToSDB = 0;
 		if (!GetInputParameter2(dat, dat2, "Capacity when burial capacity increases", "%lf", (void*)&(P.CapacityToMoreSDB), 1, 1, 0)) P.CapacityToMoreSDB = 1;
 		if (!GetInputParameter2(dat, dat2, "Increase in burial capacity", "%i", (void*)&(P.incCapacitySDB), 1, 1, 0)) P.incCapacitySDB = 1;
+		if (!GetInputParameter2(dat, dat2, "Maximum burial capacity per day", "%i", (void*)&(P.MaxSDBPerDay), 1, 1, 0)) P.MaxSDBPerDay = 10000;
 
 		//if(!GetInputParameter2(dat,dat2,"Funeral controls by admin unit","%i",(void *) &(P.DoFuneralByAdUnit),1,1,0)) P.DoFuneralByAdUnit=0;
 		//if((P.DoFuneralByAdUnit)&&(P.DoAdUnits))
@@ -715,6 +724,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 					if (!GetInputParameter2(dat, dat2, "Hospital capacity reached before increasing ETU bed numbers", "%lf", (void*)&(P.CapacityToMoreETUBeds), 1, 1, 0)) P.CapacityToMoreETUBeds = 0;
 					if (!GetInputParameter2(dat, dat2, "Subsequent time to install ETU beds", "%lf", (void*)&(P.SubDelayToETUBeds), 1, 1, 0)) P.SubDelayToETUBeds = 0;
 					if (!GetInputParameter2(dat, dat2, "Subsequent number of additional ETU beds", "%i", (void*)&(P.SubNumETUBeds), 1, 1, 0)) P.SubNumETUBeds = 0;
+					if (!GetInputParameter2(dat, dat2, "Maximum number of ETU beds", "%i", (void*)&(P.MaxNumETUBeds), 1, 1, 0)) P.MaxNumETUBeds = 100000;
 				}
 				if (!GetInputParameter2(dat, dat2, "Output ETU capacity", "%i", (void*)&(P.DoOutputETUCapacity), 1, 1, 0)) P.DoOutputETUCapacity = 0;
 			}
@@ -872,10 +882,19 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Divisor for per-capita area threshold (default 1000)", "%i", (void*)&(P.IncThreshPop), 1, 1, 0)) P.IncThreshPop = 1000;
 	if (!GetInputParameter2(dat, dat2, "Divisor for per-capita global threshold (default 1000)", "%i", (void*)&(P.GlobalIncThreshPop), 1, 1, 0)) P.GlobalIncThreshPop = 1000;
 
+	//add this for outputs - intervention capacities for adunit
+	if (P.DoAdUnits)
+	{
+		if (!GetInputParameter2(dat, dat2, "Output intervention capacities", "%i", (void*)&(P.DoInterventionCapacityOutput), 1, 1, 0)) P.DoInterventionCapacityOutput = 0;
+	}
+
 
 	if (!GetInputParameter2(dat, dat2, "Number of sampling intervals over which cumulative incidence measured for global trigger", "%i", (void*)&(P.TriggersSamplingInterval), 1, 1, 0)) P.TriggersSamplingInterval = 10000000;
+	
+	if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.ProbDetectCommunity), 1, 1, 0)) P.ProbDetectCommunity = 0;
+	if (!GetInputParameter2(dat, dat2, "Proportion of hospital cases detected", "%lf", (void*)&(P.ProbDetectHosp), 1, 1, 0)) P.ProbDetectHosp = 1;
 	//if (!GetInputParameter2(dat, dat2, "Number of undetected infections before first case detected", "%i", (void*)&(P.NumUndetectedInfPreOutbreakAlert), 1, 1, 0)) P.NumUndetectedInfPreOutbreakAlert = 0;
-	if (!GetInputParameter2(dat, dat2, "Proportion of cases detected after surveillance alert", "%lf", (void*)&(P.PostAlertControlPropCasesId), 1, 1, 0)) P.PostAlertControlPropCasesId = 1;
+	//if (!GetInputParameter2(dat, dat2, "Proportion of cases detected after surveillance alert", "%lf", (void*)&(P.PostAlertControlPropCasesId), 1, 1, 0)) P.PostAlertControlPropCasesId = 1;
 	//if(!GetInputParameter2(dat,dat2,"Proportion of cases detected before surveillance alert","%lf",(void *) &(P.PreAlertControlPropCasesId),1,1,0)) P.PreAlertControlPropCasesId=1;
 	//if(P.PreControlClusterIdCaseThreshold==0)
 	//	{
@@ -1144,7 +1163,10 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Do clustered case detection by household", "%i", (void*)&(P.DoClusterCaseDetection), 1, 1, 0)) P.DoClusterCaseDetection = 0;
 	if (P.DoDetectDelay)
 	{
-		if (!GetInputParameter2(dat, dat2, "Mean detection delay", "%lf", (void*)&(P.DetectTime), 1, 1, 0)) P.DetectTime = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay in community", "%lf", (void*)&(P.DetectTime), 1, 1, 0)) P.DetectTime = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay for community contact traced case", "%lf", (void*)&(P.DetectTimeContact), 1, 1, 0)) P.DetectTimeContact = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay in hospital", "%lf", (void*)&(P.DetectTimeHosp), 1, 1, 0)) P.DetectTimeHosp = 0;
+		if (!GetInputParameter2(dat, dat2, "Mean detection delay in ETU", "%lf", (void*)&(P.DetectTimeETU), 1, 1, 0)) P.DetectTimeETU = 0;
 	}
 	//Case detection - horrible and hard coded at the moment: ggilani 03/02/15
 	//if(!GetInputParameter2(dat,dat2,"Include case detection","%i",(void *) &(P.DoCaseDetection),1,1,0)) P.DoCaseDetection=0;
@@ -1252,6 +1274,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 			if (!GetInputParameter2(dat, dat2, "Contact tracing increased capacity per admin unit", "%i", (void*)&(P.AdunitCTCapacityInc), 1, 1, 0)) P.AdunitCTCapacityInc = 0;
 			if (!GetInputParameter2(dat, dat2, "Contact tracing capacity reached before increasing teams", "%lf", (void*)&(P.CapacityToMoreCT), 1, 1, 0)) P.CapacityToMoreCT = 1;
 			if (!GetInputParameter2(dat, dat2, "Subsequent time to increase teams", "%lf", (void*)&(P.DelayToCT), 1, 1, 0)) P.DelayToCT = 0;
+			if (!GetInputParameter2(dat, dat2, "Maximum contact tracing capacity", "%lf", (void*)&(P.MaxCTCapacity), 1, 1, 0)) P.MaxCTCapacity = 100000;
 
 			for (i = 0; i < P.NumAdunits; i++)
 			{

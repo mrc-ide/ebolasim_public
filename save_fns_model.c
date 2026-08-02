@@ -322,7 +322,7 @@ void RecordSample(double t, int n)
 	{
 		if (P.OutbreakDetected == 0)
 		{
-			P.OutbreakDetected = 1; //mart outbreak as detected
+			P.OutbreakDetected = 1; //mark outbreak as detected
 			P.PropHospSeek *= P.RelChangeHospSeekPostOutbreak;
 		}
 		if (P.DoGlobalTriggers)
@@ -379,7 +379,7 @@ void RecordSample(double t, int n)
 			{
 				if (P.FuneralControlTimeStart >= 1e10)
 				{
-					P.FuneralControlTimeStart = t + P.FuneralControlTimeStartBase;
+					P.FuneralControlTimeStart = t;
 				}
 			}
 
@@ -424,7 +424,7 @@ void RecordSample(double t, int n)
 			if (P.PlaceCloseTimeStart >= 1e10) P.PlaceCloseTimeStart = t + P.PlaceCloseTimeStartBase;
 			if (P.MoveRestrTimeStart >= 1e10) P.MoveRestrTimeStart = t + P.MoveRestrTimeStartBase;
 			if (P.KeyWorkerProphTimeStart >= 1e10) P.KeyWorkerProphTimeStart = t + P.KeyWorkerProphTimeStartBase;
-			if (P.FuneralControlTimeStart >= 1e10) P.FuneralControlTimeStart = t + P.FuneralControlTimeStartBase;
+			if (P.FuneralControlTimeStart >= 1e10) P.FuneralControlTimeStart = t;
 			if (P.ContactTracingTimeStart >= 1e10) P.ContactTracingTimeStart = t + P.ContactTracingTimeStartBase;
 			//if (P.GeoVaccTimeStart >= 1e10) P.GeoVaccTimeStart = t + P.GeoVaccTimeStartBase;
 			//if (P.RingVaccTimeStart >= 1e10) P.RingVaccTimeStart = t + P.RingVaccTimeStartBase;
@@ -627,7 +627,7 @@ void RecordInfTypes(void)
  *
  * Author: ggilani, Date: 10/10/2014
  */
-void RecordEvent(double t, int ai, int run, int type, int tn) //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+void RecordEvent(double t, int ai, int run, int tn) //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 {
 	//Declare int to store infector's index
 	int bi, i;
@@ -638,66 +638,102 @@ void RecordEvent(double t, int ai, int run, int type, int tn) //added int as arg
 #pragma omp critical (inf_event)
 	{
 		InfEventLog[*nEvents].run = run;
-		InfEventLog[*nEvents].type = type;
-		InfEventLog[*nEvents].t = t;
-		InfEventLog[*nEvents].infectee_ind = ai;
-		InfEventLog[*nEvents].infectee_adunit = AdUnits[Mcells[Hosts[ai].mcell].adunit].id;
-		InfEventLog[*nEvents].infectee_x = Households[Hosts[ai].hh].loc_x + P.SpatialBoundingBox[0];
-		InfEventLog[*nEvents].infectee_y = Households[Hosts[ai].hh].loc_y + P.SpatialBoundingBox[1];
-		InfEventLog[*nEvents].listpos = Hosts[ai].listpos;
-		InfEventLog[*nEvents].infectee_cell = Hosts[ai].pcell;
-		InfEventLog[*nEvents].infectee_cell_n = Cells[Hosts[ai].pcell].n;
 		InfEventLog[*nEvents].thread = tn;
-		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].keyworker;
-		if (type == 0) //infection event - record time of onset of infector and infector
+		InfEventLog[*nEvents].infectee_ind = ai;
+		InfEventLog[*nEvents].age = Hosts[ai].age;
+		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].hcw;
+		InfEventLog[*nEvents].infectee_adunit = Mcells[Hosts[ai].mcell].adunit;
+		InfEventLog[*nEvents].infection_time = (int)ceil(((double)Hosts[ai].infection_time) / P.TimeStepsPerDay);
+		InfEventLog[*nEvents].latent_time = (int)ceil((double)Hosts[ai].latent_time) / P.TimeStepsPerDay;
+		// set hospital and etu times to negative values
+		InfEventLog[*nEvents].etu_time = -1;
+		InfEventLog[*nEvents].hospital_time = -1;
+		if (Hosts[ai].etu)
 		{
-			InfEventLog[*nEvents].infector_ind = bi;
-			if (bi < 0)
-			{
-				InfEventLog[*nEvents].t_infector = -1;
-				InfEventLog[*nEvents].infector_cell = -1;
-				InfEventLog[*nEvents].infector_adunit = -1;
-				InfEventLog[*nEvents].infector_x = -1;
-				InfEventLog[*nEvents].infector_y = -1;
-				InfEventLog[*nEvents].infector_hcw = -1;
-				InfEventLog[*nEvents].same_hh = -1;
-				for (i = 0; i < P.PlaceTypeNum; i++)
-				{
-					InfEventLog[*nEvents].same_place[i] = -1;
-				}
-			}
-			else
-			{
-				InfEventLog[*nEvents].t_infector = (int)(Hosts[bi].infection_time / P.TimeStepsPerDay);
-				InfEventLog[*nEvents].infector_cell = Hosts[bi].pcell;
-				InfEventLog[*nEvents].infector_cell_n = Cells[Hosts[bi].pcell].n;
-				InfEventLog[*nEvents].infector_adunit = AdUnits[Mcells[Hosts[bi].mcell].adunit].id;
-				InfEventLog[*nEvents].infector_x = Households[Hosts[bi].hh].loc_x + P.SpatialBoundingBox[0];
-				InfEventLog[*nEvents].infector_y = Households[Hosts[bi].hh].loc_y + P.SpatialBoundingBox[1];
-				InfEventLog[*nEvents].infector_hcw = Hosts[bi].keyworker;
-				InfEventLog[*nEvents].same_hh = (Hosts[ai].hh == Hosts[bi].hh);
-				for (i = 0; i < P.PlaceTypeNum; i++)
-				{
-					if (Hosts[ai].PlaceLinks[i] == Hosts[bi].PlaceLinks[i])
-					{
-						InfEventLog[*nEvents].same_place[i] = 1;
-					}
-					else
-					{
-						InfEventLog[*nEvents].same_place[i] = 0;
-					}
+			InfEventLog[*nEvents].etu_time = (int)ceil(((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay);
+		}
+		else if (Hosts[ai].hospitalised)
+		{
+			InfEventLog[*nEvents].hospital_time = (int)ceil(((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay);
+		}
+		// detection values
+		InfEventLog[*nEvents].detected = Hosts[ai].detected;
+		if (Hosts[ai].detected)
+		{
+			InfEventLog[*nEvents].detection_time = (int)ceil(((double)Hosts[ai].detect_time)/ P.TimeStepsPerDay); // check this. or detection_time?
+		}
+		else
+		{
+			InfEventLog[*nEvents].detection_time = -1;
+		}
+		InfEventLog[*nEvents].to_die = Hosts[ai].to_die;
+		InfEventLog[*nEvents].recovery_time = (int)ceil(((double)Hosts[ai].recovery_time) / P.TimeStepsPerDay);
+		InfEventLog[*nEvents].safe_burial = Hosts[ai].safeBurial;
+		InfEventLog[*nEvents].contact = Hosts[ai].contactTraced;
 
-				}
-			}
-		}
-		else if (type == 1) //onset event - record infectee's onset time
+		InfEventLog[*nEvents].infector_ind = bi;
+		if (bi < 0)
 		{
-			InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].infection_time / P.TimeStepsPerDay);
+			
+			InfEventLog[*nEvents].t_infector = -1;
+			InfEventLog[*nEvents].t_infector = -1;
 		}
-		else if ((type == 2) || (type == 3)) //recovery or death event - record infectee's onset time
+		else
 		{
-			InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].latent_time / P.TimeStepsPerDay);
+			InfEventLog[*nEvents].t_infector = (int)ceil(((double)Hosts[bi].infection_time) / P.TimeStepsPerDay);
+			InfEventLog[*nEvents].infector_adunit = Mcells[Hosts[bi].mcell].adunit;
 		}
+
+
+		//if (type == 0) //infection event - record time of onset of infector and infector
+		//{
+		//	InfEventLog[*nEvents].infector_ind = bi;
+		//	if (bi < 0)
+		//	{
+		//		InfEventLog[*nEvents].t_infector = -1;
+		//		InfEventLog[*nEvents].infector_cell = -1;
+		//		InfEventLog[*nEvents].t_infector = -1;
+		//		InfEventLog[*nEvents].infector_x = -1;
+		//		InfEventLog[*nEvents].infector_y = -1;
+		//		InfEventLog[*nEvents].infector_hcw = -1;
+		//		InfEventLog[*nEvents].same_hh = -1;
+		//		for (i = 0; i < P.PlaceTypeNum; i++)
+		//		{
+		//			InfEventLog[*nEvents].same_place[i] = -1;
+		//		}
+		//	}
+		//	else
+		//	{
+		//		InfEventLog[*nEvents].t_infector = (int)(Hosts[bi].infection_time / P.TimeStepsPerDay);
+		//		InfEventLog[*nEvents].infector_cell = Hosts[bi].pcell;
+		//		InfEventLog[*nEvents].infector_cell_n = Cells[Hosts[bi].pcell].n;
+		//		InfEventLog[*nEvents].infector_adunit = AdUnits[Mcells[Hosts[bi].mcell].adunit].id;
+		//		InfEventLog[*nEvents].infector_x = Households[Hosts[bi].hh].loc_x + P.SpatialBoundingBox[0];
+		//		InfEventLog[*nEvents].infector_y = Households[Hosts[bi].hh].loc_y + P.SpatialBoundingBox[1];
+		//		InfEventLog[*nEvents].infector_hcw = Hosts[bi].keyworker;
+		//		InfEventLog[*nEvents].same_hh = (Hosts[ai].hh == Hosts[bi].hh);
+		//		for (i = 0; i < P.PlaceTypeNum; i++)
+		//		{
+		//			if (Hosts[ai].PlaceLinks[i] == Hosts[bi].PlaceLinks[i])
+		//			{
+		//				InfEventLog[*nEvents].same_place[i] = 1;
+		//			}
+		//			else
+		//			{
+		//				InfEventLog[*nEvents].same_place[i] = 0;
+		//			}
+
+		//		}
+		//	}
+		//}
+		//else if (type == 1) //onset event - record infectee's onset time
+		//{
+		//	InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].infection_time / P.TimeStepsPerDay);
+		//}
+		//else if ((type == 2) || (type == 3)) //recovery or death event - record infectee's onset time
+		//{
+		//	InfEventLog[*nEvents].t_infector = (int)(Hosts[ai].latent_time / P.TimeStepsPerDay);
+		//}
 
 		//increment the index of the infection event
 		(*nEvents)++;
@@ -1321,12 +1357,12 @@ void SaveResults(void)
 		if (P.DoFuneralTransmission)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "SDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
 		}
 
 		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
 		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
+			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "ETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
 			if (P.DoOutputETUCapacity)
@@ -1340,7 +1376,7 @@ void SaveResults(void)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCC_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of cases who are contacts
 
 			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CTC_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
@@ -1375,14 +1411,14 @@ void SaveResults(void)
 			{
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incSDB_adunit[j]); //added safe burials: ggilani 05/10/23
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+				//for (j = 0; j < P.NumAdunits; j++)
+				//	fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
 			}
 
 			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
 			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
+				//for (j = 0; j < P.NumAdunits; j++)
+				//	fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
 				for (j = 0; j < P.NumAdunits; j++)
@@ -1403,8 +1439,8 @@ void SaveResults(void)
 					fprintf(dat, "%lg,", TimeSeries[i].incCT_adunit[j]); //"\t%lg" //added contact tracing
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].CT_adunit[j]); //"\t%lg" //added contact tracing
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
+				//for (j = 0; j < P.NumAdunits; j++)
+				//	fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].incCC_adunit[j]); //"\t%lg" //added cases who are contacts
 				//for (j = 0; j < P.NumAdunits; j++)
@@ -1424,6 +1460,55 @@ void SaveResults(void)
 		}
 		fclose(dat);
 	}
+
+	//adding a file to track capacities only
+	if ((P.DoAdUnits) && (P.DoInterventionCapacityOutput))
+	{
+		sprintf(outname, "%s.int_capacity.csv", OutFile); //modifying to csv file
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		fprintf(dat, "t,");
+
+		//headers
+		if (P.DoFuneralTransmission)
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+		}
+		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
+		}
+		if (P.DoContactTracing)
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+
+		}
+		fprintf(dat, "\n");
+		//outputs
+		for (i = 0; i < P.NumSamples; i++)
+		{
+			fprintf(dat, "%lg,", TimeSeries[i].t);
+			if (P.DoFuneralTransmission)
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+			}
+			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
+			}
+			if (P.DoContactTracing)
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+						fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
+
+			}
+			fprintf(dat, "\n");
+		}
+
+		fclose(dat);
+	}
+
 	if (P.EvolResistNumTypes > 1)
 	{
 		sprintf(outname, "%s.resist.xls", OutFile);
@@ -2120,28 +2205,31 @@ void SaveEvents(void)
 	FILE* dat;
 	char outname[1024];
 
-	sprintf(outname, "%s.infevents.csv", OutFile);
+	sprintf(outname, "%s.linelist.csv", OutFile);
 	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-	fprintf(dat, "type,thread,infectee_t,infectee,infectee_cell,infectee_cell_n,infectee_adunit,infectee_hcw,infectee_x,infectee_y,infector_t,infector,infector_cell,infector_cell_n,infector_adunit,infector_hcw,infector_x,infector_y,same_household");
-	if (P.DoPlaces) 
+	fprintf(dat, "Run, Thread, Infectee_ID, Infectee_age, Is_HCW, Infectee_adunit, Infection_day, Onset_day, ETU_admissmion_day, Hosp_admission_day, Detected, Detection_day, Death, Outcome_day, Safe_burial, Listed_as_contact, Infector, Infector_infection_day, Infector_adunit");
+	/*if (P.DoPlaces)
 	{
 		for (j = 0; j < P.PlaceTypeNum; j++)
 		{
 			fprintf(dat, ",sameplace%i", j);
 		}
-	}
+	}*/
 	fprintf(dat, "\n");
 	
 	for (i = 0; i < *nEvents; i++)
 	{
-		fprintf(dat, "%i,%i,%lg,%i,%i,%i,%i,%i,%lg,%lg,%lg,%i,%i,%i,%i,%i,%lg,%lg,%i", InfEventLog[i].type, InfEventLog[i].thread, InfEventLog[i].t, InfEventLog[i].infectee_ind, InfEventLog[i].infectee_cell, InfEventLog[i].infectee_cell_n, InfEventLog[i].infectee_adunit, InfEventLog[i].infectee_hcw, InfEventLog[i].infectee_x, InfEventLog[i].infectee_y, InfEventLog[i].t_infector, InfEventLog[i].infector_ind, InfEventLog[i].infector_cell, InfEventLog[i].infector_cell_n,  InfEventLog[i].infector_adunit, InfEventLog[i].infector_hcw, InfEventLog[i].infector_x, InfEventLog[i].infector_y, InfEventLog[i].same_hh);
-		if (P.DoPlaces)
+		fprintf(dat, "%i, %i, %i, %i, %i, %s, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %s", 
+			InfEventLog[i].run, InfEventLog[i].thread, InfEventLog[i].infectee_ind, InfEventLog[i].age, InfEventLog[i].infectee_hcw, AdUnits[InfEventLog[i].infectee_adunit].ad_name, InfEventLog[i].infection_time,
+			InfEventLog[i].latent_time, InfEventLog[i].etu_time, InfEventLog[i].hospital_time, InfEventLog[i].detected, InfEventLog[i].detection_time, InfEventLog[i].to_die, InfEventLog[i].recovery_time, 
+			InfEventLog[i].safe_burial, InfEventLog[i].contact, InfEventLog[i].infector_ind, InfEventLog[i].t_infector, AdUnits[InfEventLog[i].infector_adunit].ad_name);
+		/*if (P.DoPlaces)
 		{
 			for (j = 0; j < P.PlaceTypeNum; j++)
 			{
 				fprintf(dat, ",%i", InfEventLog[i].same_place[j]);
 			}
-		}
+		}*/
 		fprintf(dat, "\n");
 	}
 	fclose(dat);

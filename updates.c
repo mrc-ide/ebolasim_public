@@ -199,7 +199,7 @@ void UpdateProbs(int DoPlace)
 void UpdateHospitals(double t)
 {
 	int i, j;//,nHospBeds,pop,newBeds;
-	int nCases, numBedsTotal, numBedsInUse;
+	int nCases, numBedsTotal, numBedsInUse, nBedsTotal_allAdUnits;
 	double capacityFlag;
 	//pop=P.N;
 
@@ -226,7 +226,14 @@ void UpdateHospitals(double t)
 		}
 	}
 
-	if ((P.DoReactETUBeds) && (t >= P.ETUTimeStart))
+	//calculate total number of beds currently available
+	nBedsTotal_allAdUnits = 0;
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		nBedsTotal_allAdUnits += AdUnits[i].totalETUBeds;
+	}
+	// allow there to be a maximum number of beds possible
+	if ((P.DoReactETUBeds) && (t >= P.ETUTimeStart) && (nBedsTotal_allAdUnits < P.MaxNumETUBeds))
 	{
 		//new code for reactive provisioning of hospital beds - check to see if new beds are planned
 		for (i = 0; i < P.NumAdunits; i++)
@@ -263,7 +270,7 @@ void UpdateHospitals(double t)
 		for (i = 0; i < P.NumAdunits; i++)
 		{
 			//check to see if new beds should be added
-			if (((int)t == (int)AdUnits[i].nextTimeToETUBeds) && (AdUnits[i].ETUbedsActive == 1))
+			if (((int)(t * P.TimeStepsPerDay) == (int)(AdUnits[i].nextTimeToETUBeds * P.TimeStepsPerDay)) && (AdUnits[i].ETUbedsActive == 1))
 			{
 				AdUnits[i].totalETUBeds += AdUnits[i].nextETUBeds;
 				State.NumBeds += AdUnits[i].nextETUBeds;
@@ -291,8 +298,8 @@ void UpdateHospitals(double t)
 		//check to see if new beds should be added
 		if ((AdUnits[i].lastCaseDay > 0) && ((t - AdUnits[i].lastCaseDay) > P.DaysToRemoveCapacity))
 		{
-			AdUnits[i].totalETUBeds = 0;
 			State.NumBeds -= AdUnits[i].totalETUBeds;
+			AdUnits[i].totalETUBeds = 0;
 			State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
 		}
 	}
@@ -359,11 +366,17 @@ void UpdateHospitals(double t)
 void UpdateContactTracing(double t)
 {
 	int i, j;
-	int nCT, numBedsTotal, numBedsInUse;
-	double capacityFlag;
+	double capacityFlag,maxCTCapacity;
 	//pop=P.N;
 
-	if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart))
+	maxCTCapacity = 0;
+
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		maxCTCapacity += AdUnits[i].contactTraceCapacity;
+	}
+
+	if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart) && (maxCTCapacity < P.MaxCTCapacity))
 	{
 		//code to see if contact tracing capacity should be increased
 		for (i = 0; i < P.NumAdunits; i++)
@@ -371,23 +384,21 @@ void UpdateContactTracing(double t)
 			if ((AdUnits[i].contactTraceThresholdCrossed) && (AdUnits[i].nextTimeToCT < t))
 			{
 				capacityFlag = (double)(AdUnits[i].nct) / (double)(AdUnits[i].contactTraceCapacity);
-				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding beds again)
-				if (capacityFlag > P.CapacityToMoreCT) //we also can't add more beds until we've added the last set
+				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding CT capacity again)
+				if (capacityFlag > P.CapacityToMoreCT) //we also can't add more CT capacity until we've added the last set
 				{
-					//set time for next lot of beds to be added
+					//set time for next lot of CT capacity to be added
 					AdUnits[i].nextTimeToCT = t + P.DelayToCT;
 				}
 			}
 		}
-		// check to see if new beds should be allocated
+		// check to see if more CT capacity should be allocated
 		for (i = 0; i < P.NumAdunits; i++)
 		{
-			//check to see if new beds should be added
+			//check to see if more CT capacity should be added
 			if (((int)t == (int)AdUnits[i].nextTimeToCT) && (AdUnits[i].contactTraceCaseThreshold == 1))
 			{
 				AdUnits[i].contactTraceCapacity += AdUnits[i].contactTraceCapacityInc;
-				//State.NumBeds += AdUnits[i].nextETUBeds;
-				//State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
 			}
 		}
 	}
@@ -395,7 +406,7 @@ void UpdateContactTracing(double t)
 	// something to get rid of capacity
 	for (i = 0; i < P.NumAdunits; i++)
 	{
-		//check to see if new beds should be added
+		//check to see if we should reduce capacity
 		if ((AdUnits[i].lastCaseDay > 0) && ((t - AdUnits[i].lastCaseDay) > P.DaysToRemoveCapacity))
 		{
 			AdUnits[i].contactTraceCapacity = 0;
@@ -414,36 +425,56 @@ void UpdateContactTracing(double t)
  */
 void UpdateSDB(double t)
 {
-	int i, j;
-	int nCT, numBedsTotal, numBedsInUse;
+	int i, j, totalSDB_allAdUnits, nCases;
 	double capacityFlag;
 	//pop=P.N;
 
-	if (t >= P.FuneralControlTimeStart)
+	//calculate current safe burial capacity across all admin units
+	totalSDB_allAdUnits = 0;
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		totalSDB_allAdUnits += AdUnits[i].maxSDB;
+	}
+
+
+	// added this to cap SDBs per day across all outbreaks
+	if ((t >= P.FuneralControlTimeStart) && (totalSDB_allAdUnits < P.MaxSDBPerDay))
 	{
 		//code to see if contact tracing capacity should be increased
 		for (i = 0; i < P.NumAdunits; i++)
 		{
-			if (AdUnits[i].nextTimeToSDB < t)
+			// go through each admin unit in term to see if we've passed the first threshold - based on active cases
+			nCases = State.cumDC_adunit[i]; //calculated current number of active cases
+			if (nCases >= P.InitCasesToSDB)
 			{
-				capacityFlag = (double)(State.cumSDB_adunit[i]) / (double)(AdUnits[i].maxSDB);
-				//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding beds again)
-				if (capacityFlag > P.CapacityToMoreSDB) //we also can't add more beds until we've added the last set
+				if (AdUnits[i].SDBActive == 0)
 				{
-					//set time for next lot of beds to be added
-					AdUnits[i].nextTimeToSDB = t + P.DelayToSDB;
+					//this means we have only reached the first threshold - set time to increase number of beds and number of beds
+					AdUnits[i].nextTimeToSDB = t + P.FuneralControlTimeStartBase;
+					AdUnits[i].SDBActive = 1;
 				}
-			}
-		}
-		// check to see if new beds should be allocated
-		for (i = 0; i < P.NumAdunits; i++)
-		{
-			//check to see if new beds should be added
-			if ((int)t == (int)AdUnits[i].nextTimeToSDB)
-			{
-				AdUnits[i].maxSDB += P.incCapacitySDB;
-				//State.NumBeds += AdUnits[i].nextETUBeds;
-				//State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
+				else if ((AdUnits[i].SDBActive) && (AdUnits[i].nextTimeToSDB < t))
+				{
+					capacityFlag = (double)(AdUnits[i].currentSDB) / (double)(AdUnits[i].maxSDB);
+					//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding burials again)
+					if (capacityFlag > P.CapacityToMoreSDB) //we also can't add more burials until we've added the last set
+					{
+						//set time for next burial capacity to be added
+						AdUnits[i].nextTimeToSDB = t + P.DelayToSDB;
+					}
+				}
+				//check to see if new beds should be added
+				if (((int)t == (int)AdUnits[i].nextTimeToSDB) && (AdUnits[i].SDBActive == 1))
+				{
+					if (AdUnits[i].maxSDB == 0)
+					{
+						AdUnits[i].maxSDB = P.AdunitSDBCapacity;
+					}
+					else
+					{
+						AdUnits[i].maxSDB += P.incCapacitySDB;
+					}
+				}
 			}
 		}
 	}
