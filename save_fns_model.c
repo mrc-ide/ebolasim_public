@@ -643,31 +643,31 @@ void RecordEvent(double t, int ai, int run, int tn) //added int as argument to R
 		InfEventLog[*nEvents].age = Hosts[ai].age;
 		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].hcw;
 		InfEventLog[*nEvents].infectee_adunit = Mcells[Hosts[ai].mcell].adunit;
-		InfEventLog[*nEvents].infection_time = (int)((double) Hosts[ai].infection_time / P.TimeStepsPerDay);
-		InfEventLog[*nEvents].latent_time = (int)((double) Hosts[ai].latent_time / P.TimeStepsPerDay);
+		InfEventLog[*nEvents].infection_time = (int)ceil(((double)Hosts[ai].infection_time) / P.TimeStepsPerDay);
+		InfEventLog[*nEvents].latent_time = (int)ceil((double)Hosts[ai].latent_time) / P.TimeStepsPerDay;
 		// set hospital and etu times to negative values
 		InfEventLog[*nEvents].etu_time = -1;
 		InfEventLog[*nEvents].hospital_time = -1;
 		if (Hosts[ai].etu)
 		{
-			InfEventLog[*nEvents].etu_time = (int)((double) Hosts[ai].hospital_time / P.TimeStepsPerDay);
+			InfEventLog[*nEvents].etu_time = (int)ceil(((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay);
 		}
 		else if (Hosts[ai].hospitalised)
 		{
-			InfEventLog[*nEvents].hospital_time = (int)((double) Hosts[ai].hospital_time / P.TimeStepsPerDay);
+			InfEventLog[*nEvents].hospital_time = (int)ceil(((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay);
 		}
 		// detection values
 		InfEventLog[*nEvents].detected = Hosts[ai].detected;
 		if (Hosts[ai].detected)
 		{
-			InfEventLog[*nEvents].detection_time = (int)((double) Hosts[ai].detect_time / P.TimeStepsPerDay); // check this. or detection_time?
+			InfEventLog[*nEvents].detection_time = (int)ceil(((double)Hosts[ai].detect_time)/ P.TimeStepsPerDay); // check this. or detection_time?
 		}
 		else
 		{
 			InfEventLog[*nEvents].detection_time = -1;
 		}
 		InfEventLog[*nEvents].to_die = Hosts[ai].to_die;
-		InfEventLog[*nEvents].recovery_time = (int)((double) Hosts[ai].recovery_time / P.TimeStepsPerDay);
+		InfEventLog[*nEvents].recovery_time = (int)ceil(((double)Hosts[ai].recovery_time) / P.TimeStepsPerDay);
 		InfEventLog[*nEvents].safe_burial = Hosts[ai].safeBurial;
 		InfEventLog[*nEvents].contact = Hosts[ai].contactTraced;
 
@@ -680,7 +680,7 @@ void RecordEvent(double t, int ai, int run, int tn) //added int as argument to R
 		}
 		else
 		{
-			InfEventLog[*nEvents].t_infector = (int)((double) Hosts[bi].infection_time / P.TimeStepsPerDay);
+			InfEventLog[*nEvents].t_infector = (int)ceil(((double)Hosts[bi].infection_time) / P.TimeStepsPerDay);
 			InfEventLog[*nEvents].infector_adunit = Mcells[Hosts[bi].mcell].adunit;
 		}
 

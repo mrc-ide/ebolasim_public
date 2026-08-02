@@ -270,7 +270,7 @@ void UpdateHospitals(double t)
 		for (i = 0; i < P.NumAdunits; i++)
 		{
 			//check to see if new beds should be added
-			if (((int)t == (int)AdUnits[i].nextTimeToETUBeds) && (AdUnits[i].ETUbedsActive == 1))
+			if (((int)(t * P.TimeStepsPerDay) == (int)(AdUnits[i].nextTimeToETUBeds * P.TimeStepsPerDay)) && (AdUnits[i].ETUbedsActive == 1))
 			{
 				AdUnits[i].totalETUBeds += AdUnits[i].nextETUBeds;
 				State.NumBeds += AdUnits[i].nextETUBeds;
@@ -298,8 +298,8 @@ void UpdateHospitals(double t)
 		//check to see if new beds should be added
 		if ((AdUnits[i].lastCaseDay > 0) && ((t - AdUnits[i].lastCaseDay) > P.DaysToRemoveCapacity))
 		{
-			AdUnits[i].totalETUBeds = 0;
 			State.NumBeds -= AdUnits[i].totalETUBeds;
+			AdUnits[i].totalETUBeds = 0;
 			State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
 		}
 	}
