@@ -31,42 +31,41 @@ void RunModel(int run) //added run number as parameter
 	fs2 = 0;
 	nu = 0;
 
-	for (ns = 1; ((ns < P.NumSamples) && (!InterruptRun)); ns++) //&&(continueEvents) <-removed this
+	for (ns = 1; ((ns < P.NumSamples) && (!InterruptRun) && (continueEvents)); ns++) //&&(continueEvents) <-removed this
 	{
-		if (continueEvents)
+		
+		RecordSample(t, ns - 1);
+		//update hospitalisation parameters at the beginning of every time step? ggilani - 11/03/2017
+		if ((P.DoHospitalisation) && (t >= P.ETUTimeStart))
 		{
-			RecordSample(t, ns - 1);
-			//update hospitalisation parameters at the beginning of every time step? ggilani - 11/03/2017
-			if ((P.DoHospitalisation) && (t >= P.ETUTimeStart))
-			{
-				UpdateHospitals(t);
-			}
-			//update contact tracing parameters at the beginning of every time step? ggilani - 11/03/2017
-			if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart))
-			{
-				UpdateContactTracing(t);
-			}
-			//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
-			if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
-			{
-				UpdateSDB(t);
-			}
-			//update vaccination parameters at the beginning of every time step
-			if (((P.DoRingVaccination) && (t > P.VaccTimeStart)) || ((P.DoGeoVaccination) && (t > P.VaccTimeStart)))
-			{
-				UpdateVaccination(t, ns - 1);
-			}
-			//update vaccination parameters at the beginning of every time step
-			if (P.DoUpdateCaseDetection)//&&(t>=P.TimeToUpdateCaseDetection))
-			{
-				UpdateCaseDetection(t);
-			}
-			if (P.VaccDosePerDay >= 0) //if constrained by total number of vaccine doses per day, reset each day
-			{
-				State.cumV_daily = 0;
-				State.cumVG_daily = 0;
-			}
+			UpdateHospitals(t);
 		}
+		//update contact tracing parameters at the beginning of every time step? ggilani - 11/03/2017
+		if ((P.DoContactTracing) && (t >= P.ContactTracingTimeStart))
+		{
+			UpdateContactTracing(t);
+		}
+		//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
+		if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
+		{
+			UpdateSDB(t);
+		}
+		//update vaccination parameters at the beginning of every time step
+		if (((P.DoRingVaccination) && (t > P.VaccTimeStart)) || ((P.DoGeoVaccination) && (t > P.VaccTimeStart)))
+		{
+			UpdateVaccination(t, ns - 1);
+		}
+		//update vaccination parameters at the beginning of every time step
+		if (P.DoUpdateCaseDetection)//&&(t>=P.TimeToUpdateCaseDetection))
+		{
+			UpdateCaseDetection(t);
+		}
+		if (P.VaccDosePerDay >= 0) //if constrained by total number of vaccine doses per day, reset each day
+		{
+			State.cumV_daily = 0;
+			State.cumVG_daily = 0;
+		}
+		
 
 		//Only run to a certain number of infections: ggilani 28/10/14
 		if (P.LimitNumInfections) continueEvents = (State.cumI < P.MaxNumInfections);
@@ -525,7 +524,7 @@ void HospitalSweepAdunits(double t)
 	int age; //added age to help track hospitalisations by age.
 	int ts;
 
-	ts = (int)t * P.TimeStepsPerDayInt;
+	ts = (int)(t * P.TimeStepsPerDayInt);
 
 	//combine admission lists across threads into a single list per admin unit
 	for (i = 0; i < P.NumAdunits; i++)

@@ -95,6 +95,7 @@ void DoInfect(int ai, double t, int tn, int run) //added int as argument to DoIn
 			{
 				x = ((int)(Households[a->hh].loc_x * P.scalex)) - P.bminx;
 				y = ((int)(Households[a->hh].loc_y * P.scaley)) - P.bminy;
+				y = ((int)(Households[a->hh].loc_y * P.scaley)) - P.bminy;
 				if ((x >= 0) && (x < P.bwidth) && (y >= 0) && (y < P.bheight))
 				{
 					j = y * bmh->width + x;
