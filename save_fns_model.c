@@ -2207,7 +2207,7 @@ void SaveEvents(void)
 
 	sprintf(outname, "%s.linelist.csv", OutFile);
 	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-	fprintf(dat, "Run, Thread, Infectee_ID, Infectee_age, Is_HCW, Infectee_adunit, Infection_day, Onset_day, ETU_admissmion_day, Hosp_admission_day, Detected, Detection_day, Death, Outcome_day, Safe_burial, Listed_as_contact, Infector, Infector_infection_day, Infector_adunit");
+	fprintf(dat, "Run, Thread, Infectee_ID, Infectee_age, Is_HCW, Infectee_adunit, Infection_day, Onset_day, ETU_admission_day, Hosp_admission_day, Detected, Detection_day, Death, Outcome_day, Safe_burial, Listed_as_contact, Infector, Infector_infection_day, Infector_adunit");
 	/*if (P.DoPlaces)
 	{
 		for (j = 0; j < P.PlaceTypeNum; j++)
