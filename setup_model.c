@@ -359,7 +359,7 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 						}
 			}
 		}
-	fprintf(stderr,"Places intialised.\n");
+	fprintf(stderr,"Places initialised.\n");
 	UpdateProbs(0);
 	if(P.DoAirports) SetupAirports();
 	if(P.R0scale!=1.0)
