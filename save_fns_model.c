@@ -1269,7 +1269,7 @@ void SaveResults(void)
 	sprintf(outname, "%s.csv", OutFile);
 	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
 	fprintf(dat, "t,S,L,I,R,D,incI,incR,incFC,incFI,incC,incDC,incD,incDD,incSDB,incTC,incETU,incH,incCT,incCC,cumT,cumTP,cumV,capV,cumVG,capVG,nBeds,Extinct,Detected,rmsRad,maxRad\n");//\t\t%lg\t%lg\t%lg\n",P.R0household,P.R0places,P.R0spatial);
-	for (i = 0; i < P.NumSamples; i++)
+	for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 	{
 		fprintf(dat, "%lg,%lf,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg,%lg\n",
 			TimeSeries[i].t, TimeSeries[i].S, TimeSeries[i].L, TimeSeries[i].I,
@@ -1285,7 +1285,7 @@ void SaveResults(void)
 		fprintf(dat, "t\tS\tincC\tincTC\tincFC\tincFI\tincETU\tincH\tcumT\tcumUT\tcumTP\tcumV\tincHQ\tincAC\tincAH\tincAA\tincACS\tincAPC\tincAPA\tincAPCS");
 		for (j = 0; j < NUM_PLACE_TYPES; j++) fprintf(dat, "\tprClosed_%i", j);
 		fprintf(dat, "\n");
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg\t%lf\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg\t%lg",
 				TimeSeries[i].t, TimeSeries[i].S, TimeSeries[i].incC, TimeSeries[i].incTC, TimeSeries[i].incFC, TimeSeries[i].incFI, TimeSeries[i].incETU, TimeSeries[i].incH, //added incidence of funeral transmissions and hospitalisation
@@ -1317,7 +1317,7 @@ void SaveResults(void)
 		for (i = 0; i < NUM_AGE_GROUPS; i++)
 			fprintf(dat, ",V%i-%i", AGE_GROUP_WIDTH * i, AGE_GROUP_WIDTH * (i + 1));
 		fprintf(dat, "\n");
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg", TimeSeries[i].t);
 			for (j = 0; j < NUM_AGE_GROUPS; j++)
@@ -1393,7 +1393,7 @@ void SaveResults(void)
 		//for(i=0;i<P.NumAdunits;i++) fprintf(dat,"%lg,",P.PopByAdunit[i][0]); //"\t%lg"
 		//for(i=0;i<P.NumAdunits;i++) fprintf(dat,"%lg,",P.PopByAdunit[i][1]); //"\t%lg"
 		fprintf(dat, "\n");
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg,", TimeSeries[i].t); //"%lg"
 			for (j = 0; j < P.NumAdunits; j++)
@@ -1484,7 +1484,7 @@ void SaveResults(void)
 		}
 		fprintf(dat, "\n");
 		//outputs
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg,", TimeSeries[i].t);
 			if (P.DoFuneralTransmission)
@@ -1518,7 +1518,7 @@ void SaveResults(void)
 		for (i = 0; i < P.EvolResistNumTypes; i++) fprintf(dat, "\tC%i", i);
 		for (i = 0; i < P.EvolResistNumTypes; i++) fprintf(dat, "\tT%i", i);
 		fprintf(dat, "\n");
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i< min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg", TimeSeries[i].t);
 			for (j = 0; j < P.EvolResistNumTypes; j++)
@@ -1542,7 +1542,7 @@ void SaveResults(void)
 		for (i = 0; i < 2; i++) fprintf(dat, ",T%i", i);
 		for (i = 0; i < 2; i++) fprintf(dat, ",D%i", i);
 		fprintf(dat, ",%i,%i\n", P.KeyWorkerNum, P.KeyWorkerIncHouseNum);
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg", TimeSeries[i].t);
 			for (j = 0; j < 2; j++)
@@ -1566,7 +1566,7 @@ void SaveResults(void)
 		for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, ",incItype_%i", j);
 		for (j = 0; j < NUM_AGE_GROUPS; j++) fprintf(dat, ",Rage_%i", j);
 		fprintf(dat, "\n");
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg,%lg", TimeSeries[i].t, TimeSeries[i].Rdenom);
 			for (j = 0; j < INFECT_TYPE_MASK; j++) fprintf(dat, ",%lg", TimeSeries[i].Rtype[j]);
@@ -1787,7 +1787,7 @@ void SaveResults(void)
 		y = 2009;
 		m = 1;
 		d = 1;
-		for (i = 0; i < P.NumSamples; i++)
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "<GroundOverlay>\n<name>Snapshot %i</name>\n", i + 1);
 			fprintf(dat, "<TimeSpan>\n<begin>%i-%02i-%02iT00:00:00Z</begin>\n", y, m, d);

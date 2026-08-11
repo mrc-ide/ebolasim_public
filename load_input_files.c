@@ -1478,16 +1478,34 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		P.ImportLocation[1] = -1000;
 	}
 	//Added this to parameter list so that recording infection events (and the number to record) can easily be turned off and on: ggilani - 10/10/2014
-	if (!GetInputParameter2(dat, dat2, "Record infection events", "%i", (void*)&(P.DoRecordInfEvents), 1, 1, 0)) P.DoRecordInfEvents = 0;
+	if (!GetInputParameter2(dat, dat2, "Record line list", "%i", (void*)&(P.DoRecordInfEvents), 1, 1, 0)) P.DoRecordInfEvents = 0;
 	if (P.DoRecordInfEvents)
 	{
-		if (!GetInputParameter2(dat, dat2, "Max number of infection events to record", "%i", (void*)&(P.MaxInfEvents), 1, 1, 0)) P.MaxInfEvents = 1000;
-		if (!GetInputParameter2(dat, dat2, "Record infection events per run", "%i", (void*)&(P.RecordInfEventsPerRun), 1, 1, 0)) P.RecordInfEventsPerRun = 0;
+		if (!GetInputParameter2(dat, dat2, "Max number of line list records", "%i", (void*)&(P.MaxInfEvents), 1, 1, 0)) P.MaxInfEvents = 1000;
+		if (!GetInputParameter2(dat, dat2, "Record line list per run", "%i", (void*)&(P.RecordInfEventsPerRun), 1, 1, 0)) P.RecordInfEventsPerRun = 0;
 	}
 	else
 	{
 		P.MaxInfEvents = 0;
 	}
+	
+	//Added this parameter to 
+	if (!GetInputParameter2(dat, dat2, "Stop simulation based on detected cases", "%i", (void*)&(P.DoStopSimDC), 1, 1, 0)) P.DoStopSimDC = 0;
+	if (P.DoStopSimDC)
+	{
+		if (!GetInputParameter2(dat, dat2, "Number of detected cases to reach", "%i", (void*)&(P.MaxDetCaseStopSim), 1, 1, 0)) P.MaxDetCaseStopSim = 1e9;
+		if (!GetInputParameter2(dat, dat2, "Number of days to project on by", "%i", (void*)&(P.NumDaysProject), 1, 1, 0)) P.NumDaysProject = 0;
+		P.StopDay = P.NumSamples;
+		P.StopTimeSet = 0;
+	}
+	else
+	{
+		P.MaxDetCaseStopSim = 1e9;
+		P.NumDaysProject = 0;
+		P.StopDay = P.NumSamples;
+		P.StopTimeSet = 0;
+	}
+
 	//Include a limit to the number of infections to simulate, if this happens before time runs out
 	if (!GetInputParameter2(dat, dat2, "Limit number of infections", "%i", (void*)&(P.LimitNumInfections), 1, 1, 0)) P.LimitNumInfections = 0;
 	if (P.LimitNumInfections)

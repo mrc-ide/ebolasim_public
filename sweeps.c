@@ -31,7 +31,7 @@ void RunModel(int run) //added run number as parameter
 	fs2 = 0;
 	nu = 0;
 
-	for (ns = 1; ((ns < P.NumSamples) && (!InterruptRun) && (continueEvents)); ns++) //&&(continueEvents) <-removed this
+	for (ns = 1; ((ns < P.NumSamples) && (ns <= P.StopDay) && (!InterruptRun) && (continueEvents)); ns++) //&&(continueEvents) <-removed this
 	{
 		
 		RecordSample(t, ns - 1);
@@ -68,7 +68,19 @@ void RunModel(int run) //added run number as parameter
 		
 
 		//Only run to a certain number of infections: ggilani 28/10/14
-		if (P.LimitNumInfections) continueEvents = (State.cumI < P.MaxNumInfections);
+		if (P.LimitNumInfections)
+		{
+			continueEvents = (State.cumI < P.MaxNumInfections);
+		}
+		if (P.DoStopSimDC && !P.StopTimeSet)
+		{
+			if (State.cumDC > P.MaxDetCaseStopSim)
+			{
+				P.StopDay = ns + P.NumDaysProject;
+				P.StopTimeSet = 1;
+			}
+		}
+
 		fprintf(stderr, "\r    t=%lg   %i    %i|%i    %i     %i   %i (%lg %lg %lg)   %lg    ", t, State.S, State.L, State.I, State.R, State.D, State.cumD, State.cumT, State.cumV, State.cumVG, sqrt(State.maxRad2) / 1000); //added State.cumVG
 		for (j = 0; ((j < P.UpdatesPerSample) && (!InterruptRun) && (continueEvents)); j++)
 		{
