@@ -239,16 +239,16 @@ void RecordSample(double t, int n)
 	if (P.DoAdUnits)
 		for (i = 0; i <= P.NumAdunits; i++)
 		{
-			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].capETU_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
+			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].capETU_adunit[i] = 0;// TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
 			for (j = 0; j < P.NumThreads; j++)
 			{
 				TimeSeries[n].incI_adunit[i] += (double)StateT[j].cumI_adunit[i];
 				TimeSeries[n].incC_adunit[i] += (double)StateT[j].cumC_adunit[i];
-				TimeSeries[n].incDC_adunit[i] += (double)StateT[j].cumDC_adunit[i]; //added detected cases: ggilani 03/02/15
-				TimeSeries[n].incD_adunit[i] += (double)StateT[j].cumD_adunit[i];
-				TimeSeries[n].incDD_adunit[i] += (double)StateT[j].cumDD_adunit[i]; //added detected deaths: ggilani 03/02/15
-				TimeSeries[n].incDR_adunit[i] += (double)StateT[j].cumDR_adunit[i]; //added detected recoveries: ggilani 03/02/15
-				TimeSeries[n].incSDB_adunit[i] += (double)StateT[j].cumSDB_adunit[i]; //added safe burials: ggilani 05/10/23
+				//TimeSeries[n].incDC_adunit[i] += (double)StateT[j].cumDC_adunit[i]; //added detected cases: ggilani 03/02/15
+				//TimeSeries[n].incD_adunit[i] += (double)StateT[j].cumD_adunit[i];
+				//TimeSeries[n].incDD_adunit[i] += (double)StateT[j].cumDD_adunit[i]; //added detected deaths: ggilani 03/02/15
+				//TimeSeries[n].incDR_adunit[i] += (double)StateT[j].cumDR_adunit[i]; //added detected recoveries: ggilani 03/02/15
+				//TimeSeries[n].incSDB_adunit[i] += (double)StateT[j].cumSDB_adunit[i]; //added safe burials: ggilani 05/10/23
 				if ((t >= P.FuneralControlTimeStart) && (AdUnits[i].contactTraceThresholdCrossed))
 				{
 					TimeSeries[n].capSDB_adunit[i] = AdUnits[i].maxSDB;
@@ -266,13 +266,13 @@ void RecordSample(double t, int n)
 					TimeSeries[n].capCT_adunit[i] = 0;
 				}
 
-				TimeSeries[n].incV_adunit[i] += (double)StateT[j].cumV_adunit[i]; //added vaccination: ggilani 05/10/23
-				TimeSeries[n].incVG_adunit[i] += (double)StateT[j].cumVG_adunit[i]; //added vaccination: ggilani 05/10/23
-				TimeSeries[n].incETU_adunit[i] += (double)StateT[j].cumETU_adunit[i]; //added hospitalisation
-				TimeSeries[n].incH_adunit[i] += (double)StateT[j].cumH_adunit[i];
-				TimeSeries[n].incCT_adunit[i] += (double)StateT[j].cumCT_adunit[i]; //added contact tracing: ggilani 15/06/17
-				TimeSeries[n].incCC_adunit[i] += (double)StateT[j].cumCC_adunit[i]; //added cases who are contacts: ggilani 28/05/2019
-				TimeSeries[n].cumT_adunit[i] += (double)StateT[j].cumT_adunit[i];
+				//TimeSeries[n].incV_adunit[i] += (double)StateT[j].cumV_adunit[i]; //added vaccination: ggilani 05/10/23
+				//TimeSeries[n].incVG_adunit[i] += (double)StateT[j].cumVG_adunit[i]; //added vaccination: ggilani 05/10/23
+				//TimeSeries[n].incETU_adunit[i] += (double)StateT[j].cumETU_adunit[i]; //added hospitalisation
+				//TimeSeries[n].incH_adunit[i] += (double)StateT[j].cumH_adunit[i];
+				//TimeSeries[n].incCT_adunit[i] += (double)StateT[j].cumCT_adunit[i]; //added contact tracing: ggilani 15/06/17
+				//TimeSeries[n].incCC_adunit[i] += (double)StateT[j].cumCC_adunit[i]; //added cases who are contacts: ggilani 28/05/2019
+				//TimeSeries[n].cumT_adunit[i] += (double)StateT[j].cumT_adunit[i];
 				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] = StateT[j].cumDD_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumVG_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumCC_adunit[i] = 0; //added hospitalisation, detected cases, contact tracing: ggilani 03/02/15, 15/06/17
 			}
 
@@ -280,7 +280,7 @@ void RecordSample(double t, int n)
 			{
 				for (j = 0; j < P.NumThreads; j++)
 				{
-					TimeSeries[n].ETU_adunit[i] += StateT[j].ETU_adunit[i];
+					//TimeSeries[n].ETU_adunit[i] += StateT[j].ETU_adunit[i];
 					//TimeSeries[n].H_adunit[i] += StateT[j].H_adunit[i];
 
 					if (StateT[j].capETU_adunit[i])
@@ -298,10 +298,10 @@ void RecordSample(double t, int n)
 
 	if (P.DoContactTracing) //added this to print out total number of beds in use at each time point: ggilani 31/10/14
 	{
-		for (i = 0; i < P.NumAdunits; i++)
+		/*for (i = 0; i < P.NumAdunits; i++)
 		{
 			TimeSeries[n].CT_adunit[i] = (double)AdUnits[i].nct;
-		}
+		}*/
 	}
 	if ((P.DoPlaces) && (t >= P.PlaceCloseTimeStart))
 	{
@@ -1349,47 +1349,47 @@ void SaveResults(void)
 		fprintf(dat, "t,");
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "I_%s,", AdUnits[i].ad_name); //"\tI%i"
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "C_%s,", AdUnits[i].ad_name); //"\tC%i"
-		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "DC_%s,", AdUnits[i].ad_name); //added detected cases: ggilani 03/02/15
-		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "D_%s,", AdUnits[i].ad_name); //added deaths: ggilani 05/10/23
-		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "DD_%s,", AdUnits[i].ad_name); //added detected deaths: ggilani 05/10/23
+		//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "DC_%s,", AdUnits[i].ad_name); //added detected cases: ggilani 03/02/15
+		//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "D_%s,", AdUnits[i].ad_name); //added deaths: ggilani 05/10/23
+		//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "DD_%s,", AdUnits[i].ad_name); //added detected deaths: ggilani 05/10/23
 		//for(i=0;i<P.NumAdunits;i++) fprintf(dat,"T_%s,",AdUnits[i].ad_name); //"\tT%i"
 
-		if (P.DoFuneralTransmission)
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "SDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
-			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
-		}
+		//if (P.DoFuneralTransmission)
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "SDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+		//	//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
+		//}
 
-		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-		{
-			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "ETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
-			if (P.DoOutputETUCapacity)
-			{
-				for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospital capacity indicator: ggilani 25/04/22
-			}
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incH_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
-			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "H_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
-		}
-		if (P.DoContactTracing)
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
-			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCC_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of cases who are contacts
+		//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+		//{
+		//	//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "ETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
+		//	if (P.DoOutputETUCapacity)
+		//	{
+		//		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospital capacity indicator: ggilani 25/04/22
+		//	}
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incH_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
+		//	//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "H_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
+		//}
+		//if (P.DoContactTracing)
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+		//	//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capCT_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incCC_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of cases who are contacts
 
-			//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CTC_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
+		//	//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "CTC_%s,", AdUnits[i].ad_name); //"\tT%i" //added contact tracing
 
-		}
-		if (P.DoRingVaccination)
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incV_%s,", AdUnits[i].ad_name); //"\tT%i" //added vaccination
-		}
-		if (P.DoGeoVaccination)
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incVG_%s,", AdUnits[i].ad_name); //"\tT%i" //added vaccination
-		}
+		//}
+		//if (P.DoRingVaccination)
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incV_%s,", AdUnits[i].ad_name); //"\tT%i" //added vaccination
+		//}
+		//if (P.DoGeoVaccination)
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incVG_%s,", AdUnits[i].ad_name); //"\tT%i" //added vaccination
+		//}
 		//for(i=0;i<P.NumAdunits;i++) fprintf(dat,"%lg,",P.PopByAdunit[i][0]); //"\t%lg"
 		//for(i=0;i<P.NumAdunits;i++) fprintf(dat,"%lg,",P.PopByAdunit[i][1]); //"\t%lg"
 		fprintf(dat, "\n");
@@ -1400,62 +1400,62 @@ void SaveResults(void)
 				fprintf(dat, "%lg,", TimeSeries[i].incI_adunit[j]); //"\t%lg"
 			for (j = 0; j < P.NumAdunits; j++)
 				fprintf(dat, "%lg,", TimeSeries[i].incC_adunit[j]); //"\t%lg"
-			for (j = 0; j < P.NumAdunits; j++)
-				fprintf(dat, "%lg,", TimeSeries[i].incDC_adunit[j]); //added detected cases: ggilani 03/02/15 
-			for (j = 0; j < P.NumAdunits; j++)
-				fprintf(dat, "%lg,", TimeSeries[i].incD_adunit[j]); //"\t%lg"
-			for (j = 0; j < P.NumAdunits; j++)
-				fprintf(dat, "%lg,", TimeSeries[i].incDD_adunit[j]); //"\t%lg"
+			//for (j = 0; j < P.NumAdunits; j++)
+			//	fprintf(dat, "%lg,", TimeSeries[i].incDC_adunit[j]); //added detected cases: ggilani 03/02/15 
+			//for (j = 0; j < P.NumAdunits; j++)
+			//	fprintf(dat, "%lg,", TimeSeries[i].incD_adunit[j]); //"\t%lg"
+			//for (j = 0; j < P.NumAdunits; j++)
+			//	fprintf(dat, "%lg,", TimeSeries[i].incDD_adunit[j]); //"\t%lg"
 
-			if (P.DoFuneralTransmission)
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incSDB_adunit[j]); //added safe burials: ggilani 05/10/23
-				//for (j = 0; j < P.NumAdunits; j++)
-				//	fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
-			}
+			//if (P.DoFuneralTransmission)
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].incSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+			//	//for (j = 0; j < P.NumAdunits; j++)
+			//	//	fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
+			//}
 
-			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-			{
-				//for (j = 0; j < P.NumAdunits; j++)
-				//	fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].ETU_adunit[j]); //"\t%lg" //added hospitalisation
-				if (P.DoOutputETUCapacity)
-				{
-					for (j = 0; j < P.NumAdunits; j++)
-						fprintf(dat, "%lg,", TimeSeries[i].capETU_adunit[j]); //"\t%lg" //added output for hospital capacity: ggilani 25/04/22
-				}
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incH_adunit[j]); //"\t%lg" //added incidence hospitalisation
-				//for (j = 0; j < P.NumAdunits; j++)
-					//fprintf(dat, "%lg,", TimeSeries[i].H_adunit[j]); //"\t%lg" //added hospitalisation
-			}
-			if (P.DoContactTracing)
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incCT_adunit[j]); //"\t%lg" //added contact tracing
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].CT_adunit[j]); //"\t%lg" //added contact tracing
-				//for (j = 0; j < P.NumAdunits; j++)
-				//	fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incCC_adunit[j]); //"\t%lg" //added cases who are contacts
-				//for (j = 0; j < P.NumAdunits; j++)
-				//	fprintf(dat, "%lg,", TimeSeries[i].CC_adunit[j]); //"\t%lg" //added cases who are contacts
-			}
-			if (P.DoRingVaccination)
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incV_adunit[j]); //"\t%lg" //added vaccination
-			}
-			if (P.DoGeoVaccination)
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, "%lg,", TimeSeries[i].incVG_adunit[j]); //"\t%lg" //added geographic vaccination
-			}
+			//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+			//{
+			//	//for (j = 0; j < P.NumAdunits; j++)
+			//	//	fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].incETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].ETU_adunit[j]); //"\t%lg" //added hospitalisation
+			//	if (P.DoOutputETUCapacity)
+			//	{
+			//		for (j = 0; j < P.NumAdunits; j++)
+			//			fprintf(dat, "%lg,", TimeSeries[i].capETU_adunit[j]); //"\t%lg" //added output for hospital capacity: ggilani 25/04/22
+			//	}
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].incH_adunit[j]); //"\t%lg" //added incidence hospitalisation
+			//	//for (j = 0; j < P.NumAdunits; j++)
+			//		//fprintf(dat, "%lg,", TimeSeries[i].H_adunit[j]); //"\t%lg" //added hospitalisation
+			//}
+			//if (P.DoContactTracing)
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].incCT_adunit[j]); //"\t%lg" //added contact tracing
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].CT_adunit[j]); //"\t%lg" //added contact tracing
+			//	//for (j = 0; j < P.NumAdunits; j++)
+			//	//	fprintf(dat, "%lg,", TimeSeries[i].capCT_adunit[j]); //"\t%lg" //added contact tracing
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].incCC_adunit[j]); //"\t%lg" //added cases who are contacts
+			//	//for (j = 0; j < P.NumAdunits; j++)
+			//	//	fprintf(dat, "%lg,", TimeSeries[i].CC_adunit[j]); //"\t%lg" //added cases who are contacts
+			//}
+			//if (P.DoRingVaccination)
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].incV_adunit[j]); //"\t%lg" //added vaccination
+			//}
+			//if (P.DoGeoVaccination)
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, "%lg,", TimeSeries[i].incVG_adunit[j]); //"\t%lg" //added geographic vaccination
+			//}
 			fprintf(dat, "\n");
 		}
 		fclose(dat);
@@ -1942,16 +1942,16 @@ void SaveSummaryResults(void)
 		fprintf(dat, "t");
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",I_%s", AdUnits[i].ad_name);
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",C_%s", AdUnits[i].ad_name);
-		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",DC_%s", AdUnits[i].ad_name); //added detected cases: ggilani 03/02/15
+		//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",DC_%s", AdUnits[i].ad_name); //added detected cases: ggilani 03/02/15
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",T_%s", AdUnits[i].ad_name);
-		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",ETU_%s", AdUnits[i].ad_name); //added hospitalisation
-		}
-		if (P.DoContactTracing)
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",CT_%s", AdUnits[i].ad_name); //added contact tracing
-		}
+		//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",ETU_%s", AdUnits[i].ad_name); //added hospitalisation
+		//}
+		//if (P.DoContactTracing)
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",CT_%s", AdUnits[i].ad_name); //added contact tracing
+		//}
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",%lg", P.PopByAdunit[i][0]);
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",%lg", P.PopByAdunit[i][1]);
 		fprintf(dat, "\n");
@@ -1962,22 +1962,22 @@ void SaveSummaryResults(void)
 				fprintf(dat, ",%lg", c * TSMean[i].incI_adunit[j]);
 			for (j = 0; j < P.NumAdunits; j++)
 				fprintf(dat, ",%lg", c * TSMean[i].incC_adunit[j]);
-			for (j = 0; j < P.NumAdunits; j++)
-				fprintf(dat, ",%lg", c * TSMean[i].incDC_adunit[j]); //added detected cases: ggilani 03/02/15
-			for (j = 0; j < P.NumAdunits; j++)
-				fprintf(dat, ",%lg", c * TSMean[i].cumT_adunit[j]);
-			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, ",%lg", c * TSMean[i].incETU_adunit[j]); //added hospitalisation
-			}
-			if (P.DoContactTracing)
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, ",%lg", c * TSMean[i].incCT_adunit[j]); //added contact tracing
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, ",%lg", c * TSMean[i].incCC_adunit[j]); //added cases who are contacts
-			}
+			//for (j = 0; j < P.NumAdunits; j++)
+			//	fprintf(dat, ",%lg", c * TSMean[i].incDC_adunit[j]); //added detected cases: ggilani 03/02/15
+			/*for (j = 0; j < P.NumAdunits; j++)
+				fprintf(dat, ",%lg", c * TSMean[i].cumT_adunit[j]);*/
+			//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, ",%lg", c * TSMean[i].incETU_adunit[j]); //added hospitalisation
+			//}
+			//if (P.DoContactTracing)
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, ",%lg", c * TSMean[i].incCT_adunit[j]); //added contact tracing
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, ",%lg", c * TSMean[i].incCC_adunit[j]); //added cases who are contacts
+			//}
 			fprintf(dat, "\n");
 		}
 		fclose(dat);
@@ -1986,16 +1986,16 @@ void SaveSummaryResults(void)
 		fprintf(dat, "t");
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",I_%s", AdUnits[i].ad_name);
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",C_%s", AdUnits[i].ad_name);
-		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",DC_%s", AdUnits[i].ad_name); //added detected cases: ggilani 03/02/15
+		//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",DC_%s", AdUnits[i].ad_name); //added detected cases: ggilani 03/02/15
 		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",T_%s", AdUnits[i].ad_name);
-		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",ETU_%s", AdUnits[i].ad_name); //added hospitalisation
-		}
-		if (P.DoContactTracing)
-		{
-			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",CT_%s", AdUnits[i].ad_name); //added contact tracing
-		}
+		//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",ETU_%s", AdUnits[i].ad_name); //added hospitalisation
+		//}
+		//if (P.DoContactTracing)
+		//{
+		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, ",CT_%s", AdUnits[i].ad_name); //added contact tracing
+		//}
 		fprintf(dat, "\n");
 		for (i = 0; i < P.NumSamples; i++)
 		{
@@ -2004,22 +2004,22 @@ void SaveSummaryResults(void)
 				fprintf(dat, ",%lg", c * TSVar[i].incI_adunit[j] - c * c * TSMean[i].incI_adunit[j] * TSMean[i].incI_adunit[j]);
 			for (j = 0; j < P.NumAdunits; j++)
 				fprintf(dat, ",%lg", c * TSVar[i].incC_adunit[j] - c * c * TSMean[i].incC_adunit[j] * TSMean[i].incC_adunit[j]);
-			for (j = 0; j < P.NumAdunits; j++)
-				fprintf(dat, ",%lg", c * TSVar[i].incDC_adunit[j] - c * c * TSMean[i].incDC_adunit[j] * TSMean[i].incDC_adunit[j]); //added detected cases: ggilani 03/02/15
-			for (j = 0; j < P.NumAdunits; j++)
-				fprintf(dat, ",%lg", c * TSVar[i].cumT_adunit[j] - c * c * TSMean[i].cumT_adunit[j] * TSMean[i].cumT_adunit[j]);
-			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, ",%lg", c * TSVar[i].incETU_adunit[j] - c * c * TSMean[i].incETU_adunit[j] * TSMean[i].incETU_adunit[j]); //added hospitalisation
-			}
-			if (P.DoContactTracing)
-			{
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, ",%lg", c * TSVar[i].incCT_adunit[j] - c * c * TSMean[i].incCT_adunit[j] * TSMean[i].incCT_adunit[j]); //added contact tracing
-				for (j = 0; j < P.NumAdunits; j++)
-					fprintf(dat, ",%lg", c * TSVar[i].incCC_adunit[j] - c * c * TSMean[i].incCC_adunit[j] * TSMean[i].incCC_adunit[j]); //added cases who are contacts
-			}
+			//for (j = 0; j < P.NumAdunits; j++)
+			//	fprintf(dat, ",%lg", c * TSVar[i].incDC_adunit[j] - c * c * TSMean[i].incDC_adunit[j] * TSMean[i].incDC_adunit[j]); //added detected cases: ggilani 03/02/15
+			/*for (j = 0; j < P.NumAdunits; j++)
+				fprintf(dat, ",%lg", c * TSVar[i].cumT_adunit[j] - c * c * TSMean[i].cumT_adunit[j] * TSMean[i].cumT_adunit[j]);*/
+			//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, ",%lg", c * TSVar[i].incETU_adunit[j] - c * c * TSMean[i].incETU_adunit[j] * TSMean[i].incETU_adunit[j]); //added hospitalisation
+			//}
+			//if (P.DoContactTracing)
+			//{
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, ",%lg", c * TSVar[i].incCT_adunit[j] - c * c * TSMean[i].incCT_adunit[j] * TSMean[i].incCT_adunit[j]); //added contact tracing
+			//	for (j = 0; j < P.NumAdunits; j++)
+			//		fprintf(dat, ",%lg", c * TSVar[i].incCC_adunit[j] - c * c * TSMean[i].incCC_adunit[j] * TSMean[i].incCC_adunit[j]); //added cases who are contacts
+			//}
 			fprintf(dat, "\n");
 		}
 		fclose(dat);

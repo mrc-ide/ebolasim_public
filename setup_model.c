@@ -219,15 +219,14 @@ void SetupModel(char *DensityFile,char *NetworkFile,char *SchoolFile, char *RegD
 					TSMean[i].incI_keyworker[j]=TSVar[i].incI_keyworker[j]=
 					TSMean[i].incC_keyworker[j]=TSVar[i].incC_keyworker[j]=
 					TSMean[i].cumT_keyworker[j]=TSVar[i].cumT_keyworker[j]=0;
-			if(P.DoAdUnits)
-				for(j=0;j<=P.NumAdunits;j++)
-					TSMean[i].incI_adunit[j]=TSVar[i].incI_adunit[j]=
-					TSMean[i].incC_adunit[j]=TSVar[i].incC_adunit[j]=
-					TSMean[i].incDC_adunit[j]=TSVar[i].incDC_adunit[j]=//added detected cases here: ggilani 03/02/15
-					TSMean[i].incETU_adunit[j]=TSVar[i].incETU_adunit[j]=
-					TSMean[i].incCT_adunit[j]=TSVar[i].incCT_adunit[j]= //added contact tracing
-					TSMean[i].incCC_adunit[j]=TSVar[i].incCC_adunit[j]= //added cases who are contacts: ggilani 28/05/2019
-					TSMean[i].cumT_adunit[j]=TSVar[i].cumT_adunit[j]=0;
+			if (P.DoAdUnits)
+				for (j = 0; j <= P.NumAdunits; j++)
+					TSMean[i].incI_adunit[j] = TSVar[i].incI_adunit[j] = TSMean[i].incC_adunit[j] = TSVar[i].incC_adunit[j] = 0;
+					//TSMean[i].incDC_adunit[j]=TSVar[i].incDC_adunit[j]=//added detected cases here: ggilani 03/02/15
+					//TSMean[i].incETU_adunit[j]=TSVar[i].incETU_adunit[j]=
+					//TSMean[i].incCT_adunit[j]=TSVar[i].incCT_adunit[j]= //added contact tracing
+					//TSMean[i].incCC_adunit[j]=TSVar[i].incCC_adunit[j]= //added cases who are contacts: ggilani 28/05/2019
+					//TSMean[i].cumT_adunit[j]=TSVar[i].cumT_adunit[j]=0;
 			}
 		TSMean=TSMeanNE;TSVar=TSVarNE;
 		}
