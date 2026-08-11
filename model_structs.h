@@ -15,7 +15,7 @@ typedef struct PERSON {
   int PlacePresence[NUM_PLACE_TYPES]; //added this to help keep track of household members who should be in similar places, when actually doing the place assignment: ggilani 10/02/17
   float base_inf_level;
   float infectiousness,susc,vacc_eff,infectiousMult; //added infectiousMult to help reset infectiousness
-  double rep_rate,vacc_accept; // added this to allow for clustering of reporting rates in households/places: ggilani 
+  double rep_rate,vacc_accept,hcs_accept; // added this to allow for clustering of reporting rates in households/places: ggilani 
   short int inf,infect_type;
   unsigned short int infection_time,latent_time,recovery_time,hospital_time; //added time to hospitalisation: ggilani 28/10/2014
   unsigned short int treat_start_time,treat_stop_time,contactTraced_start_time,contactTraced_end_time; //added contact tracing start time as well: ggilani 14/06/17
@@ -301,7 +301,7 @@ typedef struct PARAM {
   int ResetVaccQueue; //added to reset vaccination queue daily - ggilani 19/12/23
   int DoGeoVaccination,OnlyDoGeoVaccWhenNoRing;
   double ProbEstablishRing;
-  int DoClusterVaccAccept;
+  int DoClusterVaccAccept, DoClusterHCS;
   int NPropRingVacc, CurrIndPropRingVacc; //added for updated ring vaccination code - gilani 29/05/19
   double PropRingVacc,TimeToIncVaccRing; //added this for ring vaccination - ggilani 15/02/2017
   double ChangePointPropRingVacc[MAX_CHANGE_POINTS], ListPropRingVacc[MAX_CHANGE_POINTS]; //added this for ring vaccination - ggilani 29/05/19

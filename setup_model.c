@@ -685,7 +685,7 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 	const char delimiters[] = " \t,";
 	FILE *dat,*dat2;
 	bin_file rec,*BinFileOutBuf,*BFO;
-	double temp_rep_rate,temp_vacc_accept; //added this to add case detection rate per household
+	double temp_rep_rate,temp_vacc_accept,temp_hcs_accept; //added this to add case detection rate per household
 
 	if(!(Cells=(cell *) calloc(P.NC,sizeof(cell)))) ERR_CRITICAL("Unable to allocate cell storage\n");
 	if(!(Mcells=(microcell *) calloc(P.NMC,sizeof(microcell)))) ERR_CRITICAL("Unable to allocate cell storage\n");
@@ -1124,10 +1124,11 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 				}
 			denom_household[m]++;
 			//Case detection by household
-			if (P.DoClusterVaccAccept||P.DoClusterCaseDetection)
+			if (P.DoClusterVaccAccept||P.DoClusterCaseDetection||P.DoClusterHCS)
 			{
 				temp_rep_rate = ranf();
 				temp_vacc_accept = ranf();
+				temp_hcs_accept = ranf();
 			}
 			for(i2=0;i2<m;i2++)
 			{
@@ -1155,6 +1156,14 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 				else
 				{
 					Hosts[i + i2].rep_rate = ranf();
+				}
+				if (P.DoClusterHCS)
+				{
+					Hosts[i + i2].hcs_accept = temp_hcs_accept;
+				}
+				else
+				{
+					Hosts[i + i2].hcs_accept = ranf();
 				}
 				//add case detection here: ggilani 13/06/19
 				//if (P.DoCaseDetection)
