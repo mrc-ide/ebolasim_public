@@ -332,6 +332,9 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.VaccGeoDosePerDay = P.BaseVaccGeoDosePerDay;
 	P.VaccDoseFlag = 1;
 	P.UpdateVaccDosePerDay = 1;
+	//reset stop times
+	P.StopDay = P.NumSamples;
+	P.StopTimeSet = 0;
 
 	//vaccinate HCWs and FLWs
 	if (P.IncludeHospitalPlaceType)

@@ -342,6 +342,7 @@ typedef struct PARAM {
   int DoDistributionVaccination,DistribNetCountry,SIADoAllCountries,VaccDosesPerPhial;
   //Added DoRecordInfEvents and MaxInfEvents in order to give the user a choice as to whether to output infection events as a line list: ggilani - 10/10/14
   int DoRecordInfEvents, MaxInfEvents, RecordInfEventsPerRun;
+  int DoStopSimDC, MaxDetCaseStopSim, NumDaysProject, StopDay, StopTimeSet; // added this to stop simulation after a specified number of detected cases: ggilani 11/08/26
   double KernelPowerScale, KernelOffsetScale;
   int LimitNumInfections, MaxNumInfections;
   //Added parameters to incorporate time to death/recovery functions: ggilani - 22/10/14
