@@ -667,6 +667,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 
 		//
 		if (!GetInputParameter2(dat, dat2, "Proportion of cases seeking care before outbreak declared", "%lf", (void*)&P.PropHospSeekPreOutbreak, 1, 1, 0)) P.PropHospSeekPreOutbreak = 0.5;
+		if (!GetInputParameter2(dat, dat2, "Do clustered healthcare seeking by household", "%i", (void*)&(P.DoClusterHCS), 1, 1, 0)) P.DoClusterHCS = 0;
 		if (!GetInputParameter2(dat, dat2, "Relative change in care seeking behaviour after outbreak declared", "%lf", (void*)&P.RelChangeHospSeekPostOutbreak, 1, 1, 0)) P.RelChangeHospSeekPostOutbreak = 1;
 
 		// Currently commented this out in order to make 

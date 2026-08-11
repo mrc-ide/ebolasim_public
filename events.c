@@ -1060,7 +1060,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 		
 		if (P.DoHospitalisation)
 		{
-			if (ranf_mt(tn) < P.PropHospSeek)
+			if (Hosts[ai].hcs_accept < P.PropHospSeek)
 			{
 				//this just sets hospitalisation time. detection now happens after hospitalisation
 				if (Hosts[ai].contactTraced == 0)
