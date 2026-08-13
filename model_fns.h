@@ -47,6 +47,7 @@ void SaveHospDist(int); //added function to save hospital information: ggilani -
 void SaveResults(void);
 void SaveSummaryResults(void);
 void SaveRandomSeeds(void); //added this function to save random seeds for each run: ggilani - 09/03/17
+void SaveParamDists(void); //added this function to save variables for each run when sampled from a distribution - ggilani 13/08/26
 void SaveEvents(void); //added this function to save infection events from all realisations: ggilani - 15/10/14
 void LoadSnapshot(void);
 void SaveSnapshot(void);

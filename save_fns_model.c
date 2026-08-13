@@ -2196,6 +2196,66 @@ void SaveRandomSeeds(void)
 	fclose(dat);
 }
 
+/* function: SaveParamDists(void)
+ *
+ * Purpose: outputs variables sampled from parameter distributions
+ * Parameter: none
+ * Returns: none
+ *
+ * Author: ggilani, 09/03/17
+ */
+void SaveParamDists(void)
+{
+	FILE* dat;
+	char outname[1024];
+	int i;
+
+	if (P.DoDistSeekCare)
+	{
+		sprintf(outname, "%s.careseeking.csv", OutFileBase);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		for (i = 0; i < P.NR; i++)
+		{
+			fprintf(dat, "%i,%lf\n",i, P.PropSeekCareDist[i]);
+		}
+		fclose(dat);
+	}
+
+	if (P.DoDistSeekCarePostDec)
+	{
+		sprintf(outname, "%s.rel_careseeking.csv", OutFileBase);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		for (i = 0; i < P.NR; i++)
+		{
+			fprintf(dat, "%i,%lf\n", i, P.PropSeekCarePostDecDist[i]);
+		}
+		fclose(dat);
+	}
+
+	if (P.DoDistPropHospDetect)
+	{
+		sprintf(outname, "%s.hospdetect.csv", OutFileBase);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		for (i = 0; i < P.NR; i++)
+		{
+			fprintf(dat, "%i,%lf\n", i, P.PropHospDetectDist[i]);
+		}
+		fclose(dat);
+	}
+
+	if (P.DoDistCommDeath)
+	{
+		sprintf(outname, "%s.commdeath.csv", OutFileBase);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		for (i = 0; i < P.NR; i++)
+		{
+			fprintf(dat, "%i,%lf\n", i, P.PropCommDeathDist[i]);
+		}
+		fclose(dat);
+	}
+	
+}
+
 
 /* function: SaveEvents(void)
  *

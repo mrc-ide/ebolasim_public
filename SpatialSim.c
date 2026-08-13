@@ -398,6 +398,45 @@ int main(int argc,char *argv[])
 			P.FixedSeeds[i][1]	= (int)(ranf() * 1e8);
 		}
 	}
+	//sample from distributions for care seeking parameters if necessary
+	if (P.DoDistSeekCare)
+	{
+		for (i = 0; (i < P.NR); i++)
+		{
+			P.PropSeekCareDist[i] = ranf()*(P.PropSeekCareMax - P.PropSeekCareMin) + P.PropSeekCareMin;
+		}
+	}
+	//sample from distributions for relative care seeking parameters post declaration if necessary
+	if (P.DoDistSeekCarePostDec)
+	{
+		for (i = 0; (i < P.NR); i++)
+		{
+			P.PropSeekCarePostDecDist[i] = ranf() * (P.PropSeekCarePostDecMax - P.PropSeekCarePostDecMin) + P.PropSeekCarePostDecMin;
+		}
+	}
+	//sample from distributions for hospital detection if necessary
+	if (P.DoDistPropHospDetect)
+	{
+		for (i = 0; (i < P.NR); i++)
+		{
+			P.PropHospDetectDist[i] = ranf() * (P.PropHospDetectMax - P.PropHospDetectMin) + P.PropHospDetectMin;
+		}
+	}
+	//sample from distributions for hospital detection if necessary
+	if (P.DoDistCommDeath)
+	{
+		for (i = 0; (i < P.NR); i++)
+		{
+			P.PropCommDeathDist[i] = ranf() * (P.PropCommDeathMax - P.PropCommDeathMin) + P.PropCommDeathMin;
+		}
+	}
+
+	//write out distribution files if necessary
+	if (P.DoDistSeekCare || P.DoDistSeekCarePostDec || P.DoDistPropHospDetect || P.DoDistCommDeath) //don't really need if statement
+	{
+		SaveParamDists();
+	}
+
 
 	if(!P.ResetSeeds)
 	{
@@ -444,6 +483,24 @@ int main(int argc,char *argv[])
 			setall(P.newseed1,P.newseed2);
 			//fprintf(stderr, "%i, %i\n", P.newseed1,P.newseed2);
 			//fprintf(stderr, "%f\n", ranf());
+		}
+
+		//update distribution parameters if necessary
+		if (P.DoDistSeekCare)
+		{
+			P.PropHospSeekPreOutbreak = P.PropSeekCareDist[i];
+		}
+		if (P.DoDistSeekCarePostDec)
+		{
+			P.RelChangeHospSeekPostOutbreak = P.PropSeekCarePostDecDist[i];
+		}
+		if (P.DoDistPropHospDetect)
+		{
+			P.ProbDetectHosp = P.PropHospDetectDist[i];
+		}
+		if (P.DoDistCommDeath)
+		{
+			P.PropUndetectedCommunityCasesDetectedAtDeath = P.PropCommDeathDist[i];
 		}
 
 		InitModel(i); //passing run number into RunModel so we can save run number in the infection event log: ggilani - 15/10/2014
