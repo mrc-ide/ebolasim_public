@@ -40,7 +40,7 @@ typedef struct POPVAR {
   int cumC_country[MAX_COUNTRIES]; //added cumulative cases by country: ggilani 12/11/14
   int cumHQ,cumAC,cumAA,cumAH,cumACS,cumAPC,cumAPA,cumAPCS;
   int Na[NUM_AGE_GROUPS],cumIa[NUM_AGE_GROUPS],cumCa[NUM_AGE_GROUPS],cumDa[NUM_AGE_GROUPS],cumDCa[NUM_AGE_GROUPS],cumETUa[NUM_AGE_GROUPS], cumHa[NUM_AGE_GROUPS],cumVa[NUM_AGE_GROUPS], cumVGa[NUM_AGE_GROUPS]; //added detected cases, hosp and vacc by age group - ggilani 22/02/22
-  int cumI_adunit[MAX_ADUNITS],cumC_adunit[MAX_ADUNITS],cumT_adunit[MAX_ADUNITS],cumETU_adunit[MAX_ADUNITS],ETU_adunit[MAX_ADUNITS], cumH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS], cumDC_adunit[MAX_ADUNITS], cumD_adunit[MAX_ADUNITS],cumDD_adunit[MAX_ADUNITS], cumDR_adunit[MAX_ADUNITS]; //added cumulative hospitalisation per admin unit: ggilani 28/10/14, cumulative detected cases per adunit: ggilani 03/02/15
+  int cumI_adunit[MAX_ADUNITS],cumC_adunit[MAX_ADUNITS],cumT_adunit[MAX_ADUNITS],cumETU_adunit[MAX_ADUNITS], disETU_adunit[MAX_ADUNITS],ETU_adunit[MAX_ADUNITS], cumH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS], cumDC_adunit[MAX_ADUNITS], cumD_adunit[MAX_ADUNITS],cumDD_adunit[MAX_ADUNITS], cumDR_adunit[MAX_ADUNITS]; //added cumulative hospitalisation per admin unit: ggilani 28/10/14, cumulative detected cases per adunit: ggilani 03/02/15
   int cumCT_adunit[MAX_ADUNITS],CT_adunit[MAX_ADUNITS],cumV_adunit[MAX_ADUNITS],cumVG_adunit[MAX_ADUNITS],cumCC_adunit[MAX_ADUNITS],CC_adunit[MAX_ADUNITS],cumSDB_adunit[MAX_ADUNITS]; //added cumulative and CT per admin unit: ggilani 15/06/17
   int capETU_adunit[MAX_ADUNITS]; //added something to store whether hospitals are over capacity in each adunit: ggilani 04/05/22
   int cumItype[INFECT_TYPE_MASK],cumI_keyworker[2],cumC_keyworker[2],cumT_keyworker[2],cumD_keyworker[2];
@@ -77,7 +77,7 @@ typedef struct RESULTS {
   double incIa[NUM_AGE_GROUPS],incCa[NUM_AGE_GROUPS],incDa[NUM_AGE_GROUPS],incDCa[NUM_AGE_GROUPS],incETUa[NUM_AGE_GROUPS], incHa[NUM_AGE_GROUPS], incVa[NUM_AGE_GROUPS];
   double incItype[INFECT_TYPE_MASK],Rtype[INFECT_TYPE_MASK],Rage[NUM_AGE_GROUPS],Rdenom;
   double rmsRad,maxRad,PropPlacesClosed[NUM_PLACE_TYPES];
-  double incI_adunit[MAX_ADUNITS], incC_adunit[MAX_ADUNITS];// , cumT_adunit[MAX_ADUNITS], incETU_adunit[MAX_ADUNITS], ETU_adunit[MAX_ADUNITS], incH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS], incDC_adunit[MAX_ADUNITS]; //added incidence of hospitalisation per day: ggilani 28/10/14, incidence of detected cases per adunit,: ggilani 03/02/15
+  double incI_adunit[MAX_ADUNITS], incC_adunit[MAX_ADUNITS],incETU_adunit[MAX_ADUNITS], ETU_adunit[MAX_ADUNITS], disETU_adunit[MAX_ADUNITS];// , cumT_adunit[MAX_ADUNITS], incH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS], incDC_adunit[MAX_ADUNITS]; //added incidence of hospitalisation per day: ggilani 28/10/14, incidence of detected cases per adunit,: ggilani 03/02/15
   //double incCT_adunit[MAX_ADUNITS],CT_adunit[MAX_ADUNITS], incCC_adunit[MAX_ADUNITS], CC_adunit[MAX_ADUNITS],incV_adunit[MAX_ADUNITS],incVG_adunit[MAX_ADUNITS]; //added incidence of contact tracing and number of people being contact traced per admin unit: ggilani 15/06/17
   //double incD_adunit[MAX_ADUNITS],incDD_adunit[MAX_ADUNITS], incDR_adunit[MAX_ADUNITS],incSDB_adunit[MAX_ADUNITS]; //added detected deaths, detected recoveries, safe burials per adunit, beds per admin unit
   double capETU_adunit[MAX_ADUNITS],capSDB_adunit[MAX_ADUNITS],capCT_adunit[MAX_ADUNITS],nBeds_adunit[MAX_ADUNITS]; //added marker for hospital capacity in each admin unit: ggilani 04/05/22
