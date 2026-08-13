@@ -180,7 +180,15 @@ void DoIncub(int ai, unsigned short int ts, int tn, int run)
 			i = (int)floor(q = ranf_mt(tn) * CDF_RES);
 			q -= ((double)i);
 			ti = -P.InfectiousPeriod * log(q * P.infectious_icdf[i + 1] + (1.0 - q) * P.infectious_icdf[i]);
-			a->recovery_time = a->latent_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
+			if (P.DoSymptoms)
+			{
+				a->recovery_time = a->latent_time + (unsigned short int) max(floor(0.5 + (ti * P.TimeStepsPerDay)), ((int)(P.LatentToSymptDelay / P.TimeStep)));
+			}
+			else
+			{
+				a->recovery_time = a->latent_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
+			}
+
 		}
 
 		if (P.DoMortality) //added DoMortality to allow different approaches to assigning mortality: ggilani - 22/10/2014

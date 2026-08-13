@@ -239,7 +239,7 @@ void RecordSample(double t, int n)
 	if (P.DoAdUnits)
 		for (i = 0; i <= P.NumAdunits; i++)
 		{
-			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].capETU_adunit[i] = 0;// TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
+			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].capETU_adunit[i] = TimeSeries[n].ETU_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].disETU_adunit[i] = 0;// TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
 			for (j = 0; j < P.NumThreads; j++)
 			{
 				TimeSeries[n].incI_adunit[i] += (double)StateT[j].cumI_adunit[i];
@@ -268,19 +268,20 @@ void RecordSample(double t, int n)
 
 				//TimeSeries[n].incV_adunit[i] += (double)StateT[j].cumV_adunit[i]; //added vaccination: ggilani 05/10/23
 				//TimeSeries[n].incVG_adunit[i] += (double)StateT[j].cumVG_adunit[i]; //added vaccination: ggilani 05/10/23
-				//TimeSeries[n].incETU_adunit[i] += (double)StateT[j].cumETU_adunit[i]; //added hospitalisation
+				TimeSeries[n].incETU_adunit[i] += (double)StateT[j].cumETU_adunit[i]; //added hospitalisation
+				TimeSeries[n].disETU_adunit[i] += (double)StateT[j].disETU_adunit[i]; //added discharge
 				//TimeSeries[n].incH_adunit[i] += (double)StateT[j].cumH_adunit[i];
 				//TimeSeries[n].incCT_adunit[i] += (double)StateT[j].cumCT_adunit[i]; //added contact tracing: ggilani 15/06/17
 				//TimeSeries[n].incCC_adunit[i] += (double)StateT[j].cumCC_adunit[i]; //added cases who are contacts: ggilani 28/05/2019
 				//TimeSeries[n].cumT_adunit[i] += (double)StateT[j].cumT_adunit[i];
-				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] = StateT[j].cumDD_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumVG_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumCC_adunit[i] = 0; //added hospitalisation, detected cases, contact tracing: ggilani 03/02/15, 15/06/17
+				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] = StateT[j].cumDD_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumVG_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumCC_adunit[i] = StateT[j].disETU_adunit[i] = 0; //added hospitalisation, detected cases, contact tracing: ggilani 03/02/15, 15/06/17
 			}
 
 			if ((P.DoHospitalisation) && (P.DoETUByAdUnit)) //added this to print out total number of beds in use at each time point: ggilani 31/10/14
 			{
 				for (j = 0; j < P.NumThreads; j++)
 				{
-					//TimeSeries[n].ETU_adunit[i] += StateT[j].ETU_adunit[i];
+					TimeSeries[n].ETU_adunit[i] += StateT[j].ETU_adunit[i];
 					//TimeSeries[n].H_adunit[i] += StateT[j].H_adunit[i];
 
 					if (StateT[j].capETU_adunit[i])
@@ -1360,11 +1361,13 @@ void SaveResults(void)
 		//	//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burials: ggilani 05/10/23
 		//}
 
-		//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-		//{
-		//	//for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
-		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
-		//	for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "ETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
+		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+		{
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "disETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added incidence of hospitalisation
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "ETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospitalisation
+		}
 		//	if (P.DoOutputETUCapacity)
 		//	{
 		//		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capETU_%s,", AdUnits[i].ad_name); //"\tT%i" //added hospital capacity indicator: ggilani 25/04/22
@@ -1415,14 +1418,17 @@ void SaveResults(void)
 			//	//	fprintf(dat, "%lg,", TimeSeries[i].capSDB_adunit[j]); //added safe burials: ggilani 05/10/23
 			//}
 
-			//if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
-			//{
-			//	//for (j = 0; j < P.NumAdunits; j++)
-			//	//	fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
-			//	for (j = 0; j < P.NumAdunits; j++)
-			//		fprintf(dat, "%lg,", TimeSeries[i].incETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
-			//	for (j = 0; j < P.NumAdunits; j++)
-			//		fprintf(dat, "%lg,", TimeSeries[i].ETU_adunit[j]); //"\t%lg" //added hospitalisation
+			if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
+			{
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].incETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].disETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].ETU_adunit[j]); //"\t%lg" //added hospitalisation
+			}
 			//	if (P.DoOutputETUCapacity)
 			//	{
 			//		for (j = 0; j < P.NumAdunits; j++)

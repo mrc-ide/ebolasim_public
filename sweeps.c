@@ -564,12 +564,13 @@ void HospitalSweepAdunits(double t)
 			{
 				for (k = 0; k < StateT[j].nhd_queue[i]; k++)
 				{
-					if (Hosts[StateT[j].hd_queue[i][k]].etu)
+					if (Hosts[StateT[j].hd_queue[i][k]].etu && (Hosts[StateT[j].hd_queue[i][k]].etu == ts))
 					{
 						//Hosts[StateT[j].hd_queue[i][k]].etu = 0;
 						//if host was hospitalised in the same admin unit of which they are a residence, we reduce the number of currently in-use within admin unit beds in the current admin unit
 						AdUnits[i].currentETUBeds--;
 						StateT[j].ETU_adunit[i]--;
+						StateT[j].disETU_adunit[i]++;
 					}
 				}
 			}

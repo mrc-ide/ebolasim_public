@@ -10,7 +10,7 @@
 
 // #define COUNTRY_WA
 #define DO_OMP_PARALLEL
-#define MAX_NUM_THREADS 16
+#define MAX_NUM_THREADS 4//16
 #define CACHE_LINE_SIZE 256
 #include <omp.h>
 
