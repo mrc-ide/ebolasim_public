@@ -528,13 +528,14 @@ void TravelDepartSweep(double t)
  */
 void HospitalSweepAdunits(double t)
 {
-	int i, j, k, l, tn, ad;
+	int i, j, k, l, tn, ad, ai;
 	int numBeds, numBeds_inAU, numBeds_outAU;
 	int numFreeBeds, numFreeBeds_inAU, numFreeBeds_outAU;
 	int flag, ntrials;
 	int max_trials = 50; //maximum number of times to try and fill outside of admin unit hospital beds
 	int age; //added age to help track hospitalisations by age.
 	int ts;
+	person* a;
 
 	ts = (int)(t * P.TimeStepsPerDayInt);
 
@@ -602,31 +603,32 @@ void HospitalSweepAdunits(double t)
 						{
 							for (j = 0; j < AdUnits[i].nh_queue; j++)
 							{
-								k = AdUnits[i].h_queue[j];
-								age = HOST_AGE_GROUP(k); 
-								if (k == 31067128)
+								ai = AdUnits[i].h_queue[j];
+								a = Hosts + ai;
+								age = HOST_AGE_GROUP(ai); 
+								if (ai == 31067128)
 								{
 									1;
 								}
 								//if host is set to die, but would recover because of treatment, change flag here and extend recovery_time by a randomly sampled amount
 								if (P.DoMortalityByETU)
 								{
-									if (Hosts[k].to_die)
+									if (a -> to_die)
 									{
 										if (ranf_mt(tn) > (1.0 / P.RelCommCFR))
 										{
-											//Hosts[k].to_die = 0;
+											a -> to_die = 0;
 											//update recovery time
-											Hosts[k].recovery_time += (unsigned short int) (P.TimeStepsPerDay * (ranf_mt(tn) * (P.ExtraRecTimeETUMax - P.ExtraRecTimeETUMin) + P.ExtraRecTimeETUMin));
+											a -> recovery_time += (unsigned short int) (P.TimeStepsPerDay * (ranf_mt(tn) * (P.ExtraRecTimeETUMax - P.ExtraRecTimeETUMin) + P.ExtraRecTimeETUMin));
 										}
 									}
 								}
-								Hosts[k].etu = Hosts[k].recovery_time;
+								a -> etu = a -> recovery_time;
 								//actual time they go into ETU
-								Hosts[k].hospital_time = ts;
+								a -> hospital_time = ts;
 								//all cases in ETUs are detected
-								Hosts[k].detected = 1;
-								Hosts[k].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
+								a -> detected = 1;
+								a -> detect_time = min(ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), a -> recovery_time);
 								//set the admin unit identifier in which they are hospitalised
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -641,24 +643,29 @@ void HospitalSweepAdunits(double t)
 							SampleWithoutReplacement(tn, numFreeBeds, AdUnits[i].nh_queue);
 							for (j = 0; j < numFreeBeds; j++)
 							{
-								k = AdUnits[i].h_queue[SamplingQueue[tn][j]];
-								age = HOST_AGE_GROUP(k);
+								ai = AdUnits[i].h_queue[SamplingQueue[tn][j]];
+								if (ai == 31067128)
+								{
+									1;
+								}
+								age = HOST_AGE_GROUP(ai);
+								a = Hosts + ai;
 								if (P.DoMortalityByETU) {
-									if (Hosts[k].to_die)
+									if (a -> to_die)
 									{
 										if (ranf_mt(tn) > (1.0 / P.RelCommCFR))
 										{
-											Hosts[k].to_die = 0;
+											a -> to_die = 0;
 											//update recovery time
-											Hosts[k].recovery_time += (unsigned short int) (P.TimeStepsPerDay * (ranf_mt(tn) * (P.ExtraRecTimeETUMax - P.ExtraRecTimeETUMin) + P.ExtraRecTimeETUMin));
+											a -> recovery_time += (unsigned short int) (P.TimeStepsPerDay * (ranf_mt(tn) * (P.ExtraRecTimeETUMax - P.ExtraRecTimeETUMin) + P.ExtraRecTimeETUMin));
 										}
 									}
 								}
-								Hosts[k].etu = Hosts[k].recovery_time;
-								Hosts[k].hospital_time = ts;
+								a -> etu = a -> recovery_time;
+								a -> hospital_time = ts;
 								//all cases in ETUs are detected
-								Hosts[k].detected = 1;
-								Hosts[k].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
+								a -> detected = 1;
+								a -> detect_time = min(ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), a-> recovery_time);
 								//Hosts[AdUnits[i].h_queue[j]].hospitalised=Hosts[AdUnits[i].h_queue[j]].recovery_time;
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -1290,9 +1297,9 @@ void IncubRecoverySweep(double t, int run)
 
 
 				//Adding code to assign recovery or death when leaving the infectious class: ggilani - 22/10/14
-				if (ts >= si->recovery_time)
+				if (ts == si->recovery_time)
 				{
-					if ((P.DoHospitalisation) && (P.DoETUByAdUnit) && ((si->hospitalised) || (si->etu)))
+					if ((P.DoHospitalisation) && (P.DoETUByAdUnit) && (si->etu))
 					{
 						//if someone has reached their recovery time, regardless of whether it's a death or recovery, they will leave hospital at this point if they are hospitalised
 						//mark someone to be discharged; however, if we're doing hospitalisation by place, this gets taken care of in HospitalSweep
@@ -1370,9 +1377,9 @@ void IncubRecoverySweep(double t, int run)
 						//}
 
 					}
-					if ((!si->to_die) && (ts >= si->recovery_time))
+					if ((!si->to_die) && (ts == si->recovery_time))
 						StateT[tn].inf_queue[0][StateT[tn].n_queue[0]++] = ci;
-					else if ((si->to_die) && (ts >= si->recovery_time))
+					else if ((si->to_die) && (ts == si->recovery_time))
 					{
 						if ((!HOST_TREATED(ci)) || (abs(si->inf) == 6)) // if infectious status is 6, then host is already dead and cannot be treated!
 							DoDeath(ci, tn, run);

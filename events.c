@@ -144,6 +144,10 @@ void DoIncub(int ai, unsigned short int ts, int tn, int run)
 		{
 			cfr = P.RelCommCFR * P.MortalityETU;
 		}
+		else
+		{
+			cfr = P.DiseaseMortality;
+		}
 
 		if (HOST_TO_BE_VACCED(ai) || HOST_VACCED(ai))
 		{
@@ -1086,7 +1090,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 				// if for some reason, hospitalisation time is after recovery/death, set hospitalisation time at recovery/death
 				if (a->hospital_time >= a->recovery_time)
 				{
-					a->hospital_time = a->recovery_time;
+					a->hospital_time = a->recovery_time - 1;
 				}
 			}
 			else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
