@@ -430,9 +430,17 @@ int main(int argc,char *argv[])
 			P.PropCommDeathDist[i] = ranf() * (P.PropCommDeathMax - P.PropCommDeathMin) + P.PropCommDeathMin;
 		}
 	}
+	//sample from distributions for hospital detection if necessary
+	if (P.DoDistCommCFR)
+	{
+		for (i = 0; (i < P.NR); i++)
+		{
+			P.RelCommCFRDist[i] = ranf() * (P.RelCommCFRMax - P.RelCommCFRMin) + P.RelCommCFRMin;
+		}
+	}
 
 	//write out distribution files if necessary
-	if (P.DoDistSeekCare || P.DoDistSeekCarePostDec || P.DoDistPropHospDetect || P.DoDistCommDeath) //don't really need if statement
+	if (P.DoDistSeekCare || P.DoDistSeekCarePostDec || P.DoDistPropHospDetect || P.DoDistCommDeath || P.DoDistCommCFR) //don't really need if statement
 	{
 		SaveParamDists();
 	}
@@ -501,6 +509,10 @@ int main(int argc,char *argv[])
 		if (P.DoDistCommDeath)
 		{
 			P.PropUndetectedCommunityCasesDetectedAtDeath = P.PropCommDeathDist[i];
+		}
+		if (P.DoDistCommCFR)
+		{
+			P.RelCommCFR = P.RelCommCFRDist[i];
 		}
 
 		InitModel(i); //passing run number into RunModel so we can save run number in the infection event log: ggilani - 15/10/2014

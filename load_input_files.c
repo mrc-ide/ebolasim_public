@@ -558,9 +558,27 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 			if (!GetInputParameter2(dat, dat2, "Relative duration of infectiousness for dying cases", "%lf", (void*)&(P.LethalInfectiousPeriod), 1, 1, 0)) P.LethalInfectiousPeriod = 1; // P.LethalInfectiousPeriod = P.InfectiousPeriod;
 
 			if (!GetInputParameter2(dat, dat2, "Include age-dependent mortality", "%i", (void*)&(P.DoAgeMortality), 1, 1, 0)) P.DoAgeMortality = 0;
+			if (!GetInputParameter2(dat, dat2, "Stratify proportion of cases dying by ETUs", "%i", (void*)&(P.DoMortalityByETU), 1, 1, 0)) P.DoMortalityByETU = 0;
 			if (P.DoAgeMortality)
 			{
-				if (!GetInputParameter2(dat, dat2, "Mortality by age", "%lf", (void*)P.AgeMortality, NUM_AGE_GROUPS, 1, 0));
+				GetInputParameter2(dat, dat2, "Mortality by age", "%lf", (void*)P.AgeMortality, NUM_AGE_GROUPS, 1, 0);
+			}
+			else if (P.DoMortalityByETU)
+			{
+				if (!GetInputParameter2(dat, dat2, "Proportion of cases dying in ETUs", "%lf", (void*)&(P.MortalityETU), 1, 1, 0));
+				//care seeking behaviour
+				if (!GetInputParameter2(dat, dat2, "Sample relative proportion of community deaths", "%i", (void*)&(P.DoDistCommCFR), 1, 1, 0)) P.DoDistCommCFR = 0;
+				if (P.DoDistCommCFR)
+				{
+					if (!GetInputParameter2(dat, dat2, "Min relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFRMin), 1, 1, 0)) P.RelCommCFRMin = 1;
+					if (!GetInputParameter2(dat, dat2, "Max relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFRMax), 1, 1, 0)) P.RelCommCFRMax = 1.5;
+				}
+				else
+				{
+					if (!GetInputParameter2(dat, dat2, "Relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFR), 1, 1, 0)) P.RelCommCFR = 1;
+				}
+				if (!GetInputParameter2(dat, dat2, "Min extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMin), 1, 1, 0)) P.ExtraRecTimeETUMin = 0;
+				if (!GetInputParameter2(dat, dat2, "Max extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMax), 1, 1, 0)) P.ExtraRecTimeETUMax = 0;
 			}
 			else
 			{

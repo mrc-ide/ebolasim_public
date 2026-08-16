@@ -602,13 +602,31 @@ void HospitalSweepAdunits(double t)
 						{
 							for (j = 0; j < AdUnits[i].nh_queue; j++)
 							{
-								age = HOST_AGE_GROUP(AdUnits[i].h_queue[j]);
-								Hosts[AdUnits[i].h_queue[j]].etu = Hosts[AdUnits[i].h_queue[j]].recovery_time;
+								k = AdUnits[i].h_queue[j];
+								age = HOST_AGE_GROUP(k); 
+								if (k == 31067128)
+								{
+									1;
+								}
+								//if host is set to die, but would recover because of treatment, change flag here and extend recovery_time by a randomly sampled amount
+								if (P.DoMortalityByETU)
+								{
+									if (Hosts[k].to_die)
+									{
+										if (ranf_mt(tn) > (1.0 / P.RelCommCFR))
+										{
+											//Hosts[k].to_die = 0;
+											//update recovery time
+											Hosts[k].recovery_time += (unsigned short int) (P.TimeStepsPerDay * (ranf_mt(tn) * (P.ExtraRecTimeETUMax - P.ExtraRecTimeETUMin) + P.ExtraRecTimeETUMin));
+										}
+									}
+								}
+								Hosts[k].etu = Hosts[k].recovery_time;
 								//actual time they go into ETU
-								Hosts[AdUnits[i].h_queue[j]].hospital_time = ts;
+								Hosts[k].hospital_time = ts;
 								//all cases in ETUs are detected
-								Hosts[AdUnits[i].h_queue[j]].detected = 1;
-								Hosts[AdUnits[i].h_queue[j]].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
+								Hosts[k].detected = 1;
+								Hosts[k].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
 								//set the admin unit identifier in which they are hospitalised
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -623,12 +641,24 @@ void HospitalSweepAdunits(double t)
 							SampleWithoutReplacement(tn, numFreeBeds, AdUnits[i].nh_queue);
 							for (j = 0; j < numFreeBeds; j++)
 							{
-								age = HOST_AGE_GROUP(AdUnits[i].h_queue[SamplingQueue[tn][j]]);
-								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].etu = Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].recovery_time;
-								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].hospital_time = ts;
+								k = AdUnits[i].h_queue[SamplingQueue[tn][j]];
+								age = HOST_AGE_GROUP(k);
+								if (P.DoMortalityByETU) {
+									if (Hosts[k].to_die)
+									{
+										if (ranf_mt(tn) > (1.0 / P.RelCommCFR))
+										{
+											Hosts[k].to_die = 0;
+											//update recovery time
+											Hosts[k].recovery_time += (unsigned short int) (P.TimeStepsPerDay * (ranf_mt(tn) * (P.ExtraRecTimeETUMax - P.ExtraRecTimeETUMin) + P.ExtraRecTimeETUMin));
+										}
+									}
+								}
+								Hosts[k].etu = Hosts[k].recovery_time;
+								Hosts[k].hospital_time = ts;
 								//all cases in ETUs are detected
-								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].detected = 1;
-								Hosts[AdUnits[i].h_queue[SamplingQueue[tn][j]]].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
+								Hosts[k].detected = 1;
+								Hosts[k].detect_time = ts + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU);
 								//Hosts[AdUnits[i].h_queue[j]].hospitalised=Hosts[AdUnits[i].h_queue[j]].recovery_time;
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;

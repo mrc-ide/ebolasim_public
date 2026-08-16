@@ -140,9 +140,9 @@ void DoIncub(int ai, unsigned short int ts, int tn, int run)
 		{
 			cfr = P.AgeMortality[age];
 		}
-		else
+		else if(P.DoMortalityByETU)
 		{
-			cfr = P.DiseaseMortalityVacc;
+			cfr = P.RelCommCFR * P.MortalityETU;
 		}
 
 		if (HOST_TO_BE_VACCED(ai) || HOST_VACCED(ai))
@@ -971,7 +971,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 	//int *RingVaccRingList; //added this to keep track of which ring each contact belongs too - ggilani 29/05/2019
 	int currentRing; //to keep track of the current ring
 	int nVacc, casePlaceType, i, i1, i2, cnt, k2, k3, l, nAlreadyVacc, ii, vaccflag;
-	double propVacc, adjPropToVacc;
+	double propVacc, adjPropToVacc, ti;
 
 	casePlaceType = 0; //added this to initialise casePlaceType memory - ggilani 21/10/19
 	currentRing = 0; //to initialise - ggilani 29/10/19
@@ -1073,16 +1073,20 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 				//this just sets hospitalisation time. detection now happens after hospitalisation
 				if (Hosts[ai].contactTraced == 0)
 				{
-					a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
+					i = (int)floor((q = ranf_mt(tn) * CDF_RES));
+					q -= ((double)i);
+					ti = -P.HospitalisationTime * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
+					a->hospital_time = a->latent_time + (unsigned short int) floor((0.5 + ti) * P.TimeStepsPerDay);
+					//a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
 				}
 				else
 				{
-					a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+					a->hospital_time = a->latent_time + (unsigned short int) floor((0.5 + P.HospitalisationTime_contactTrace) * P.TimeStepsPerDay); //different hospitalisation time for contact traced case: ggilani 05/07/2017
 				}
-				// if for some reason, hospitalisation time is after recovery/death, set hospitalisation time to be just before recovery/death
+				// if for some reason, hospitalisation time is after recovery/death, set hospitalisation time at recovery/death
 				if (a->hospital_time >= a->recovery_time)
 				{
-					a->hospital_time = a->recovery_time - 1;
+					a->hospital_time = a->recovery_time;
 				}
 			}
 			else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
@@ -1342,7 +1346,7 @@ void DoRecover(int ai, int run, int tn)
 	{
 		if(*nEvents<P.MaxInfEvents)
 		{
-			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+			RecordEvent(ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 		}
 	}
 }
@@ -1409,7 +1413,7 @@ void DoDeath(int ai, int tn, int run)
 	{
 		if(*nEvents<P.MaxInfEvents)
 		{
-			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+			RecordEvent(ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 		}
 	}
 }

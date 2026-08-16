@@ -22,6 +22,7 @@ typedef struct PERSON {
   unsigned short int num_treats,resist;
   int vacc_start_time; //switched to int so we can vaccinate before the outbreak
   int revacc; //added this to check which HCWs are being revaccinated
+  int switchdeath; //debugging variable only 
 } person;  
 
 typedef struct HOUSEHOLD {
@@ -90,7 +91,7 @@ typedef struct RESULTS {
 typedef struct EVENTS {
 	double infectee_x, infectee_y, t ,infector_x, infector_y;
 	int run, infectee_ind, infector_ind, infectee_adunit, infector_adunit, listpos,infectee_cell,infector_cell,infectee_cell_n,infector_cell_n,thread, same_hh, infectee_hcw, infector_hcw, age, to_die, contact, safe_burial, detected;
-	int infection_time, latent_time, recovery_time, hospital_time, etu_time, detection_time, t_infector;
+	double infection_time, latent_time, recovery_time, hospital_time, etu_time, detection_time, t_infector;
 	int same_place[NUM_PLACE_TYPES];
 } events;
 
@@ -249,8 +250,6 @@ typedef struct PARAM {
   double SymptSpatialContactRate,SymptPlaceTypeContactRate[NUM_PLACE_TYPES],InhibitInterAdunitPlaceAssignment[NUM_PLACE_TYPES];
   double SymptPlaceTypeWithdrawalProp[NUM_PLACE_TYPES],CaseAbsenteeismDuration,CaseAbsenteeismDelay;
   double CaseAbsentChildPropAdultCarers;
-  int DoEventMortality, DoAgeMortality;
-  double ProportionHospitalised,AgeMortality[NUM_AGE_GROUPS],DiseaseMortality,DiseaseMortalityVacc;
   double RelativeTravelRate[NUM_AGE_GROUPS],RelativeSpatialContact[NUM_AGE_GROUPS];
   double AgeSusceptibility[NUM_AGE_GROUPS],AgeInfectiousness[NUM_AGE_GROUPS],InitialImmunity[NUM_AGE_GROUPS];
   double WAIFW_Matrix[NUM_AGE_GROUPS][NUM_AGE_GROUPS];
@@ -346,7 +345,8 @@ typedef struct PARAM {
   double KernelPowerScale, KernelOffsetScale;
   int LimitNumInfections, MaxNumInfections;
   //Added parameters to incorporate time to death/recovery functions: ggilani - 22/10/14
-  int DoMortality;
+  int DoMortality, DoMortalityByETU, DoEventMortality, DoAgeMortality;
+  double ProportionHospitalised, AgeMortality[NUM_AGE_GROUPS], DiseaseMortality, DiseaseMortalityVacc, MortalityETU; 
   double RecoveryAmp,RecoveryShape,RecoveryScale,RecoveryProb[RECOVERY_RES];
   //Parameters for funeral transmission
   int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB, MaxSDBPerDay, InitCasesToSDB;
@@ -403,11 +403,11 @@ typedef struct PARAM {
   int CaseThresholdUntilUpdateCaseDetection,UpdateCaseDetectionByCasesFlag;
   double CaseDetectionRateAfterThresholdReached;
   double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
-  double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact; // detection delays for contact, etu, hospital, community
+  double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact, ExtraRecTimeETUMin, ExtraRecTimeETUMax; // detection delays for contact, etu, hospital, community
   double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
-  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec;
-  double PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax;
-  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS];
+  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR;
+  double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax;
+  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS];
 
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput; //added intervention capacities separate to adunit file file
 

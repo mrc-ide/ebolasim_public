@@ -628,10 +628,15 @@ void RecordInfTypes(void)
  *
  * Author: ggilani, Date: 10/10/2014
  */
-void RecordEvent(double t, int ai, int run, int tn) //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+void RecordEvent(int ai, int run, int tn) //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 {
 	//Declare int to store infector's index
 	int bi, i;
+
+	if(ai == 31067128)
+	{
+		1;
+	}
 
 	bi = Hosts[ai].infector;
 
@@ -644,31 +649,31 @@ void RecordEvent(double t, int ai, int run, int tn) //added int as argument to R
 		InfEventLog[*nEvents].age = Hosts[ai].age;
 		InfEventLog[*nEvents].infectee_hcw = Hosts[ai].hcw;
 		InfEventLog[*nEvents].infectee_adunit = Mcells[Hosts[ai].mcell].adunit;
-		InfEventLog[*nEvents].infection_time = (int)floor(((double)Hosts[ai].infection_time) / P.TimeStepsPerDay) + 1;
-		InfEventLog[*nEvents].latent_time = (int)floor((double)Hosts[ai].latent_time) / P.TimeStepsPerDay + 1;
+		InfEventLog[*nEvents].infection_time = ((double)Hosts[ai].infection_time) / P.TimeStepsPerDay;
+		InfEventLog[*nEvents].latent_time = ((double)Hosts[ai].latent_time) / P.TimeStepsPerDay;
 		// set hospital and etu times to negative values
 		InfEventLog[*nEvents].etu_time = -1;
 		InfEventLog[*nEvents].hospital_time = -1;
 		if (Hosts[ai].etu)
 		{
-			InfEventLog[*nEvents].etu_time = (int)floor(((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay) + 1;
+			InfEventLog[*nEvents].etu_time = ((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay;
 		}
 		else if (Hosts[ai].hospitalised)
 		{
-			InfEventLog[*nEvents].hospital_time = (int)floor(((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay) + 1;
+			InfEventLog[*nEvents].hospital_time = ((double)Hosts[ai].hospital_time) / P.TimeStepsPerDay;
 		}
 		// detection values
 		InfEventLog[*nEvents].detected = Hosts[ai].detected;
 		if (Hosts[ai].detected)
 		{
-			InfEventLog[*nEvents].detection_time = (int)floor(((double)Hosts[ai].detect_time)/ P.TimeStepsPerDay) + 1; // check this. or detection_time?
+			InfEventLog[*nEvents].detection_time = ((double)Hosts[ai].detect_time)/ P.TimeStepsPerDay; // check this. or detection_time?
 		}
 		else
 		{
 			InfEventLog[*nEvents].detection_time = -1;
 		}
 		InfEventLog[*nEvents].to_die = Hosts[ai].to_die;
-		InfEventLog[*nEvents].recovery_time = (int)floor(((double)Hosts[ai].recovery_time) / P.TimeStepsPerDay) +1;
+		InfEventLog[*nEvents].recovery_time = ((double)Hosts[ai].recovery_time) / P.TimeStepsPerDay;
 		InfEventLog[*nEvents].safe_burial = Hosts[ai].safeBurial;
 		InfEventLog[*nEvents].contact = Hosts[ai].contactTraced;
 
@@ -681,7 +686,7 @@ void RecordEvent(double t, int ai, int run, int tn) //added int as argument to R
 		}
 		else
 		{
-			InfEventLog[*nEvents].t_infector = (int)floor(((double)Hosts[bi].infection_time) / P.TimeStepsPerDay) +1;
+			InfEventLog[*nEvents].t_infector = ((double)Hosts[bi].infection_time) / P.TimeStepsPerDay;
 			InfEventLog[*nEvents].infector_adunit = Mcells[Hosts[bi].mcell].adunit;
 		}
 
@@ -2253,6 +2258,17 @@ void SaveParamDists(void)
 		}
 		fclose(dat);
 	}
+
+	if (P.DoDistCommCFR)
+	{
+		sprintf(outname, "%s.relcommcfr.csv", OutFileBase);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		for (i = 0; i < P.NR; i++)
+		{
+			fprintf(dat, "%i,%lf\n", i, P.RelCommCFRDist[i]);
+		}
+		fclose(dat);
+	}
 	
 }
 
@@ -2285,7 +2301,7 @@ void SaveEvents(void)
 	
 	for (i = 0; i < *nEvents; i++)
 	{
-		fprintf(dat, "%i, %i, %i, %i, %i, %s, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %i, %s", 
+		fprintf(dat, "%i, %i, %i, %i, %i, %s, %lf, %lf, %lf, %lf, %i, %lf, %i, %lf, %i, %i, %i, %lf, %s", 
 			InfEventLog[i].run, InfEventLog[i].thread, InfEventLog[i].infectee_ind, InfEventLog[i].age, InfEventLog[i].infectee_hcw, AdUnits[InfEventLog[i].infectee_adunit].ad_name, InfEventLog[i].infection_time,
 			InfEventLog[i].latent_time, InfEventLog[i].etu_time, InfEventLog[i].hospital_time, InfEventLog[i].detected, InfEventLog[i].detection_time, InfEventLog[i].to_die, InfEventLog[i].recovery_time, 
 			InfEventLog[i].safe_burial, InfEventLog[i].contact, InfEventLog[i].infector_ind, InfEventLog[i].t_infector, AdUnits[InfEventLog[i].infector_adunit].ad_name);
