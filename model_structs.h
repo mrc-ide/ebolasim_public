@@ -17,7 +17,7 @@ typedef struct PERSON {
   float infectiousness,susc,vacc_eff,infectiousMult; //added infectiousMult to help reset infectiousness
   double rep_rate,vacc_accept,hcs_accept; // added this to allow for clustering of reporting rates in households/places: ggilani 
   short int inf,infect_type;
-  unsigned short int infection_time,latent_time,recovery_time,hospital_time; //added time to hospitalisation: ggilani 28/10/2014
+  unsigned short int infection_time,latent_time,symptom_time,recovery_time,hospital_time; //added time to hospitalisation: ggilani 28/10/2014
   unsigned short int treat_start_time,treat_stop_time,contactTraced_start_time,contactTraced_end_time; //added contact tracing start time as well: ggilani 14/06/17
   unsigned short int num_treats,resist;
   int vacc_start_time; //switched to int so we can vaccinate before the outbreak
@@ -355,7 +355,7 @@ typedef struct PARAM {
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
   int IncludeHospitalPlaceType, HospPlaceTypeNum, IncludeFLWs, HospCaseCapacity, DayHCWFLWVacc, DoHospInSameAdUnit;
   double HCWPerThousand, PropHCWFLWVacc, FLWPerThousand, RelSuscFLW, RelSuscPPE;
-  double HospitalisationTime,hospital_icdf[CDF_RES+1],RelativeInfectiousnessETU,HospWaitingTime,HospitalisationTime_contactTrace; //added time to hospitalisation for a hospitalised case - ggilani 05/07/17
+  double HospitalisationTime,hospital_icdf[CDF_RES+1],RelativeInfectiousnessETU,HospWaitingTime,HospitalisationTime_contactTrace, MinHospTimeBeforeOutcome; //added time to hospitalisation for a hospitalised case - ggilani 05/07/17
   int CurrIndMeanTimeToHosp,CurrIndETUBeds,CurrIndMeanTimeToHospCT;
   int NETUBeds,NMeanTimeToHosp, NMeanTimeToHospCT,ETUBeds[MAX_CHANGE_POINTS];
   double ChangePointMeanTimeToHosp[MAX_CHANGE_POINTS], ChangePointMeanTimeToHospCT[MAX_CHANGE_POINTS],ChangePointETUBeds[MAX_CHANGE_POINTS],MeanTimeToHosp[MAX_CHANGE_POINTS], MeanTimeToHospCT[MAX_CHANGE_POINTS];

@@ -659,7 +659,9 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 
 		//leave the terminology the same at the moment but consider making these more general. These relate to both hospitals and ETUs
 		if (!GetInputParameter2(dat, dat2, "Mean time to hospitalisation", "%lf", (void*)&(P.HospitalisationTime), 1, 1, 0)) P.HospitalisationTime = 0;
-		if (!GetInputParameter2(dat, dat2, "Hospital waiting time", "%lf", (void*)&(P.HospWaitingTime), 1, 1, 0)) P.HospWaitingTime = 0.25; //To ensure acceptance 
+		if (!GetInputParameter2(dat, dat2, "Hospital waiting time", "%lf", (void*)&(P.HospWaitingTime), 1, 1, 0)) P.HospWaitingTime = 0.25; //To ensure acceptance
+		if (!GetInputParameter2(dat, dat2, "Minimum delay between hospitalisation and outcome", "%lf", (void*)&(P.MinHospTimeBeforeOutcome), 1, 1, 0)) P.MinHospTimeBeforeOutcome = 0.5; //To ensure acceptance
+		
 		if (!GetInputParameter2(dat, dat2, "Time to hospitalisation inverse CDF", "%lf", (void*)P.hospital_icdf, CDF_RES + 1, 1, 0))
 		{
 			P.hospital_icdf[CDF_RES] = 1e10;

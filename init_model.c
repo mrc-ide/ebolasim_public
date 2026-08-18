@@ -161,7 +161,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 					Hosts[k].treat_stop_time = Hosts[k].num_treats = Hosts[k].contactTraced_end_time = 0;
 					Hosts[k].vacc_start_time = Hosts[k].treat_start_time = Hosts[k].contactTraced_start_time = USHRT_MAX - 1;
 					Hosts[k].revacc = 0;
-					Hosts[k].latent_time = Hosts[k].recovery_time = Hosts[k].hospital_time = Hosts[k].detect_time = 0; //also set hospitalisation time to zero: ggilani 28/10/2014
+					Hosts[k].latent_time = Hosts[k].recovery_time = Hosts[k].infection_time = Hosts[k].symptom_time = Hosts[k].hospital_time = Hosts[k].detect_time = 0; //also set hospitalisation time to zero: ggilani 28/10/2014
 					Hosts[k].hospitalised = Hosts[k].etu = 0; //set hospitalised flag to zero: ggilani 28/10/14
 					Hosts[k].contactTraced = 0;
 					Hosts[k].vaccRing = 0; //set flag for vacc ring to zero: ggilani 29/05/19
