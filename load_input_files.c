@@ -558,22 +558,34 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 			if (!GetInputParameter2(dat, dat2, "Relative duration of infectiousness for dying cases", "%lf", (void*)&(P.LethalInfectiousPeriod), 1, 1, 0)) P.LethalInfectiousPeriod = 1; // P.LethalInfectiousPeriod = P.InfectiousPeriod;
 
 			if (!GetInputParameter2(dat, dat2, "Include age-dependent mortality", "%i", (void*)&(P.DoAgeMortality), 1, 1, 0)) P.DoAgeMortality = 0;
+			if (!GetInputParameter2(dat, dat2, "Stratify proportion of cases dying by ETUs", "%i", (void*)&(P.DoMortalityByETU), 1, 1, 0)) P.DoMortalityByETU = 0;
 			if (P.DoAgeMortality)
 			{
-				if (!GetInputParameter2(dat, dat2, "Mortality by age", "%lf", (void*)P.AgeMortality, NUM_AGE_GROUPS, 1, 0));
+				GetInputParameter2(dat, dat2, "Mortality by age", "%lf", (void*)P.AgeMortality, NUM_AGE_GROUPS, 1, 0);
+			}
+			else if (P.DoMortalityByETU)
+			{
+				if (!GetInputParameter2(dat, dat2, "Proportion of cases dying in ETUs", "%lf", (void*)&(P.MortalityETU), 1, 1, 0));
+				//care seeking behaviour
+				if (!GetInputParameter2(dat, dat2, "Sample relative proportion of community deaths", "%i", (void*)&(P.DoDistCommCFR), 1, 1, 0)) P.DoDistCommCFR = 0;
+				if (P.DoDistCommCFR)
+				{
+					if (!GetInputParameter2(dat, dat2, "Min relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFRMin), 1, 1, 0)) P.RelCommCFRMin = 1;
+					if (!GetInputParameter2(dat, dat2, "Max relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFRMax), 1, 1, 0)) P.RelCommCFRMax = 1.5;
+				}
+				else
+				{
+					if (!GetInputParameter2(dat, dat2, "Relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFR), 1, 1, 0)) P.RelCommCFR = 1;
+				}
+				if (!GetInputParameter2(dat, dat2, "Min extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMin), 1, 1, 0)) P.ExtraRecTimeETUMin = 0;
+				if (!GetInputParameter2(dat, dat2, "Max extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMax), 1, 1, 0)) P.ExtraRecTimeETUMax = 0;
 			}
 			else
 			{
 				if (!GetInputParameter2(dat, dat2, "Proportion of cases dying", "%lf", (void*)&(P.DiseaseMortality), 1, 1, 0)) P.DiseaseMortality = 0;
 			}
 		}
-		// added this to detect some undetected community cases at death
-		if (!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropUndetectedCommunityCasesDetectedAtDeath), 1, 1, 0)) P.PropUndetectedCommunityCasesDetectedAtDeath = 0;
-		if (P.PropUndetectedCommunityCasesDetectedAtDeath)
-		{
-			// then what is the delay to reporting?
-			if (!GetInputParameter2(dat, dat2, "Reporting delay for community case detected at death", "%lf", (void*)&(P.DelayCommunityCasesDetectedAtDeath), 1, 1, 0)) P.DelayCommunityCasesDetectedAtDeath = 0.0;
-		}
+		
 	}
 	if (!GetInputParameter2(dat, dat2, "Include funeral transmission", "%i", (void*)&(P.DoFuneralTransmission), 1, 1, 0)) P.DoFuneralTransmission = 0;
 	if (P.DoFuneralTransmission) //Funeral transmission parameters: ggilani - 26/10/14
@@ -647,7 +659,9 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 
 		//leave the terminology the same at the moment but consider making these more general. These relate to both hospitals and ETUs
 		if (!GetInputParameter2(dat, dat2, "Mean time to hospitalisation", "%lf", (void*)&(P.HospitalisationTime), 1, 1, 0)) P.HospitalisationTime = 0;
-		if (!GetInputParameter2(dat, dat2, "Hospital waiting time", "%lf", (void*)&(P.HospWaitingTime), 1, 1, 0)) P.HospWaitingTime = 0.25; //To ensure acceptance 
+		if (!GetInputParameter2(dat, dat2, "Hospital waiting time", "%lf", (void*)&(P.HospWaitingTime), 1, 1, 0)) P.HospWaitingTime = 0.25; //To ensure acceptance
+		if (!GetInputParameter2(dat, dat2, "Minimum delay between hospitalisation and outcome", "%lf", (void*)&(P.MinHospTimeBeforeOutcome), 1, 1, 0)) P.MinHospTimeBeforeOutcome = 0.5; //To ensure acceptance
+		
 		if (!GetInputParameter2(dat, dat2, "Time to hospitalisation inverse CDF", "%lf", (void*)P.hospital_icdf, CDF_RES + 1, 1, 0))
 		{
 			P.hospital_icdf[CDF_RES] = 1e10;
@@ -665,10 +679,30 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		}
 		P.CurrIndMeanTimeToHosp = 0;
 
-		//
-		if (!GetInputParameter2(dat, dat2, "Proportion of cases seeking care before outbreak declared", "%lf", (void*)&P.PropHospSeekPreOutbreak, 1, 1, 0)) P.PropHospSeekPreOutbreak = 0.5;
+		//care seeking behaviour
+		if (!GetInputParameter2(dat, dat2, "Sample proportion of care seeking", "%i", (void*)&(P.DoDistSeekCare), 1, 1, 0)) P.DoDistSeekCare = 0;
+		if (P.DoDistSeekCare)
+		{
+			if (!GetInputParameter2(dat, dat2, "Min proportion of cases seeking care before outbreak declared", "%lf", (void*)&P.PropSeekCareMin, 1, 1, 0)) P.PropSeekCareMin = 0.1;
+			if (!GetInputParameter2(dat, dat2, "Max proportion of cases seeking care before outbreak declared", "%lf", (void*)&P.PropSeekCareMax, 1, 1, 0)) P.PropSeekCareMax = 1.0;
+		}
+		else
+		{
+			if (!GetInputParameter2(dat, dat2, "Proportion of cases seeking care before outbreak declared", "%lf", (void*)&P.PropHospSeekPreOutbreak, 1, 1, 0)) P.PropHospSeekPreOutbreak = 0.5;
+		}
 		if (!GetInputParameter2(dat, dat2, "Do clustered healthcare seeking by household", "%i", (void*)&(P.DoClusterHCS), 1, 1, 0)) P.DoClusterHCS = 0;
-		if (!GetInputParameter2(dat, dat2, "Relative change in care seeking behaviour after outbreak declared", "%lf", (void*)&P.RelChangeHospSeekPostOutbreak, 1, 1, 0)) P.RelChangeHospSeekPostOutbreak = 1;
+		//how care changes after declaration
+		if (!GetInputParameter2(dat, dat2, "Sample change in care seeking", "%i", (void*)&(P.DoDistSeekCarePostDec), 1, 1, 0)) P.DoDistSeekCarePostDec = 0;
+		if (P.DoDistSeekCarePostDec)
+		{
+			if (!GetInputParameter2(dat, dat2, "Min relative change in care seeking behaviour after outbreak declared", "%lf", (void*)&P.PropSeekCarePostDecMin, 1, 1, 0)) P.PropSeekCarePostDecMin = 0.1;
+			if (!GetInputParameter2(dat, dat2, "Max relative change in care seeking behaviour after outbreak declared", "%lf", (void*)&P.PropSeekCarePostDecMax, 1, 1, 0)) P.PropSeekCarePostDecMax = 1.0;
+		}
+		else
+		{
+			if (!GetInputParameter2(dat, dat2, "Relative change in care seeking behaviour after outbreak declared", "%lf", (void*)&P.RelChangeHospSeekPostOutbreak, 1, 1, 0)) P.RelChangeHospSeekPostOutbreak = 1;
+		}
+		
 
 		// Currently commented this out in order to make 
 		//if(!GetInputParameter2(dat,dat2,"Number of hospital beds change points","%i",(void *) &(P.NHospBeds),1,1,0)) P.NHospBeds=0;
@@ -893,7 +927,35 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Number of sampling intervals over which cumulative incidence measured for global trigger", "%i", (void*)&(P.TriggersSamplingInterval), 1, 1, 0)) P.TriggersSamplingInterval = 10000000;
 	
 	if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.ProbDetectCommunity), 1, 1, 0)) P.ProbDetectCommunity = 0;
-	if (!GetInputParameter2(dat, dat2, "Proportion of hospital cases detected", "%lf", (void*)&(P.ProbDetectHosp), 1, 1, 0)) P.ProbDetectHosp = 1;
+	
+	//proportion of hospital cases detected
+	if (!GetInputParameter2(dat, dat2, "Sample proportion of hospital cases detected", "%i", (void*)&(P.DoDistPropHospDetect), 1, 1, 0)) P.DoDistPropHospDetect = 0;
+	if (P.DoDistPropHospDetect)
+	{
+		if (!GetInputParameter2(dat, dat2, "Min proportion of hospital cases detected", "%lf", (void*)&(P.PropHospDetectMin), 1, 1, 0)) P.PropHospDetectMin = 0.1;
+		if (!GetInputParameter2(dat, dat2, "Max proportion of hospital cases detected", "%lf", (void*)&(P.PropHospDetectMax), 1, 1, 0)) P.PropHospDetectMax = 1;
+	}
+	else
+	{
+		if (!GetInputParameter2(dat, dat2, "Proportion of hospital cases detected", "%lf", (void*)&(P.ProbDetectHosp), 1, 1, 0)) P.ProbDetectHosp = 1;
+	}
+	if (P.DoMortality)
+	{
+		if (!GetInputParameter2(dat, dat2, "Sample proportion of community deaths detected", "%i", (void*)&(P.DoDistCommDeath), 1, 1, 0)) P.DoDistCommDeath = 0;
+		// added this to detect some undetected community cases at death
+		if (P.DoDistCommDeath)
+		{
+			if (!GetInputParameter2(dat, dat2, "Min proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropCommDeathMin), 1, 1, 0)) P.PropCommDeathMin = 0;
+			if (!GetInputParameter2(dat, dat2, "Max proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropCommDeathMax), 1, 1, 0)) P.PropCommDeathMax = 0;
+		}
+		else
+		{
+			if(!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropUndetectedCommunityCasesDetectedAtDeath), 1, 1, 0)) P.PropUndetectedCommunityCasesDetectedAtDeath = 0;
+		}
+		// then what is the delay to reporting?
+		if (!GetInputParameter2(dat, dat2, "Reporting delay for community case detected at death", "%lf", (void*)&(P.DelayCommunityCasesDetectedAtDeath), 1, 1, 0)) P.DelayCommunityCasesDetectedAtDeath = 0.0;
+	}
+
 	//if (!GetInputParameter2(dat, dat2, "Number of undetected infections before first case detected", "%i", (void*)&(P.NumUndetectedInfPreOutbreakAlert), 1, 1, 0)) P.NumUndetectedInfPreOutbreakAlert = 0;
 	//if (!GetInputParameter2(dat, dat2, "Proportion of cases detected after surveillance alert", "%lf", (void*)&(P.PostAlertControlPropCasesId), 1, 1, 0)) P.PostAlertControlPropCasesId = 1;
 	//if(!GetInputParameter2(dat,dat2,"Proportion of cases detected before surveillance alert","%lf",(void *) &(P.PreAlertControlPropCasesId),1,1,0)) P.PreAlertControlPropCasesId=1;

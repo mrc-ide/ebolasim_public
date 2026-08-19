@@ -140,9 +140,13 @@ void DoIncub(int ai, unsigned short int ts, int tn, int run)
 		{
 			cfr = P.AgeMortality[age];
 		}
+		else if(P.DoMortalityByETU)
+		{
+			cfr = P.RelCommCFR * P.MortalityETU;
+		}
 		else
 		{
-			cfr = P.DiseaseMortalityVacc;
+			cfr = P.DiseaseMortality;
 		}
 
 		if (HOST_TO_BE_VACCED(ai) || HOST_VACCED(ai))
@@ -180,13 +184,14 @@ void DoIncub(int ai, unsigned short int ts, int tn, int run)
 			i = (int)floor(q = ranf_mt(tn) * CDF_RES);
 			q -= ((double)i);
 			ti = -P.InfectiousPeriod * log(q * P.infectious_icdf[i + 1] + (1.0 - q) * P.infectious_icdf[i]);
-			if (P.DoSymptoms)
+			if(a->inf == -1)
 			{
-				a->recovery_time = a->latent_time + (unsigned short int) max(floor(0.5 + (ti * P.TimeStepsPerDay)), ((int)(P.LatentToSymptDelay / P.TimeStep)));
+				a->symptom_time = a->latent_time + ((unsigned int)(P.LatentToSymptDelay / P.TimeStep));
+				a->recovery_time = a->symptom_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
 			}
 			else
 			{
-				a->recovery_time = a->latent_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
+				a->recovery_time = a->latent_time + ((unsigned short int)(P.LatentToSymptDelay / P.TimeStep)) + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
 			}
 
 		}
@@ -971,7 +976,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 	//int *RingVaccRingList; //added this to keep track of which ring each contact belongs too - ggilani 29/05/2019
 	int currentRing; //to keep track of the current ring
 	int nVacc, casePlaceType, i, i1, i2, cnt, k2, k3, l, nAlreadyVacc, ii, vaccflag;
-	double propVacc, adjPropToVacc;
+	double propVacc, adjPropToVacc, ti;
 
 	casePlaceType = 0; //added this to initialise casePlaceType memory - ggilani 21/10/19
 	currentRing = 0; //to initialise - ggilani 29/10/19
@@ -1070,20 +1075,28 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 		{
 			if (Hosts[ai].hcs_accept < P.PropHospSeek)
 			{
+
 				//this just sets hospitalisation time. detection now happens after hospitalisation
 				if (Hosts[ai].contactTraced == 0)
 				{
-					a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
+					do {
+						i = (int)floor((q = ranf_mt(tn) * CDF_RES));
+						q -= ((double)i);
+						ti = -P.HospitalisationTime * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
+						a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
+					} while (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep));
+					1;
+					//a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
 				}
 				else
 				{
-					a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+					a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+					if (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep))
+					{
+						a->hospital_time = a->hospital_time - (int)(P.MinHospTimeBeforeOutcome / P.TimeStep);
+					}
 				}
-				// if for some reason, hospitalisation time is after recovery/death, set hospitalisation time to be just before recovery/death
-				if (a->hospital_time >= a->recovery_time)
-				{
-					a->hospital_time = a->recovery_time - 1;
-				}
+
 			}
 			else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
 			{
@@ -1112,23 +1125,23 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 				//while(Hosts[ai].detect_time<=Hosts[ai].recoverytime);
 				if (Hosts[ai].contactTraced == 0)
 				{
-					if ((unsigned short int) (Hosts[ai].latent_time + (P.DetectTime * P.TimeStepsPerDay)) < Hosts[ai].recovery_time)
+					if ((Hosts[ai].symptom_time + (unsigned short int)(P.DetectTime * P.TimeStepsPerDay)) < Hosts[ai].recovery_time)
 					{
-						Hosts[ai].detect_time = (unsigned short int) (Hosts[ai].latent_time + (P.DetectTime * P.TimeStepsPerDay) + (P.LatentToSymptDelay / P.TimeStep)); //currently using a fixed delay
+						Hosts[ai].detect_time = Hosts[ai].symptom_time + (unsigned short int) (P.DetectTime * P.TimeStepsPerDay); //currently using a fixed delay
 					}
 					else
 					{
-						Hosts[ai].detect_time = Hosts[ai].recovery_time - 1; //if the delay to 
+						Hosts[ai].detect_time = Hosts[ai].recovery_time - 1; 
 					}
 				}
 				else
 				{
-					Hosts[ai].detect_time = Hosts[ai].latent_time + (unsigned short int)((P.DetectTimeContact * P.TimeStepsPerDay) + (P.LatentToSymptDelay / P.TimeStep)); //if contact traced, detected immediately, set detect_time to be the same time
+					Hosts[ai].detect_time = Hosts[ai].symptom_time + (unsigned short int)((P.DetectTimeContact * P.TimeStepsPerDay) + (P.LatentToSymptDelay / P.TimeStep)); //if contact traced, detected immediately, set detect_time to be the same time
 				}
 			}
 			else
 			{
-				Hosts[ai].detect_time = Hosts[ai].latent_time + ((unsigned short int)(P.LatentToSymptDelay / P.TimeStep)); //if detected immediately, set detect_time to be the same time
+				Hosts[ai].detect_time = Hosts[ai].symptom_time; //if detected immediately, set detect_time at symptom onset
 			}
 		}
 
@@ -1342,7 +1355,7 @@ void DoRecover(int ai, int run, int tn)
 	{
 		if(*nEvents<P.MaxInfEvents)
 		{
-			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+			RecordEvent(ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 		}
 	}
 }
@@ -1409,7 +1422,7 @@ void DoDeath(int ai, int tn, int run)
 	{
 		if(*nEvents<P.MaxInfEvents)
 		{
-			RecordEvent(((double)a->recovery_time)*P.TimeStep,ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
+			RecordEvent(ai,run,tn); //added int as argument to RecordEvent to record run number: ggilani - 15/10/14
 		}
 	}
 }

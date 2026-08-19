@@ -47,6 +47,7 @@ void SaveHospDist(int); //added function to save hospital information: ggilani -
 void SaveResults(void);
 void SaveSummaryResults(void);
 void SaveRandomSeeds(void); //added this function to save random seeds for each run: ggilani - 09/03/17
+void SaveParamDists(void); //added this function to save variables for each run when sampled from a distribution - ggilani 13/08/26
 void SaveEvents(void); //added this function to save infection events from all realisations: ggilani - 15/10/14
 void LoadSnapshot(void);
 void SaveSnapshot(void);
@@ -54,7 +55,7 @@ void UpdateProbs(int);
 void RecordInfTypes(void);
 void RecordSample(double, int);
 //adding function to record an event: ggilani - 10/10/2014
-void RecordEvent(double, int, int, int); //added int as argument to InfectSweep to record run number: ggilani - 15/10/14, removed event type: ggilani 28/07/26
+void RecordEvent(int, int, int); //added int as argument to InfectSweep to record run number: ggilani - 15/10/14, removed event type: ggilani 28/07/26
 void DoInfect(int, double, int, int); //added int as argument to InfectSweep to record run number: ggilani - 15/10/14
 void DoImmune(int);
 void DoIncub(int, unsigned short int, int, int); //added int as argument to record run number: ggilani - 23/10/14
