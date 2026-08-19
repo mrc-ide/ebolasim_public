@@ -628,7 +628,7 @@ void HospitalSweepAdunits(double t)
 								a-> hospital_time = ts;
 								//all cases in ETUs are detected
 								a-> detected = 1;
-								a-> detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), a -> recovery_time);
+								a-> detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a -> recovery_time - 1));
 								//set the admin unit identifier in which they are hospitalised
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -662,7 +662,7 @@ void HospitalSweepAdunits(double t)
 								a-> hospital_time = ts;
 								//all cases in ETUs are detected
 								a-> detected = 1;
-								a-> detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), a-> recovery_time);
+								a-> detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a-> recovery_time - 1));
 								//Hosts[AdUnits[i].h_queue[j]].hospitalised=Hosts[AdUnits[i].h_queue[j]].recovery_time;
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
