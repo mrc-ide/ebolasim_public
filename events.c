@@ -1075,30 +1075,28 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 		{
 			if (Hosts[ai].hcs_accept < P.PropHospSeek)
 			{
-				if (((int)a->recovery_time - (int)a->symptom_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep))
+
+				//this just sets hospitalisation time. detection now happens after hospitalisation
+				if (Hosts[ai].contactTraced == 0)
 				{
-					a->hospital_time = 0;
+					do {
+						i = (int)floor((q = ranf_mt(tn) * CDF_RES));
+						q -= ((double)i);
+						ti = -P.HospitalisationTime * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
+						a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
+					} while (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep));
+					1;
+					//a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
 				}
-				else 
+				else
 				{
-					//this just sets hospitalisation time. detection now happens after hospitalisation
-					if (Hosts[ai].contactTraced == 0)
+					a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+					if (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep))
 					{
-						do {
-							i = (int)floor((q = ranf_mt(tn) * CDF_RES));
-							q -= ((double)i);
-							ti = -P.HospitalisationTime * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
-							a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
-						} while (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep));
-						1;
-						//a->hospital_time = a->latent_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime * P.TimeStepsPerDay));
-					}
-					else
-					{
-						a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+						a->hospital_time = a->hospital_time - (int)(P.MinHospTimeBeforeOutcome / P.TimeStep);
 					}
 				}
-				
+
 			}
 			else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
 			{

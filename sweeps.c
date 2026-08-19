@@ -644,10 +644,7 @@ void HospitalSweepAdunits(double t)
 							for (j = 0; j < numFreeBeds; j++)
 							{
 								ai = AdUnits[i].h_queue[SamplingQueue[tn][j]];
-								if (ai == 31067128)
-								{
-									1;
-								}
+
 								age = HOST_AGE_GROUP(ai);
 								a = Hosts + ai;
 								if (P.DoMortalityByETU) {
@@ -1270,16 +1267,11 @@ void IncubRecoverySweep(double t, int run)
 					DoCase(ci, t, ts, tn);
 				}
 
-				if ((ts == si->detect_time) && (si->detected))
-				{
-					DoDetectedCase(ci, t, ts, tn);
-				}
-
-
 				//Now considered which of infected have reached time to hospitalisation
 				if ((P.DoHospitalisation) && ((ts >= si->hospital_time) && (ts < (si->hospital_time + (int)(P.HospWaitingTime * P.TimeStepsPerDay)))) && (abs(si->inf) != 6) && (!si->hospitalised) && (!si->etu))// && (si->detected))
-					//A lot of conditions! To enter loop, we must be doing hospitalisation by admin unit, the host must be within their waiting hospitalisation time, not already hospitalised and not dead but infectious! Must also be detected case
+				//A lot of conditions! To enter loop, we must be doing hospitalisation by admin unit, the host must be within their waiting hospitalisation time, not already hospitalised and not dead but infectious! Must also be detected case
 				{
+					
 					//mark someone to be admitted
 					if (P.DoETUByAdUnit)
 					{
@@ -1290,6 +1282,12 @@ void IncubRecoverySweep(double t, int run)
 						StateT[tn].h_queue[0][StateT[tn].nh_queue[0]++] = ci;
 					}
 				}
+
+				if ((ts == si->detect_time) && (si->detected))
+				{
+					DoDetectedCase(ci, t, ts, tn);
+				}
+
 
 				//Adding code to assign recovery or death when leaving the infectious class: ggilani - 22/10/14
 				if (ts == si->recovery_time)
