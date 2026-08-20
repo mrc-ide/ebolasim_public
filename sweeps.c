@@ -78,6 +78,18 @@ void RunModel(int run) //added run number as parameter
 			{
 				P.StopDay = ns + P.NumDaysProject;
 				P.StopTimeSet = 1;
+				if (P.DoReactETUBeds)
+				{
+  					P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
+				}
+				/*if (P.PropSafeFuneralPostCal)
+				{
+					P.ProportionSafeFuneral = P.PropSafeFuneralPostCal;
+				}*/
+				/*if (P.PropSeekCarePostCal)
+				{
+					P.PropHospSeek = P.PropSeekCarePostCal;
+				}*/
 			}
 		}
 

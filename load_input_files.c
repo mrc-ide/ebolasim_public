@@ -579,6 +579,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 				}
 				if (!GetInputParameter2(dat, dat2, "Min extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMin), 1, 1, 0)) P.ExtraRecTimeETUMin = 0;
 				if (!GetInputParameter2(dat, dat2, "Max extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMax), 1, 1, 0)) P.ExtraRecTimeETUMax = 0;
+				if (!GetInputParameter2(dat, dat2, "Relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFR), 1, 1, 0)) P.RelCommCFR = 1;
 			}
 			else
 			{
@@ -602,6 +603,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Capacity when burial capacity increases", "%lf", (void*)&(P.CapacityToMoreSDB), 1, 1, 0)) P.CapacityToMoreSDB = 1;
 		if (!GetInputParameter2(dat, dat2, "Increase in burial capacity", "%i", (void*)&(P.incCapacitySDB), 1, 1, 0)) P.incCapacitySDB = 1;
 		if (!GetInputParameter2(dat, dat2, "Maximum burial capacity per day", "%i", (void*)&(P.MaxSDBPerDay), 1, 1, 0)) P.MaxSDBPerDay = 10000;
+		
 
 		//if(!GetInputParameter2(dat,dat2,"Funeral controls by admin unit","%i",(void *) &(P.DoFuneralByAdUnit),1,1,0)) P.DoFuneralByAdUnit=0;
 		//if((P.DoFuneralByAdUnit)&&(P.DoAdUnits))
@@ -702,7 +704,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		{
 			if (!GetInputParameter2(dat, dat2, "Relative change in care seeking behaviour after outbreak declared", "%lf", (void*)&P.RelChangeHospSeekPostOutbreak, 1, 1, 0)) P.RelChangeHospSeekPostOutbreak = 1;
 		}
-		
+		if (!GetInputParameter2(dat, dat2, "Proportion of cases seeking care after calibration point", "%lf", (void*)&P.PropSeekCarePostCal, 1, 1, 0)) P.PropSeekCarePostCal = 0;
 
 		// Currently commented this out in order to make 
 		//if(!GetInputParameter2(dat,dat2,"Number of hospital beds change points","%i",(void *) &(P.NHospBeds),1,1,0)) P.NHospBeds=0;
@@ -953,6 +955,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 			if(!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropUndetectedCommunityCasesDetectedAtDeath), 1, 1, 0)) P.PropUndetectedCommunityCasesDetectedAtDeath = 0;
 		}
 		// then what is the delay to reporting?
+		if (!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death after calibration point", "%lf", (void*)&(P.PropCommDeathDetPostCal), 1, 1, 0)) P.PropCommDeathDetPostCal = 0;
 		if (!GetInputParameter2(dat, dat2, "Reporting delay for community case detected at death", "%lf", (void*)&(P.DelayCommunityCasesDetectedAtDeath), 1, 1, 0)) P.DelayCommunityCasesDetectedAtDeath = 0.0;
 	}
 
@@ -1557,7 +1560,13 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	{
 		if (!GetInputParameter2(dat, dat2, "Number of detected cases to reach", "%i", (void*)&(P.MaxDetCaseStopSim), 1, 1, 0)) P.MaxDetCaseStopSim = 1e9;
 		if (!GetInputParameter2(dat, dat2, "Number of days to project on by", "%i", (void*)&(P.NumDaysProject), 1, 1, 0)) P.NumDaysProject = 0;
-		P.StopDay = P.NumSamples;
+		if (P.DoReactETUBeds)
+		{
+			if (!GetInputParameter2(dat, dat2, "Increase in maximum number of ETU beds after calibration point", "%i", (void*)&(P.IncMaxETUBeds), 1, 1, 0)) P.IncMaxETUBeds = 0;
+		}
+		if (!GetInputParameter2(dat, dat2, "Proportion of contacts lost to follow up after calibration point", "%lf", (void*)&(P.propContactLostPostCal), 1, 1, 0)) P.propContactLostPostCal = 0;
+		if (!GetInputParameter2(dat, dat2, "Proportion of cases seeking care after calibration point", "%lf", (void*)&P.PropSeekCarePostCal, 1, 1, 0)) P.PropSeekCarePostCal = 0;
+		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely after calibration point", "%lf", (void*)&(P.PropSafeFuneralPostCal), 1, 1, 0)) P.PropSafeFuneralPostCal = 0;
 		P.StopTimeSet = 0;
 	}
 	else
