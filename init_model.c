@@ -335,6 +335,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	//reset stop times
 	P.StopDay = P.NumSamples;
 	P.StopTimeSet = 0;
+	P.MaxNumETUBeds = P.InitMaxNumETUBeds;
 
 	//vaccinate HCWs and FLWs
 	if (P.IncludeHospitalPlaceType)

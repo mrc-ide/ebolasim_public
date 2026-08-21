@@ -359,7 +359,7 @@ typedef struct PARAM {
   int CurrIndMeanTimeToHosp,CurrIndETUBeds,CurrIndMeanTimeToHospCT;
   int NETUBeds,NMeanTimeToHosp, NMeanTimeToHospCT,ETUBeds[MAX_CHANGE_POINTS];
   double ChangePointMeanTimeToHosp[MAX_CHANGE_POINTS], ChangePointMeanTimeToHospCT[MAX_CHANGE_POINTS],ChangePointETUBeds[MAX_CHANGE_POINTS],MeanTimeToHosp[MAX_CHANGE_POINTS], MeanTimeToHospCT[MAX_CHANGE_POINTS];
-  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds, IncMaxETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
+  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds, InitMaxNumETUBeds, IncMaxETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
   double InitDelayToETUBeds,SubDelayToETUBeds, StartTimeReactiveETUBeds,CapacityToMoreETUBeds; //added these variable for reactive provisioning of beds: ggilani 30/03/2017
   double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak, PropSeekCarePostCal; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
   //Pseudo contact tracing parameters: ggilani 13/11/14
