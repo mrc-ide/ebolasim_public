@@ -341,7 +341,7 @@ typedef struct PARAM {
   int DoDistributionVaccination,DistribNetCountry,SIADoAllCountries,VaccDosesPerPhial;
   //Added DoRecordInfEvents and MaxInfEvents in order to give the user a choice as to whether to output infection events as a line list: ggilani - 10/10/14
   int DoRecordInfEvents, MaxInfEvents, RecordInfEventsPerRun;
-  int DoStopSimDC, MaxDetCaseStopSim, NumDaysProject, StopDay, StopTimeSet; // added this to stop simulation after a specified number of detected cases: ggilani 11/08/26
+  int DoStopSimDC, MaxDetCaseStopSim, NumDaysProject, StopDay, ChangeDay, StopTimeSet, UpdateIntervention, NumDaysPostCalChange; // added this to stop simulation after a specified number of detected cases: ggilani 11/08/26
   double KernelPowerScale, KernelOffsetScale;
   int LimitNumInfections, MaxNumInfections;
   //Added parameters to incorporate time to death/recovery functions: ggilani - 22/10/14
@@ -350,7 +350,7 @@ typedef struct PARAM {
   double RecoveryAmp,RecoveryShape,RecoveryScale,RecoveryProb[RECOVERY_RES];
   //Parameters for funeral transmission
   int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB, MaxSDBPerDay, InitCasesToSDB;
-  double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, CapacityToMoreSDB,DelayToSDB;
+  double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, PropSafeFuneralPostCal, CapacityToMoreSDB,DelayToSDB;
   //Parameters for hospitalisation/treatment centres: ggilani - 28/10/2014
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
   int IncludeHospitalPlaceType, HospPlaceTypeNum, IncludeFLWs, HospCaseCapacity, DayHCWFLWVacc, DoHospInSameAdUnit;
@@ -359,12 +359,12 @@ typedef struct PARAM {
   int CurrIndMeanTimeToHosp,CurrIndETUBeds,CurrIndMeanTimeToHospCT;
   int NETUBeds,NMeanTimeToHosp, NMeanTimeToHospCT,ETUBeds[MAX_CHANGE_POINTS];
   double ChangePointMeanTimeToHosp[MAX_CHANGE_POINTS], ChangePointMeanTimeToHospCT[MAX_CHANGE_POINTS],ChangePointETUBeds[MAX_CHANGE_POINTS],MeanTimeToHosp[MAX_CHANGE_POINTS], MeanTimeToHospCT[MAX_CHANGE_POINTS];
-  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
+  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds, InitMaxNumETUBeds, IncMaxETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
   double InitDelayToETUBeds,SubDelayToETUBeds, StartTimeReactiveETUBeds,CapacityToMoreETUBeds; //added these variable for reactive provisioning of beds: ggilani 30/03/2017
-  double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
+  double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak, PropSeekCarePostCal; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
   //Pseudo contact tracing parameters: ggilani 13/11/14
   int DoContactTracing,contactTraceCapacity,contactTraceCaseThreshold,contactTraceCaseThresholdInc,DoNewContactTracing; //added DoNewContactTracing - 06/06/17
-  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT,MaxCTCapacity;
+  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT,MaxCTCapacity,propContactLostPostCal;
   int CT_scale1, CT_scale2; //scaling factors for contact tracing capacity
   int CT_thresh1, CT_thresh2; //scaling for different contact tracing thresholds
   int CTinc_scale1, CTinc_scale2; //scaling for increased capacity
@@ -404,7 +404,7 @@ typedef struct PARAM {
   double CaseDetectionRateAfterThresholdReached;
   double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
   double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact, ExtraRecTimeETUMin, ExtraRecTimeETUMax; // detection delays for contact, etu, hospital, community
-  double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
+  double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath, PropCommDeathDetPostCal; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
   int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR;
   double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax;
   double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS];

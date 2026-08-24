@@ -77,10 +77,38 @@ void RunModel(int run) //added run number as parameter
 			if (State.cumDC > P.MaxDetCaseStopSim)
 			{
 				P.StopDay = ns + P.NumDaysProject;
+				P.ChangeDay = ns + P.NumDaysPostCalChange;
 				P.StopTimeSet = 1;
 			}
 		}
-
+		if (P.DoStopSimDC && P.StopTimeSet && (ns == P.ChangeDay) && !P.UpdateIntervention)
+		{
+			if (P.DoReactETUBeds)
+			{
+				P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
+			}
+			/*if (P.PropSafeFuneralPostCal)
+			{
+				P.ProportionSafeFuneral = P.PropSafeFuneralPostCal;
+			}*/
+			/*if (P.PropSeekCarePostCal)
+			{
+				P.PropHospSeek = P.PropSeekCarePostCal;
+			}*/
+			/*if (P.PropContactsLostPostCal)
+			{
+				P.propContactLost = P.PropContactsLostPostCal;
+			}*/
+			/*if (P.PropCommDeathDetPostCal)
+			{
+				P.PropHospSeek = P.PropCommDeathDetPostCal;
+			}*/
+			/*if (P.RelDelayHospPostCal)
+			{
+				P.RelDelayHosp = P.RelDelayHospPostCal;
+			}*/
+			P.UpdateIntervention = 1;
+		}
 		fprintf(stderr, "\r    t=%lg   %i    %i|%i    %i     %i   %i (%lg %lg %lg)   %lg    ", t, State.S, State.L, State.I, State.R, State.D, State.cumD, State.cumT, State.cumV, State.cumVG, sqrt(State.maxRad2) / 1000); //added State.cumVG
 		for (j = 0; ((j < P.UpdatesPerSample) && (!InterruptRun) && (continueEvents)); j++)
 		{
