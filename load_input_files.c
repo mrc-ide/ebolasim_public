@@ -1560,6 +1560,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	{
 		if (!GetInputParameter2(dat, dat2, "Number of detected cases to reach", "%i", (void*)&(P.MaxDetCaseStopSim), 1, 1, 0)) P.MaxDetCaseStopSim = 1e9;
 		if (!GetInputParameter2(dat, dat2, "Number of days to project on by", "%i", (void*)&(P.NumDaysProject), 1, 1, 0)) P.NumDaysProject = 0;
+		if (!GetInputParameter2(dat, dat2, "Post calibration delay to intervention change", "%i", (void*)&(P.NumDaysPostCalChange), 1, 1, 0)) P.NumDaysPostCalChange = 0;
 		if (P.DoReactETUBeds)
 		{
 			if (!GetInputParameter2(dat, dat2, "Increase in maximum number of ETU beds after calibration point", "%i", (void*)&(P.IncMaxETUBeds), 1, 1, 0)) P.IncMaxETUBeds = 0;
@@ -1573,6 +1574,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	{
 		P.MaxDetCaseStopSim = 1e9;
 		P.NumDaysProject = 0;
+		P.NumDaysPostCalChange = 0;
 		P.StopDay = P.NumSamples;
 		P.StopTimeSet = 0;
 	}
