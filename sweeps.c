@@ -87,25 +87,30 @@ void RunModel(int run) //added run number as parameter
 			{
 				P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
 			}
-			/*if (P.PropSafeFuneralPostCal)
+			if (P.relPropSafeFuneralPostCal)
 			{
-				P.ProportionSafeFuneral = P.PropSafeFuneralPostCal;
+				P.ProportionSafeFuneral *= P.relPropSafeFuneralPostCal;
+			}
+			if (P.relPropContactsLostPostCal)
+			{
+				P.propContactLost *= P.relPropContactsLostPostCal;
+			}
+			if (P.relPropContactsTracedPostCal)
+			{
+				P.propContactTraced *= P.relPropContactsTracedPostCal;
+			}
+			if (P.relPropCommDeathDetPostCal)
+			{
+				P.PropUndetectedCommunityCasesDetectedAtDeath *= P.relPropCommDeathDetPostCal;
+			}
+			//Don't think I need these. The intervention will be done on the household level, so can use UpdateIntervention == 1 as condition for starting, which already resets each run. Then set household to receive intervention yes or no (needs to reset in InitModel). if yes, use it to set individual level of care/healthcare seeking time
+			/*if (P.RelDelayHospPostCal)
+			{
+				P.RelDelayHosp *= P.RelDelayHospPostCal;
 			}*/
 			/*if (P.PropSeekCarePostCal)
 			{
-				P.PropHospSeek = P.PropSeekCarePostCal;
-			}*/
-			/*if (P.PropContactsLostPostCal)
-			{
-				P.propContactLost = P.PropContactsLostPostCal;
-			}*/
-			/*if (P.PropCommDeathDetPostCal)
-			{
-				P.PropHospSeek = P.PropCommDeathDetPostCal;
-			}*/
-			/*if (P.RelDelayHospPostCal)
-			{
-				P.RelDelayHosp = P.RelDelayHospPostCal;
+				P.PropHospSeek *= P.PropSeekCarePostCal;
 			}*/
 			P.UpdateIntervention = 1;
 		}

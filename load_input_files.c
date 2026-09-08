@@ -596,7 +596,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Safe burial trigger incidence per cell", "%lf", (void*)&(P.FuneralControlCellIncThresh), 1, 1, 0)) P.FuneralControlCellIncThresh = 1000000000;
 		if (!GetInputParameter2(dat, dat2, "Safe burial start time", "%lf", (void*)&(P.FuneralControlTimeStartBase), 1, 1, 0)) P.FuneralControlTimeStartBase = USHRT_MAX / P.TimeStepsPerDay;
 		if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a safe burial", "%lf", (void*)&(P.RelInfSafeFuneral), 1, 1, 0)) P.RelInfSafeFuneral = 1;
-		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely", "%lf", (void*)&(P.ProportionSafeFuneral), 1, 1, 0)) P.ProportionSafeFuneral = 1;
+		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely", "%lf", (void*)&(P.ProportionSafeFuneralInit), 1, 1, 0)) P.ProportionSafeFuneralInit = 1;
 		if (!GetInputParameter2(dat, dat2, "Initial number of detected cases to trigger SDB in an admin unit", "%i", (void*)&(P.InitCasesToSDB), 1, 1, 0))  P.InitCasesToSDB = 1;
 		if (!GetInputParameter2(dat, dat2, "Daily burials per admin unit", "%i", (void*)&(P.AdunitSDBCapacity), 1, 1, 0)) P.AdunitSDBCapacity = 0;
 		if (!GetInputParameter2(dat, dat2, "Delay to increase burial capacity", "%lf", (void*)&(P.DelayToSDB), 1, 1, 0)) P.DelayToSDB = 0;
@@ -952,7 +952,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		}
 		else
 		{
-			if(!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropUndetectedCommunityCasesDetectedAtDeath), 1, 1, 0)) P.PropUndetectedCommunityCasesDetectedAtDeath = 0;
+			if(!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death", "%lf", (void*)&(P.PropUndetectedCommunityCasesDetectedAtDeathInit), 1, 1, 0)) P.PropUndetectedCommunityCasesDetectedAtDeathInit = 0;
 		}
 		// then what is the delay to reporting?
 		if (!GetInputParameter2(dat, dat2, "Proportion of undetected community cases detected at death after calibration point", "%lf", (void*)&(P.PropCommDeathDetPostCal), 1, 1, 0)) P.PropCommDeathDetPostCal = 0;
@@ -1371,8 +1371,8 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		}
 		if (P.DoContactTracing) //  check this!
 		{
-			if (!GetInputParameter2(dat, dat2, "Proportion of contacts to trace", "%lf", (void*)&(P.propContactTraced), 1, 1, 0)) P.propContactTraced = 1; //so if we don't specify this, everyone will be contact traced
-			if (!GetInputParameter2(dat, dat2, "Proportion of contacts lost to follow up", "%lf", (void*)&(P.propContactLost), 1, 1, 0)) P.propContactLost = 0;
+			if (!GetInputParameter2(dat, dat2, "Proportion of contacts to trace", "%lf", (void*)&(P.propContactTracedInit), 1, 1, 0)) P.propContactTracedInit = 1; //so if we don't specify this, everyone will be contact traced
+			if (!GetInputParameter2(dat, dat2, "Proportion of contacts lost to follow up", "%lf", (void*)&(P.propContactLostInit), 1, 1, 0)) P.propContactLostInit = 0;
 			if (!GetInputParameter2(dat, dat2, "Time to hospitalisation for contact traced case", "%lf", (void*)&(P.HospitalisationTime_contactTrace), 1, 1, 0)) P.HospitalisationTime_contactTrace = 1;
 			if (!GetInputParameter2(dat, dat2, "Number of times to hospitalisation contact traced", "%i", (void*)&(P.NMeanTimeToHospCT), 1, 1, 0)) P.NMeanTimeToHosp = 0;
 			if (P.NMeanTimeToHospCT > 0)
@@ -1565,9 +1565,13 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		{
 			if (!GetInputParameter2(dat, dat2, "Increase in maximum number of ETU beds after calibration point", "%i", (void*)&(P.IncMaxETUBeds), 1, 1, 0)) P.IncMaxETUBeds = 0;
 		}
-		if (!GetInputParameter2(dat, dat2, "Proportion of contacts lost to follow up after calibration point", "%lf", (void*)&(P.propContactLostPostCal), 1, 1, 0)) P.propContactLostPostCal = 0;
-		if (!GetInputParameter2(dat, dat2, "Proportion of cases seeking care after calibration point", "%lf", (void*)&P.PropSeekCarePostCal, 1, 1, 0)) P.PropSeekCarePostCal = 0;
-		if (!GetInputParameter2(dat, dat2, "Proportion of burials conducted safely after calibration point", "%lf", (void*)&(P.PropSafeFuneralPostCal), 1, 1, 0)) P.PropSafeFuneralPostCal = 0;
+		if (!GetInputParameter2(dat, dat2, "Relative proportion of care seeking due to hh intervention after calibration point", "%lf", (void*)&P.relPropSeekCarePostCalIntervention, 1, 1, 0)) P.relPropSeekCarePostCalIntervention = 1;
+		if (!GetInputParameter2(dat, dat2, "Relative reduction in time to hospitalisation due to hh intervention after calibration point", "%lf", (void*)&P.relRedTimeToCarePostCalIntervention, 1, 1, 0)) P.relRedTimeToCarePostCalIntervention = 1;
+		if (!GetInputParameter2(dat, dat2, "Relative proportion of burials conducted safely after calibration point", "%lf", (void*)&(P.relPropSafeFuneralPostCal), 1, 1, 0)) P.relPropSafeFuneralPostCal = 1;
+		if (!GetInputParameter2(dat, dat2, "Relative proportion of contacts traced after calibration point", "%lf", (void*)&(P.relPropContactsTracedPostCal), 1, 1, 0))  P.relPropContactsTracedPostCal = 1;
+		if (!GetInputParameter2(dat, dat2, "Relative proportion of contacts lost to follow up after calibration point", "%lf", (void*)&(P.relPropContactsLostPostCal), 1, 1, 0)) P.relPropContactsLostPostCal = 1;
+		if (!GetInputParameter2(dat, dat2, "Relative proportion of undetected community cases detected at death after calibration point", "%lf", (void*)&(P.relPropCommDeathDetPostCal), 1, 1, 0)) P.relPropCommDeathDetPostCal = 1;
+		
 		P.StopTimeSet = 0;
 	}
 	else

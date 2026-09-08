@@ -171,6 +171,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 					Hosts[k].infect_type = 0;
 					Hosts[k].infectiousMult = 1; //reset to 1 - this is changed when funeral transmission temporarily increases infectiousness
 					Hosts[k].safeBurial = 0; 
+					if (Households[Hosts[k].hh].intervention != 0) Households[Hosts[k].hh].intervention = 0; //set intervention of household to zero for each run - ggilani 08/09/26
 
 				}
 				// Next loop needs to count down for DoImmune host list reordering to work
@@ -338,6 +339,36 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.StopTimeSet = 0;
 	P.UpdateIntervention = 0;
 	P.MaxNumETUBeds = P.InitMaxNumETUBeds;
+	P.ProportionSafeFuneral = P.ProportionSafeFuneralInit;
+	P.propContactTraced = P.propContactTracedInit;
+	P.propContactLost = P.propContactLostInit;
+
+	//update distribution parameters if necessary
+	if (P.DoDistSeekCare)
+	{
+		P.PropHospSeekPreOutbreak = P.PropSeekCareDist[run];
+	}
+	if (P.DoDistSeekCarePostDec)
+	{
+		P.RelChangeHospSeekPostOutbreak = P.PropSeekCarePostDecDist[run];
+	}
+	if (P.DoDistPropHospDetect)
+	{
+		P.ProbDetectHosp = P.PropHospDetectDist[run];
+	}
+	if (P.DoDistCommDeath)
+	{
+		P.PropUndetectedCommunityCasesDetectedAtDeath = P.PropCommDeathDist[run];
+	}
+	else
+	{
+		P.PropUndetectedCommunityCasesDetectedAtDeath = P.PropUndetectedCommunityCasesDetectedAtDeathInit;
+	}
+	if (P.DoDistCommCFR)
+	{
+		P.RelCommCFR = P.RelCommCFRDist[run];
+	}
+
 
 	//vaccinate HCWs and FLWs
 	if (P.IncludeHospitalPlaceType)

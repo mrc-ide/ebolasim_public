@@ -31,6 +31,7 @@ typedef struct HOUSEHOLD {
   float loc_x,loc_y;
   unsigned short int nhr,stockpile;
   float income;
+  int intervention; //added this for a RCCE-like intervention to modify healthcare seeking behaviour - ggilani 08/09/2026
 } household;
 
 
@@ -350,7 +351,7 @@ typedef struct PARAM {
   double RecoveryAmp,RecoveryShape,RecoveryScale,RecoveryProb[RECOVERY_RES];
   //Parameters for funeral transmission
   int DoFuneralTransmission, AdunitSDBCapacity, incCapacitySDB, MaxSDBPerDay, InitCasesToSDB;
-  double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral, PropSafeFuneralPostCal, CapacityToMoreSDB,DelayToSDB;
+  double FuneralTransmissionDuration,RelativeInfectiousnessFuneral,RelInfSafeFuneral,ProportionSafeFuneral,ProportionSafeFuneralInit,relPropSafeFuneralPostCal, CapacityToMoreSDB,DelayToSDB;
   //Parameters for hospitalisation/treatment centres: ggilani - 28/10/2014
   int DoHospitalisation, DoETUByAdUnit, DoReactETUBeds;
   int IncludeHospitalPlaceType, HospPlaceTypeNum, IncludeFLWs, HospCaseCapacity, DayHCWFLWVacc, DoHospInSameAdUnit;
@@ -364,7 +365,7 @@ typedef struct PARAM {
   double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak, PropSeekCarePostCal; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
   //Pseudo contact tracing parameters: ggilani 13/11/14
   int DoContactTracing,contactTraceCapacity,contactTraceCaseThreshold,contactTraceCaseThresholdInc,DoNewContactTracing; //added DoNewContactTracing - 06/06/17
-  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactLost,CapacityToMoreCT,DelayToCT,MaxCTCapacity,propContactLostPostCal;
+  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactTracedInit,propContactLost,propContactLostInit,CapacityToMoreCT,DelayToCT,MaxCTCapacity,relPropContactsLostPostCal, relPropContactsTracedPostCal;
   int CT_scale1, CT_scale2; //scaling factors for contact tracing capacity
   int CT_thresh1, CT_thresh2; //scaling for different contact tracing thresholds
   int CTinc_scale1, CTinc_scale2; //scaling for increased capacity
@@ -404,9 +405,10 @@ typedef struct PARAM {
   double CaseDetectionRateAfterThresholdReached;
   double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
   double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact, ExtraRecTimeETUMin, ExtraRecTimeETUMax; // detection delays for contact, etu, hospital, community
-  double PropUndetectedCommunityCasesDetectedAtDeath, DelayCommunityCasesDetectedAtDeath, PropCommDeathDetPostCal; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
+  double PropUndetectedCommunityCasesDetectedAtDeath, relPropCommDeathDetPostCal, PropUndetectedCommunityCasesDetectedAtDeathInit, DelayCommunityCasesDetectedAtDeath, PropCommDeathDetPostCal; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
   int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR;
   double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax;
+  double relPropSeekCarePostCalIntervention, relRedTimeToCarePostCalIntervention; 
   double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS];
 
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput; //added intervention capacities separate to adunit file file

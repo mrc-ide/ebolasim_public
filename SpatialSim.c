@@ -493,28 +493,6 @@ int main(int argc,char *argv[])
 			//fprintf(stderr, "%f\n", ranf());
 		}
 
-		//update distribution parameters if necessary
-		if (P.DoDistSeekCare)
-		{
-			P.PropHospSeekPreOutbreak = P.PropSeekCareDist[i];
-		}
-		if (P.DoDistSeekCarePostDec)
-		{
-			P.RelChangeHospSeekPostOutbreak = P.PropSeekCarePostDecDist[i];
-		}
-		if (P.DoDistPropHospDetect)
-		{
-			P.ProbDetectHosp = P.PropHospDetectDist[i];
-		}
-		if (P.DoDistCommDeath)
-		{
-			P.PropUndetectedCommunityCasesDetectedAtDeath = P.PropCommDeathDist[i];
-		}
-		if (P.DoDistCommCFR)
-		{
-			P.RelCommCFR = P.RelCommCFRDist[i];
-		}
-
 		InitModel(i); //passing run number into RunModel so we can save run number in the infection event log: ggilani - 15/10/2014
 		//fprintf(stderr, "%f\n", ranf());
 		//fprintf(stderr, "%f\n", ranf_mt(5));
