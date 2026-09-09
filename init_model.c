@@ -171,7 +171,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 					Hosts[k].infect_type = 0;
 					Hosts[k].infectiousMult = 1; //reset to 1 - this is changed when funeral transmission temporarily increases infectiousness
 					Hosts[k].safeBurial = 0; 
-					if (Households[Hosts[k].hh].intervention != 0) Households[Hosts[k].hh].intervention = 0; //set intervention of household to zero for each run - ggilani 08/09/26
+					if (Households[Hosts[k].hh].ce != 0) Households[Hosts[k].hh].ce = 0; //set intervention of household to zero for each run - ggilani 08/09/26
 
 				}
 				// Next loop needs to count down for DoImmune host list reordering to work
@@ -232,7 +232,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	for (l = 0; l < P.NMCP; l++)
 	{
 		i = (int)(McellLookup[l] - Mcells);
-		Mcells[i].vacc_start_time = Mcells[i].treat_start_time = USHRT_MAX - 1;
+		Mcells[i].vacc_start_time = Mcells[i].treat_start_time = Mcells[i].ce_start_time = USHRT_MAX - 1;
 		//added these things, just to do some bookkeeping when testing out geo vaccination
 		Mcells[i].ntriggervacc = 0;
 		Mcells[i].popvacc = 0;
@@ -244,8 +244,8 @@ void InitModel(int run) //passing run number so we can save run number in the in
 		Mcells[i].minvaccdist_dose = 1e6;
 		Mcells[i].maxvaccdist_dose = -1;
 		Mcells[i].treat_end_time = 0;
-		Mcells[i].treat_trig = Mcells[i].vacc_trig = Mcells[i].vacc = Mcells[i].treat = 0;
-		Mcells[i].place_trig = Mcells[i].move_trig = Mcells[i].socdist_trig = Mcells[i].keyworkerproph_trig =
+		Mcells[i].treat_trig = Mcells[i].vacc_trig = Mcells[i].vacc = Mcells[i].treat = Mcells[i].comm_eng = 0;
+		Mcells[i].place_trig = Mcells[i].move_trig = Mcells[i].socdist_trig = Mcells[i].keyworkerproph_trig = Mcells[i].ce_trig =
 			Mcells[i].placeclose = Mcells[i].moverest = Mcells[i].socdist = Mcells[i].keyworkerproph = 0;
 		Mcells[i].move_start_time = USHRT_MAX - 1;
 		Mcells[i].place_end_time = Mcells[i].move_end_time =

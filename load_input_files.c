@@ -1571,6 +1571,12 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Relative proportion of contacts traced after calibration point", "%lf", (void*)&(P.relPropContactsTracedPostCal), 1, 1, 0))  P.relPropContactsTracedPostCal = 1;
 		if (!GetInputParameter2(dat, dat2, "Relative proportion of contacts lost to follow up after calibration point", "%lf", (void*)&(P.relPropContactsLostPostCal), 1, 1, 0)) P.relPropContactsLostPostCal = 1;
 		if (!GetInputParameter2(dat, dat2, "Relative proportion of undetected community cases detected at death after calibration point", "%lf", (void*)&(P.relPropCommDeathDetPostCal), 1, 1, 0)) P.relPropCommDeathDetPostCal = 1;
+
+		if (!GetInputParameter2(dat, dat2, "Community engagement trigger incidence per cell", " % lf", (void*)&(P.CommEngCellIncThresh), 1, 1, 0)) P.CommEngCellIncThresh = 1;
+		if (!GetInputParameter2(dat, dat2, "Community engagement radius", "%lf", (void*)&(P.CommRadius), 1, 1, 0)) P.CommRadius = 0;
+		P.CommRadius2 = P.CommRadius * P.CommRadius;
+		if (!GetInputParameter2(dat, dat2, "Proportion of households accepting community engagement", "%lf", (void*)&(P.CE_Prop), 1, 1, 0)) P.CE_Prop = 1;
+		if (!GetInputParameter2(dat, dat2, "Delay from trigger to community engagement", "%lf", (void*)&(P.TimeToCommunityIntervention), 1, 1, 0)) P.TimeToCommunityIntervention = 1;
 		
 		P.StopTimeSet = 0;
 	}

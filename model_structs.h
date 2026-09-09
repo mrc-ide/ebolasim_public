@@ -31,7 +31,7 @@ typedef struct HOUSEHOLD {
   float loc_x,loc_y;
   unsigned short int nhr,stockpile;
   float income;
-  int intervention; //added this for a RCCE-like intervention to modify healthcare seeking behaviour - ggilani 08/09/2026
+  int ce; //added this for a RCCE-like intervention to modify healthcare seeking behaviour - ggilani 08/09/2026
 } household;
 
 
@@ -142,6 +142,7 @@ typedef struct MICROCELL {
   unsigned short int treat,vacc,treat_trig,vacc_trig;
   unsigned short int treat_start_time,treat_end_time;
   unsigned short int vacc_start_time;
+  unsigned short int comm_eng, ce_trig, ce_start_time;
   
   int ntriggervacc, totalvacc, minvaccdist_dose, maxvaccdist_dose,popvacc;
   double minvaccdist, maxvaccdist, minvaccdist_t,maxvaccdist_t;
@@ -410,7 +411,7 @@ typedef struct PARAM {
   double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax;
   double relPropSeekCarePostCalIntervention, relRedTimeToCarePostCalIntervention; 
   double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS];
-
+  double CommEngCellIncThresh, CommRadius, CommRadius2, CE_Prop, TimeToCommunityIntervention;
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput; //added intervention capacities separate to adunit file file
 
   int DoInterruptIntervention,NDaysInterrupt,DaysInterruptIntervention[MAX_CHANGE_POINTS],InterruptIntervention; //extra parameters to model interruptions of intervention: ggilani 08/01/20

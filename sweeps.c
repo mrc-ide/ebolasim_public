@@ -1705,10 +1705,10 @@ void VaccSweep(double t)
 
 int TreatSweep(double t)
 {
-	int i, j, i2, j2, k, l, m, b, rd, prd, mrd, f, f1, f2, f3, f4, tn, bs, ad, ad2, ii, jj, npropvacc;
+	int i, j, i2, j2, k, l, m, b, rd, prd, mrd, crd, f, f1, f2, f3, f4, tn, bs, ad, ad2, ii, jj, npropvacc;
 	int minx, maxx, miny, trig_thresh, nckwp, FirstPerson, LastPerson;
 	double maxdist, maxdist2, dosepercase, dosepercell, logpop;
-	unsigned short int ts, tstf, tstb, tsvb, tspf, tsmb, tsmf, tssdf, tskwpf;
+	unsigned short int ts, tstf, tstb, tsvb, tspf, tsmb, tsmf, tssdf, tskwpf, tsce; //added tsce as time to start community engagement
 	int global_trig;
 	double r, rad2;
 
@@ -1716,6 +1716,7 @@ int TreatSweep(double t)
 	rd = (int)ceil(P.TreatRadius / P.mcwidth);
 	prd = (int)ceil(P.PlaceCloseRadius / P.mcwidth);
 	mrd = (int)ceil(P.MoveRestrRadius / P.mcwidth);
+	crd = (int)ceil(P.CommRadius / P.mcwidth); // community engagement(ish) intervention radius, need to add community radius
 	f = f1 = 0;
 	if (P.DoGlobalTriggers)
 	{
@@ -1751,8 +1752,8 @@ int TreatSweep(double t)
 																(int) Places[j][l].group_start[f],
 																(int) Places[j][l].group_size[f]);
 														else
-							*/							if ((!HOST_TO_BE_TREATED(Places[j][l].members[m])) && ((P.TreatPlaceTotalProp[j] == 1) || (ranf_mt(i) < P.TreatPlaceTotalProp[j])))
-	DoProph(Places[j][l].members[m], ts, i);
+							*/							
+							if ((!HOST_TO_BE_TREATED(Places[j][l].members[m])) && ((P.TreatPlaceTotalProp[j] == 1) || (ranf_mt(i) < P.TreatPlaceTotalProp[j]))) DoProph(Places[j][l].members[m], ts, i);
 						}
 					}
 					else
@@ -1785,7 +1786,7 @@ int TreatSweep(double t)
 				DoVacc(State.mvacc_queue[i], ts, 0);
 			State.mvacc_cum = m;
 		}
-	if ((t >= P.TreatTimeStart) || (t >= P.VaccTimeStart) || (t >= P.PlaceCloseTimeStart) || (t >= P.MoveRestrTimeStart) || (t >= P.SocDistTimeStart) || (t >= P.KeyWorkerProphTimeStart))
+	if ((t >= P.TreatTimeStart) || (t >= P.VaccTimeStart) || (t >= P.PlaceCloseTimeStart) || (t >= P.MoveRestrTimeStart) || (t >= P.SocDistTimeStart) || (t >= P.KeyWorkerProphTimeStart) || P.UpdateIntervention) //added update intervention to indicate past calibration point
 	{
 		tstf = (unsigned short int) (P.TimeStepsPerDay * (t + P.TreatProphCourseLength) - 1);
 		tstb = (unsigned short int) (P.TimeStepsPerDay * (t + P.TreatDelayMean));
@@ -1796,6 +1797,7 @@ int TreatSweep(double t)
 		tsmb = (unsigned short int) floor(P.TimeStepsPerDay * (t + P.MoveDelayMean));
 		tssdf = (unsigned short int) ceil(P.TimeStepsPerDay * (t + P.SocDistDuration));
 		tskwpf = (unsigned short int) ceil(P.TimeStepsPerDay * (t + P.KeyWorkerProphRenewalDuration));
+		tsce = (unsigned short int) ceil(P.TimeStepsPerDay * (t + P.TimeToCommunityIntervention));
 		nckwp = (int)ceil(P.KeyWorkerProphDuration / P.TreatProphCourseLength);
 #pragma omp parallel for private(tn,i,i2,j,j2,k,l,m,b,bs,minx,maxx,miny,f2,f3,f4,trig_thresh,r,ad,ad2,maxdist,maxdist2,dosepercase,logpop,ii,jj,npropvacc,rad2,FirstPerson,LastPerson) reduction(+:f) schedule(static,1) //,ii,ll,nvacc,maxvacc,maxdist,maxdist2,dosepercase,logpop
 		for (tn = 0; tn < P.NumThreads; tn++)
@@ -2317,6 +2319,77 @@ int TreatSweep(double t)
 						f = 1;
 						Mcells[b].keyworkerproph = 0;
 					}
+
+					// set microcells that are marked to receive community engagement and have now reached the start time, to be activated and proportion of households reached
+					if ((Mcells[b].comm_eng == 1) && (ts >= Mcells[b].ce_start_time))
+					{
+						f = 1;
+						Mcells[b].comm_eng = 2;
+						Mcells[b].ce_trig = 0;
+						for (i = 0; i < Mcells[b].n; ) // loop over households
+						{
+							l = Mcells[b].members[i];
+							if (ranf_mt(tn) < P.CE_Prop) //((!HOST_TO_BE_TREATED(l)) && ((P.TreatPropRadial == 1) || (ranf_mt(tn) < P.TreatPropRadial)))
+							{
+								Households[Hosts[l].hh].ce = 1;
+							}
+							i += Households[Hosts[l].hh].nh;
+						}
+					}
+					// calculate trigger threshold
+					trig_thresh = (P.DoPerCapitaTriggers) ? ((int)ceil(((double)(Mcells[b].n * P.CommEngCellIncThresh)) / P.IncThreshPop)) : P.CommEngCellIncThresh;
+
+					if ((P.UpdateIntervention) && (Mcells[b].comm_eng == 0) && (((Mcells[b].ce_trig >= trig_thresh) && (!P.DoGlobalTriggers)) || (global_trig >= P.CommEngCellIncThresh)) && (P.CommRadius2 > 0))
+					{
+						minx = (b / P.nmch); miny = (b % P.nmch);
+						k = b;
+						maxx = 0;
+						i = j = m = f2 = 0;
+						l = f3 = 1;
+						if (ad > 0)
+						{
+							ad2 = ad / P.TreatAdminUnitDivisor; //do something here!
+							do
+							{
+								if ((minx >= 0) && (minx < P.nmcw) && (miny >= 0) && (miny < P.nmch))
+								{
+									if (P.TreatByAdminUnit)
+										f4 = (AdUnits[Mcells[k].adunit].id / P.TreatAdminUnitDivisor == ad2); // do something here
+									else
+										f4 = ((r = dist2_mm(Mcells + b, Mcells + k)) < P.TreatRadius2); // do something here
+									if (f4)
+									{
+										f = f2 = 1;
+										if ((Mcells[k].n > 0) && (Mcells[k].treat == 0) && ((!P.RestrictTreatToTarget) || (Mcells[k].country == P.TargetCountry)))
+										{
+											Mcells[k].ce_start_time = tsce;
+											Mcells[k].comm_eng = 1;
+											maxx += Mcells[k].nh;
+										}
+									}
+								}
+								if (j == 0)
+									minx = minx + 1;
+								else if (j == 1)
+									miny = miny - 1;
+								else if (j == 2)
+									minx = minx - 1;
+								else if (j == 3)
+									miny = miny + 1;
+								m = (m + 1) % l;
+								if (m == 0)
+								{
+									j = (j + 1) % 4;
+									i = (i + 1) % 2;
+									if (i == 0) l++;
+									if (j == 1) { f3 = f2; f2 = 0; }
+								}
+								k = ((minx + P.nmcw) % P.nmcw) * P.nmch + (miny + P.nmch) % P.nmch;
+							} while ((f3) && (maxx < P.TreatMaxCoursesPerCase)); // do something here
+						}
+
+					}
+
 					trig_thresh = (P.DoPerCapitaTriggers) ? ((int)ceil(((double)(Mcells[b].n * P.KeyWorkerProphCellIncThresh)) / P.IncThreshPop)) : P.KeyWorkerProphCellIncThresh;
 					if ((P.DoPlaces) && (t >= P.KeyWorkerProphTimeStart) && (Mcells[b].keyworkerproph == 0) && (((Mcells[b].keyworkerproph_trig >= trig_thresh) && (!P.DoGlobalTriggers)) || (global_trig >= P.KeyWorkerProphCellIncThresh)))
 					{

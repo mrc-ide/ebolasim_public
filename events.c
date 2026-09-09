@@ -338,6 +338,7 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 			if (Mcells[a->mcell].vacc_trig < USHRT_MAX - 1) Mcells[a->mcell].vacc_trig++;
 		}
 		if (Mcells[a->mcell].move_trig < USHRT_MAX - 1) Mcells[a->mcell].move_trig++;
+		if (Mcells[a->mcell].ce_trig < USHRT_MAX - 1) Mcells[a->mcell].ce_trig++;
 		if (Mcells[a->mcell].socdist_trig < USHRT_MAX - 1) Mcells[a->mcell].socdist_trig++;
 		if (Mcells[a->mcell].keyworkerproph_trig < USHRT_MAX - 1) Mcells[a->mcell].keyworkerproph_trig++;
 		//}
@@ -1073,7 +1074,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 		
 		if (P.DoHospitalisation)
 		{
-			if (Hosts[ai].hcs_accept < P.PropHospSeek)
+			if ((Households[Hosts[ai].hh].ce ? Hosts[ai].hcs_accept*P.relPropSeekCarePostCalIntervention : Hosts[ai].hcs_accept) < P.PropHospSeek)
 			{
 
 				//this just sets hospitalisation time. detection now happens after hospitalisation
@@ -1082,7 +1083,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 					do {
 						i = (int)floor((q = ranf_mt(tn) * CDF_RES));
 						q -= ((double)i);
-						ti = -P.HospitalisationTime * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
+						ti = -(Households[Hosts[ai].hh].ce? P.HospitalisationTime*P.relRedTimeToCarePostCalIntervention : P.HospitalisationTime) * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
 						a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
 					} while (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep));
 					1;
@@ -1091,6 +1092,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 				else
 				{
 					a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (P.HospitalisationTime_contactTrace * P.TimeStepsPerDay)); //different hospitalisation time for contact traced case: ggilani 05/07/2017
+					
 					if (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep))
 					{
 						a->hospital_time = a->hospital_time - (int)(P.MinHospTimeBeforeOutcome / P.TimeStep);
