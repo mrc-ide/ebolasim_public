@@ -340,11 +340,11 @@ void RecordSample(double t, int n)
 			}
 			if (D >= P.VaccCellIncThresh)
 			{
-				if (P.VaccTimeStart >= 1e10)
+				if ((P.VaccTimeStart >= 1e10) & (P.UpdateIntervention == 1))
 				{
 					P.VaccTimeStart = t + P.VaccTimeStartBase;
 				}
-				if (P.VaccNewCoursesStartTime >= 1e10)
+				if ((P.VaccNewCoursesStartTime >= 1e10) & (P.UpdateIntervention == 1))
 				{
 					P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
 					P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase;
@@ -411,12 +411,12 @@ void RecordSample(double t, int n)
 			if (P.TreatTimeStart >= 1e10) P.TreatTimeStart = t + P.TreatTimeStartBase;
 			if (P.CaseIsolationTimeStart >= 1e10) P.CaseIsolationTimeStart = t + P.CaseIsolationTimeStartBase;
 			if (P.HQuarantineTimeStart >= 1e10) P.HQuarantineTimeStart = t + P.HQuarantineTimeStartBase;
-			if (P.VaccTimeStart >= 1e10)
+			if ((P.VaccTimeStart >= 1e10) & (P.UpdateIntervention == 1))
 			{
 				P.VaccTimeStart = t + P.VaccTimeStartBase;
 				//fprintf(stderr, "t=%lg, P.VaccTimeStart=%lg, P.VaccTimeStartBase=%lg\n", t, P.VaccTimeStart, P.VaccTimeStartBase);
 			}
-			if (P.VaccNewCoursesStartTime >= 1e10)
+			if ((P.VaccNewCoursesStartTime >= 1e10) & (P.UpdateIntervention == 1))
 			{
 				P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
 				P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase;
@@ -2293,6 +2293,17 @@ void SaveParamDists(void)
 		for (i = 0; i < P.NR; i++)
 		{
 			fprintf(dat, "%i,%lf\n", i, P.RelCommCFRDist[i]);
+		}
+		fclose(dat);
+	}
+
+	if (P.DoDistVaccSusc)
+	{
+		sprintf(outname, "%s.vacc_eff.csv", OutFileBase);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		for (i = 0; i < P.NR; i++)
+		{
+			fprintf(dat, "%i,%lf\n", i, (1-P.RelVaccSuscDist[i]));
 		}
 		fclose(dat);
 	}

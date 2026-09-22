@@ -1648,13 +1648,13 @@ void VaccSweep(double t)
 		{
 			if ((State.cumV + State.cumVG) < P.VaccMaxCourses)
 			{
-				if ((State.ring_queue[i] == 1) && (State.cumV_daily < P.VaccDosePerDay)) //for ring vaccination
+				if ((State.ring_queue[i] == 1) && ((State.cumV_daily + State.cumVG_daily) < P.VaccDosePerDay)) //for ring vaccination
 				{
 					DoVacc(State.vacc_queue[i], ts, 1);
 					k++;
 					l++;
 				}
-				else if ((State.ring_queue[i] == 0) && (State.cumVG_daily < P.VaccGeoDosePerDay)) //for geo vaccination
+				else if ((State.ring_queue[i] == 0) && ((State.cumV_daily + State.cumVG_daily) < P.VaccDosePerDay)) //for geo vaccination. changed this from P.VaccGeoDosePerDay
 				{
 					DoVacc(State.vacc_queue[i], ts, 0);
 					k++;

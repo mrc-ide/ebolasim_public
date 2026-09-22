@@ -1073,7 +1073,17 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	{
 		P.VaccCellIncThresh = P.VaccCellIncThresh * P.VaccCaseScale;
 	}
-	if (!GetInputParameter2(dat, dat2, "Relative susceptibility of vaccinated individual", "%lf", (void*)&(P.VaccSuscDrop), 1, 1, 0)) P.VaccSuscDrop = 1;
+	if (!GetInputParameter2(dat, dat2, "Sample susceptibility of vaccinated individual", "%i", (void*)&(P.DoDistVaccSusc), 1, 1, 0)) P.DoDistVaccSusc = 0;
+	if (P.DoDistVaccSusc)
+	{
+		if (!GetInputParameter2(dat, dat2, "Min relative susceptibility of vaccinated individual", "%lf", (void*)&(P.VaccSuscMin), 1, 1, 0)) P.VaccSuscMin = 0;
+		if (!GetInputParameter2(dat, dat2, "Max relative susceptibility of vaccinated individual", "%lf", (void*)&(P.VaccSuscMax), 1, 1, 0)) P.VaccSuscMax = 1;
+	}
+	else
+	{
+		if (!GetInputParameter2(dat, dat2, "Relative susceptibility of vaccinated individual", "%lf", (void*)&(P.VaccSuscDrop), 1, 1, 0)) P.VaccSuscDrop = 1;
+	}
+	
 	if (P.HCWVaccSuscDrop < 0)
 	{
 		P.HCWVaccSuscDrop = P.VaccSuscDrop;
@@ -1101,6 +1111,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Base geo vaccine doses per day", "%i", (void*)&(P.BaseVaccGeoDosePerDay), 1, 1, 0)) P.BaseVaccGeoDosePerDay = -1;
 	if (!GetInputParameter2(dat, dat2, "Max geo vaccine doses per day", "%i", (void*)&(P.MaxVaccGeoDosePerDay), 1, 1, 0)) P.MaxVaccGeoDosePerDay = -1;
 	if (!GetInputParameter2(dat, dat2, "Reset vaccination queue each day", "%i", (void*)&(P.ResetVaccQueue), 1, 1, 0)) P.ResetVaccQueue = 0;
+	if (!GetInputParameter2(dat, dat2, "Time to increase vaccination teams", "%lg", (void*)&(P.TimeIncVaccTeams), 1, 1, 0)) P.TimeIncVaccTeams = 0;
 	P.VaccCampaignInterval *= DAYS_PER_YEAR;
 	if (!GetInputParameter2(dat, dat2, "Maximum number of rounds of vaccination", "%i", (void*)&(P.VaccMaxRounds), 1, 1, 0)) P.VaccMaxRounds = 1;
 	if (P.DoHouseholds)

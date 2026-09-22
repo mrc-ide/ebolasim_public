@@ -293,9 +293,9 @@ typedef struct PARAM {
   double PrivateTreatDelayMean,PrivateTreatPropCaseHouseholds,PrivateTreatPropCases;
   double TreatPlaceProbCaseId[NUM_PLACE_TYPES],TreatPlaceTotalProp[NUM_PLACE_TYPES];
   double TreatMaxCoursesBase,TreatNewCoursesRate,TreatNewCoursesStartTime,TreatMaxCourses,PropPrivateStockpile;
-  double VaccSuscDrop,VaccSuscDrop2,HCWVaccSuscDrop,VaccInfDrop,VaccMortDrop,VaccSympDrop,VaccDelayMean,VaccTimeStart,VaccTimeEfficacySwitch,VaccTimeStartGeo;
+  double VaccSuscDrop,VaccSuscDrop2,HCWVaccSuscDrop,VaccInfDrop,VaccMortDrop,VaccSympDrop,VaccDelayMean,VaccTimeStart,VaccTimeEfficacySwitch,VaccTimeStartGeo, TimeVaccIncDosePerDay, TimeIncVaccTeams;
   double VaccTimeToEfficacy,VaccProp,VaccRadius,VaccRadius2,VaccMinRadius,VaccMinRadius2,VaccPropCaseHouseholds,VaccHouseholdsDuration,VaccMaxCoursesBase,VaccRadiusHighDensity,VaccRadiusHighDensity2;
-  int DoVaccDailyReplenishment, DoVaccBulkReplenishment;
+  int DoVaccDailyReplenishment, DoVaccBulkReplenishment, QueueIncVaccDose;
   double VaccNewCoursesRate,VaccNewCoursesBulk,VaccNewCoursesStartTime,VaccNewCoursesDelay,VaccNewCoursesStartTimeBase, VaccNewCoursesBoostStartTimeBase, VaccNewCoursesInitFracBulk, VaccNewCoursesInitBulk, VaccNewCoursesInitDelay, VaccNewCoursesBoostStartTime, VaccMaxCourses,VaccNewCoursesEndTime,VaccEfficacyDecay,VaccCellIncThresh,VaccCampaignInterval,VaccCoverageIncreasePeriod;
   double GeoVaccCellIncThresh, FuneralControlCellIncThresh, ContactTracingCellIncThresh, RingVaccCellIncThresh, ETUCellIncThresh; //added more thresholds for interventions
   double VaccTimeToEfficacyThirdVaccRing;
@@ -408,13 +408,13 @@ typedef struct PARAM {
   double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
   double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact, ExtraRecTimeETUMin, ExtraRecTimeETUMax; // detection delays for contact, etu, hospital, community
   double PropUndetectedCommunityCasesDetectedAtDeath, relPropCommDeathDetPostCal, PropUndetectedCommunityCasesDetectedAtDeathInit, DelayCommunityCasesDetectedAtDeath, PropCommDeathDetPostCal; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
-  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR;
-  double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax;
+  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR, DoDistVaccSusc;
+  double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax, VaccSuscMin, VaccSuscMax;
   double relPropSeekCarePostCalIntervention, relRedTimeToCarePostCalIntervention; 
-  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS];
+  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS], RelVaccSuscDist[MAX_FIXED_SEEDS];
   double CommEngCellIncThresh, CommRadius, CommRadius2, CE_Prop, TimeToCommunityIntervention;
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput; //added intervention capacities separate to adunit file file
-
+  
   int DoInterruptIntervention,NDaysInterrupt,DaysInterruptIntervention[MAX_CHANGE_POINTS],InterruptIntervention; //extra parameters to model interruptions of intervention: ggilani 08/01/20
 } param;
 
