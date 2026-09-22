@@ -342,6 +342,8 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.ProportionSafeFuneral = P.ProportionSafeFuneralInit;
 	P.propContactTraced = P.propContactTracedInit;
 	P.propContactLost = P.propContactLostInit;
+	P.QueueIncVaccDose = 0;
+	P.TimeVaccIncDosePerDay = 0;
 
 	//update distribution parameters if necessary
 	if (P.DoDistSeekCare)
@@ -367,6 +369,10 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	if (P.DoDistCommCFR)
 	{
 		P.RelCommCFR = P.RelCommCFRDist[run];
+	}
+	if (P.DoDistVaccSusc)
+	{
+		P.VaccSuscDrop = P.RelVaccSuscDist[run];
 	}
 
 

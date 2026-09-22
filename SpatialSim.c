@@ -439,8 +439,16 @@ int main(int argc,char *argv[])
 		}
 	}
 
+	//sample from distributions for vaccine efficacy if necessary
+	if (P.DoDistVaccSusc)
+	{
+		for (i = 0; (i < P.NR); i++)
+		{
+			P.RelVaccSuscDist[i] = ranf() * (P.VaccSuscMax - P.VaccSuscMin) + P.VaccSuscMin;
+		}
+	}
 	//write out distribution files if necessary
-	if (P.DoDistSeekCare || P.DoDistSeekCarePostDec || P.DoDistPropHospDetect || P.DoDistCommDeath || P.DoDistCommCFR) //don't really need if statement
+	if (P.DoDistSeekCare || P.DoDistSeekCarePostDec || P.DoDistPropHospDetect || P.DoDistCommDeath || P.DoDistCommCFR || P.DoDistVaccSusc) //don't really need if statement
 	{
 		SaveParamDists();
 	}

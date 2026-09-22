@@ -531,11 +531,18 @@ void UpdateVaccination(double t, int n)
 			weeklyDC += TimeSeries[i].incDC;
 		}
 		avDailyDC = (double)weeklyDC / 7;
-		if (avDailyDC > P.VaccDoseFlag)
+		if ((avDailyDC > P.VaccDoseFlag) && !P.QueueIncVaccDose)
 		{
+			P.TimeVaccIncDosePerDay = t + P.TimeIncVaccTeams;
+			P.QueueIncVaccDose = 1;
+		}
+
+		if(((int)(t*P.TimeStepsPerDay) == (int)(P.TimeVaccIncDosePerDay*P.TimeStepsPerDay)) && P.QueueIncVaccDose)
+		{	
 			P.VaccDoseFlag++;
 			P.VaccDosePerDay = P.VaccDoseFlag * P.BaseVaccDosePerDay;
 			P.VaccGeoDosePerDay = P.VaccDoseFlag * P.BaseVaccGeoDosePerDay;
+			P.QueueIncVaccDose = 0;
 		}
 		if (P.VaccDosePerDay > P.MaxVaccDosePerDay)
 		{
