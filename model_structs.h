@@ -45,7 +45,7 @@ typedef struct POPVAR {
   int cumI_adunit[MAX_ADUNITS],cumC_adunit[MAX_ADUNITS],cumT_adunit[MAX_ADUNITS],cumETU_adunit[MAX_ADUNITS], disETU_adunit[MAX_ADUNITS],ETU_adunit[MAX_ADUNITS], cumH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS], cumDC_adunit[MAX_ADUNITS], cumD_adunit[MAX_ADUNITS],cumDD_adunit[MAX_ADUNITS], cumDR_adunit[MAX_ADUNITS]; //added cumulative hospitalisation per admin unit: ggilani 28/10/14, cumulative detected cases per adunit: ggilani 03/02/15
   int cumCT_adunit[MAX_ADUNITS],CT_adunit[MAX_ADUNITS],cumV_adunit[MAX_ADUNITS],cumVG_adunit[MAX_ADUNITS],cumCC_adunit[MAX_ADUNITS],CC_adunit[MAX_ADUNITS],cumSDB_adunit[MAX_ADUNITS]; //added cumulative and CT per admin unit: ggilani 15/06/17
   int capETU_adunit[MAX_ADUNITS]; //added something to store whether hospitals are over capacity in each adunit: ggilani 04/05/22
-  int cumItype[INFECT_TYPE_MASK],cumI_keyworker[2],cumC_keyworker[2],cumT_keyworker[2],cumD_keyworker[2];
+  int cumItype[INFECT_TYPE_MASK],cumI_keyworker[2],cumC_keyworker[2],cumT_keyworker[2],cumD_keyworker[2],cumDet_route[4];
   int cumI_resist[MAX_NUM_RESIST_TYPES],cumC_resist[MAX_NUM_RESIST_TYPES],cumT_resist[MAX_NUM_RESIST_TYPES];
   int *inv_cell_inf,*inf_queue[MAX_NUM_THREADS],n_queue[MAX_NUM_THREADS*CACHE_LINE_SIZE];
   int *p_queue[NUM_PLACE_TYPES],*pg_queue[NUM_PLACE_TYPES],np_queue[NUM_PLACE_TYPES];
@@ -79,12 +79,12 @@ typedef struct RESULTS {
   double incIa[NUM_AGE_GROUPS],incCa[NUM_AGE_GROUPS],incDa[NUM_AGE_GROUPS],incDCa[NUM_AGE_GROUPS],incETUa[NUM_AGE_GROUPS], incHa[NUM_AGE_GROUPS], incVa[NUM_AGE_GROUPS];
   double incItype[INFECT_TYPE_MASK],Rtype[INFECT_TYPE_MASK],Rage[NUM_AGE_GROUPS],Rdenom;
   double rmsRad,maxRad,PropPlacesClosed[NUM_PLACE_TYPES];
-  double incI_adunit[MAX_ADUNITS], incC_adunit[MAX_ADUNITS],incETU_adunit[MAX_ADUNITS], ETU_adunit[MAX_ADUNITS], disETU_adunit[MAX_ADUNITS];// , cumT_adunit[MAX_ADUNITS], incH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS], incDC_adunit[MAX_ADUNITS]; //added incidence of hospitalisation per day: ggilani 28/10/14, incidence of detected cases per adunit,: ggilani 03/02/15
+  double incI_adunit[MAX_ADUNITS], incC_adunit[MAX_ADUNITS],incETU_adunit[MAX_ADUNITS], ETU_adunit[MAX_ADUNITS], disETU_adunit[MAX_ADUNITS], incDC_adunit[MAX_ADUNITS];// , cumT_adunit[MAX_ADUNITS], incH_adunit[MAX_ADUNITS], H_adunit[MAX_ADUNITS], incDC_adunit[MAX_ADUNITS]; //added incidence of hospitalisation per day: ggilani 28/10/14, incidence of detected cases per adunit,: ggilani 03/02/15
   double incCT_adunit[MAX_ADUNITS], CT_adunit[MAX_ADUNITS], incV_adunit[MAX_ADUNITS], incVG_adunit[MAX_ADUNITS], incSDB_adunit[MAX_ADUNITS];
   //double incCC_adunit[MAX_ADUNITS], CC_adunit[MAX_ADUNITS],incV_adunit[MAX_ADUNITS],incVG_adunit[MAX_ADUNITS]; //added incidence of contact tracing and number of people being contact traced per admin unit: ggilani 15/06/17
   //double incD_adunit[MAX_ADUNITS],incDD_adunit[MAX_ADUNITS], incDR_adunit[MAX_ADUNITS]; //added detected deaths, detected recoveries, safe burials per adunit, beds per admin unit
   double capETU_adunit[MAX_ADUNITS],capSDB_adunit[MAX_ADUNITS],capCT_adunit[MAX_ADUNITS],nBeds_adunit[MAX_ADUNITS]; //added marker for hospital capacity in each admin unit: ggilani 04/05/22
-  double incI_keyworker[2],incC_keyworker[2],cumT_keyworker[2],incD_keyworker[2];
+  double incI_keyworker[2],incC_keyworker[2],cumT_keyworker[2],incD_keyworker[2],incDet_route[4];
   double incI_resist[MAX_NUM_RESIST_TYPES],incC_resist[MAX_NUM_RESIST_TYPES],cumT_resist[MAX_NUM_RESIST_TYPES];
   float *bmi2,*bmi3,*bmi4;
 } results ;
@@ -344,7 +344,7 @@ typedef struct PARAM {
   int DoDistributionVaccination,DistribNetCountry,SIADoAllCountries,VaccDosesPerPhial;
   //Added DoRecordInfEvents and MaxInfEvents in order to give the user a choice as to whether to output infection events as a line list: ggilani - 10/10/14
   int DoRecordInfEvents, MaxInfEvents, RecordInfEventsPerRun;
-  int DoStopSimDC, MaxDetCaseStopSim, NumDaysProject, StopDay, ChangeDay, StopTimeSet, UpdateIntervention, NumDaysPostCalChange; // added this to stop simulation after a specified number of detected cases: ggilani 11/08/26
+  int DoStopSimDC, MaxDetCaseStopSim, NumDaysProject, StopDay, ChangeDay, ChangeDayBeds, StopTimeSet, UpdateIntervention, NumDaysPostCalChange; // added this to stop simulation after a specified number of detected cases: ggilani 11/08/26
   double KernelPowerScale, KernelOffsetScale;
   int LimitNumInfections, MaxNumInfections;
   //Added parameters to incorporate time to death/recovery functions: ggilani - 22/10/14
@@ -362,12 +362,12 @@ typedef struct PARAM {
   int CurrIndMeanTimeToHosp,CurrIndETUBeds,CurrIndMeanTimeToHospCT;
   int NETUBeds,NMeanTimeToHosp, NMeanTimeToHospCT,ETUBeds[MAX_CHANGE_POINTS];
   double ChangePointMeanTimeToHosp[MAX_CHANGE_POINTS], ChangePointMeanTimeToHospCT[MAX_CHANGE_POINTS],ChangePointETUBeds[MAX_CHANGE_POINTS],MeanTimeToHosp[MAX_CHANGE_POINTS], MeanTimeToHospCT[MAX_CHANGE_POINTS];
-  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds, InitMaxNumETUBeds, IncMaxETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
+  int InitCasesToETUBeds,InitNumETUBeds,SubNumETUBeds,MaxNumETUBeds, InitMaxNumETUBeds, IncMaxETUBeds, TimeNextIncMaxETUBeds; // added these variable for reactive provisioning of beds: ggilani 30/03/2017, added maximum number of ETU beds total
   double InitDelayToETUBeds,SubDelayToETUBeds, StartTimeReactiveETUBeds,CapacityToMoreETUBeds; //added these variable for reactive provisioning of beds: ggilani 30/03/2017
   double PropHospSeek, PropHospSeekPreOutbreak, RelChangeHospSeekPostOutbreak, PropSeekCarePostCal; //added these to model healthcare seeking behaviour: ggilani 15/05/2024
   //Pseudo contact tracing parameters: ggilani 13/11/14
   int DoContactTracing,contactTraceCapacity,contactTraceCaseThreshold,contactTraceCaseThresholdInc,DoNewContactTracing; //added DoNewContactTracing - 06/06/17
-  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactTracedInit,propContactLost,propContactLostInit,CapacityToMoreCT,DelayToCT,MaxCTCapacity,relPropContactsLostPostCal, relPropContactsTracedPostCal;
+  double RelativeInfectiousnessContactTraced,contactTraceDuration,propContactTraced,propContactTracedInit,propContactLost,propContactLostInit,CapacityToMoreCT,DelayToCT,MaxCTCapacity,relPropContactsLostPostCal, relPropContactsTracedPostCal, relInfDetCase;
   int CT_scale1, CT_scale2; //scaling factors for contact tracing capacity
   int CT_thresh1, CT_thresh2; //scaling for different contact tracing thresholds
   int CTinc_scale1, CTinc_scale2; //scaling for increased capacity
@@ -382,7 +382,7 @@ typedef struct PARAM {
   int DoOriginDestinationMatrix, DoPlaceMatrix, DoOutputHosp; //added: ggilani 28/01/15
   //case detection parameters: 03/02/15 ggilani
   int DoCaseDetection,DoCaseDetectionAdunit,DoClusterCaseDetection;
-  double ProbDetectCommunity, ProbDetectHosp; //probability of detection in community and hospital
+  double ProbDetectCommunity, ProbDetectHosp, initProbDetectHosp, newPropCommDetectionPostCal, initProbDetectCommunity, relPropHospDetPostCal; //probability of detection in community and hospital
   double CaseDetectionRate;
   double RR1,RR2,RR3; //reporting rate scalings for Guinea, Liberia, Sierra Leone
   double RRAlt; //**separate reporting rate for individual admin units** - ggilani 18/06/2015
@@ -413,7 +413,7 @@ typedef struct PARAM {
   double relPropSeekCarePostCalIntervention, relRedTimeToCarePostCalIntervention; 
   double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS], RelVaccSuscDist[MAX_FIXED_SEEDS];
   double CommEngCellIncThresh, CommRadius, CommRadius2, CE_Prop, TimeToCommunityIntervention;
-  int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput; //added intervention capacities separate to adunit file file
+  int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput, DoDetectionRouteOutput; //added intervention capacities separate to adunit file file
   
   int DoInterruptIntervention,NDaysInterrupt,DaysInterruptIntervention[MAX_CHANGE_POINTS],InterruptIntervention; //extra parameters to model interruptions of intervention: ggilani 08/01/20
 } param;

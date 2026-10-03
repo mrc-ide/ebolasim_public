@@ -226,6 +226,16 @@ void RecordSample(double t, int n)
 			StateT[j].cumC_keyworker[i] = StateT[j].cumI_keyworker[i] = StateT[j].cumD_keyworker[i] = 0;
 		}
 	}
+	// added this to output detection route
+	for (i = 0; i < 4; i++)
+	{
+		TimeSeries[n].incDet_route[i] = 0;
+		for (j = 0; j < P.NumThreads; j++)
+		{
+			TimeSeries[n].incDet_route[i] += (double)StateT[j].cumDet_route[i];
+			StateT[j].cumDet_route[i] = 0;
+		}
+	}
 
 	for (i = 0; i < INFECT_TYPE_MASK; i++)
 	{
@@ -239,12 +249,13 @@ void RecordSample(double t, int n)
 	if (P.DoAdUnits)
 		for (i = 0; i <= P.NumAdunits; i++)
 		{
-			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].capETU_adunit[i] = TimeSeries[n].ETU_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].disETU_adunit[i] = 0;// TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
+			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].capETU_adunit[i] = TimeSeries[n].ETU_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].disETU_adunit[i] = TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = 0;//  TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i]  = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
+			AdUnits[i].currentSDB = 0;
 			for (j = 0; j < P.NumThreads; j++)
 			{
 				TimeSeries[n].incI_adunit[i] += (double)StateT[j].cumI_adunit[i];
 				TimeSeries[n].incC_adunit[i] += (double)StateT[j].cumC_adunit[i];
-				//TimeSeries[n].incDC_adunit[i] += (double)StateT[j].cumDC_adunit[i]; //added detected cases: ggilani 03/02/15
+				TimeSeries[n].incDC_adunit[i] += (double)StateT[j].cumDC_adunit[i]; //added detected cases: ggilani 03/02/15
 				//TimeSeries[n].incD_adunit[i] += (double)StateT[j].cumD_adunit[i];
 				//TimeSeries[n].incDD_adunit[i] += (double)StateT[j].cumDD_adunit[i]; //added detected deaths: ggilani 03/02/15
 				//TimeSeries[n].incDR_adunit[i] += (double)StateT[j].cumDR_adunit[i]; //added detected recoveries: ggilani 03/02/15
@@ -325,6 +336,8 @@ void RecordSample(double t, int n)
 		{
 			P.OutbreakDetected = 1; //mark outbreak as detected
 			P.PropHospSeek *= P.RelChangeHospSeekPostOutbreak;
+			//P.ProbDetectHosp *= P.relPropHospDetPostCal;
+			//P.ProbDetectCommunity = P.initProbDetectCommunity;
 		}
 		if (P.DoGlobalTriggers)
 		{
@@ -342,12 +355,12 @@ void RecordSample(double t, int n)
 			{
 				if ((P.VaccTimeStart >= 1e10) & (P.UpdateIntervention == 1))
 				{
-					P.VaccTimeStart = t + P.VaccTimeStartBase;
+					P.VaccTimeStart = t + P.VaccTimeStartBase - P.NumDaysPostCalChange;
 				}
 				if ((P.VaccNewCoursesStartTime >= 1e10) & (P.UpdateIntervention == 1))
 				{
-					P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
-					P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase;
+					P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase - P.NumDaysPostCalChange;
+					P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase - P.NumDaysPostCalChange;
 				}
 			}
 			if (D >= P.SocDistCellIncThresh)
@@ -413,13 +426,13 @@ void RecordSample(double t, int n)
 			if (P.HQuarantineTimeStart >= 1e10) P.HQuarantineTimeStart = t + P.HQuarantineTimeStartBase;
 			if ((P.VaccTimeStart >= 1e10) & (P.UpdateIntervention == 1))
 			{
-				P.VaccTimeStart = t + P.VaccTimeStartBase;
+				P.VaccTimeStart = t + P.VaccTimeStartBase - P.NumDaysPostCalChange;
 				//fprintf(stderr, "t=%lg, P.VaccTimeStart=%lg, P.VaccTimeStartBase=%lg\n", t, P.VaccTimeStart, P.VaccTimeStartBase);
 			}
 			if ((P.VaccNewCoursesStartTime >= 1e10) & (P.UpdateIntervention == 1))
 			{
-				P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase;
-				P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase;
+				P.VaccNewCoursesStartTime = t + P.VaccNewCoursesStartTimeBase - P.NumDaysPostCalChange;
+				P.VaccNewCoursesBoostStartTime = t + P.VaccNewCoursesBoostStartTimeBase - P.NumDaysPostCalChange;
 			}
 			if (P.SocDistTimeStart >= 1e10) P.SocDistTimeStart = t + P.SocDistTimeStartBase;
 			if (P.PlaceCloseTimeStart >= 1e10) P.PlaceCloseTimeStart = t + P.PlaceCloseTimeStartBase;
@@ -1480,6 +1493,7 @@ void SaveResults(void)
 		fprintf(dat, "t,");
 
 		//headers
+		for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "DC_%s,", AdUnits[i].ad_name);
 		if (P.DoFuneralTransmission)
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "capSDB_%s,", AdUnits[i].ad_name); //added safe burial capacity
@@ -1488,6 +1502,8 @@ void SaveResults(void)
 		if ((P.DoHospitalisation) & (P.DoETUByAdUnit))
 		{
 			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "Beds_%s,", AdUnits[i].ad_name); //"\tT%i" //added number of beds
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "incETU_%s,", AdUnits[i].ad_name);
+			for (i = 0; i < P.NumAdunits; i++) fprintf(dat, "ETU_%s,", AdUnits[i].ad_name);
 		}
 		if (P.DoContactTracing)
 		{
@@ -1510,6 +1526,11 @@ void SaveResults(void)
 		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
 			fprintf(dat, "%lg,", TimeSeries[i].t);
+			for (j = 0; j < P.NumAdunits; j++)
+			{
+				fprintf(dat, "%lg,", TimeSeries[i].incDC_adunit[j]);
+			}
+		
 			if (P.DoFuneralTransmission)
 			{
 				for (j = 0; j < P.NumAdunits; j++)
@@ -1521,6 +1542,11 @@ void SaveResults(void)
 			{
 				for (j = 0; j < P.NumAdunits; j++)
 					fprintf(dat, "%lg,", TimeSeries[i].nBeds_adunit[j]); //"\t%lg" //added number of beds
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].incETU_adunit[j]); //"\t%lg" //added incidence hospitalisation
+				for (j = 0; j < P.NumAdunits; j++)
+					fprintf(dat, "%lg,", TimeSeries[i].ETU_adunit[j]);
+
 			}
 			if (P.DoContactTracing)
 			{
@@ -1575,10 +1601,50 @@ void SaveResults(void)
 		sprintf(outname, "%s.keyworker.csv", OutFile);
 		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
 		fprintf(dat, "t");
-		for (i = 0; i < 2; i++) fprintf(dat, ",I%i", i);
-		for (i = 0; i < 2; i++) fprintf(dat, ",C%i", i);
-		for (i = 0; i < 2; i++) fprintf(dat, ",T%i", i);
-		for (i = 0; i < 2; i++) fprintf(dat, ",D%i", i);
+		for (i = 0; i < 2; i++)
+		{
+			if (i == 0)
+			{
+				fprintf(dat, ",I_nonHCW");
+			}
+			else
+			{
+				fprintf(dat, ",I_HCW");
+			}
+		}
+		for (i = 0; i < 2; i++)
+		{
+			if (i == 0)
+			{
+				fprintf(dat, ",C_nonHCW");
+			}
+			else
+			{
+				fprintf(dat, ",C_HCW");
+			}
+		}
+		for (i = 0; i < 2; i++)
+		{
+			if (i == 0)
+			{
+				fprintf(dat, ",T_nonHCW");
+			}
+			else
+			{
+				fprintf(dat, ",T_HCW");
+			}
+		}
+		for (i = 0; i < 2; i++)
+		{
+			if (i == 0)
+			{
+				fprintf(dat, ",D_nonHCW");
+			}
+			else
+			{
+				fprintf(dat, ",D_HCW");
+			}
+		}
 		fprintf(dat, ",%i,%i\n", P.KeyWorkerNum, P.KeyWorkerIncHouseNum);
 		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
 		{
@@ -1595,6 +1661,44 @@ void SaveResults(void)
 		}
 		fclose(dat);
 	}
+
+	//output detection routes
+	if (P.DoDetectionRouteOutput)
+	{
+		sprintf(outname, "%s.detection.csv", OutFile);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		fprintf(dat, "t");
+		for (i = 0; i < 4; i++)
+		{
+			if (i == 0)
+			{
+				fprintf(dat, ",Det_community");
+			}
+			else if (i == 1)
+			{
+				fprintf(dat, ",Det_ETU");
+			}
+			else if (i == 2)
+			{
+				fprintf(dat, ",Det_Hosp");
+			}
+			else if (i == 3)
+			{
+				fprintf(dat, ",Det_Death");
+			}
+		}
+		fprintf(dat, "\n");
+		for (i = 0; i < min(P.NumSamples, P.StopDay); i++)
+		{
+			fprintf(dat, "%lg", TimeSeries[i].t);
+			for (j = 0; j < 4; j++)
+				fprintf(dat, ",%lg", TimeSeries[i].incDet_route[j]);
+
+			fprintf(dat, "\n");
+		}
+		fclose(dat);
+	}
+
 	if (P.DoInftypeOutput)
 	{
 		sprintf(outname, "%s.inftype.csv", OutFile);
@@ -1670,6 +1774,15 @@ void SaveResults(void)
 		for (i = 1; i <= MAX_HOUSEHOLD_SIZE; i++)
 			fprintf(dat, "\t%lg", denom_household[i]);
 		fprintf(dat, "\n");
+		fclose(dat);
+	}
+
+	if (P.ChangeDay != P.NumSamples)
+	{
+		sprintf(outname, "%s.calibration_time.csv", OutFile);
+		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+		fprintf(dat, "Calibration day\n");
+		fprintf(dat, "%i\n", (P.ChangeDay - P.NumDaysPostCalChange));
 		fclose(dat);
 	}
 

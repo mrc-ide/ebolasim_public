@@ -928,7 +928,8 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 
 	if (!GetInputParameter2(dat, dat2, "Number of sampling intervals over which cumulative incidence measured for global trigger", "%i", (void*)&(P.TriggersSamplingInterval), 1, 1, 0)) P.TriggersSamplingInterval = 10000000;
 	
-	if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.ProbDetectCommunity), 1, 1, 0)) P.ProbDetectCommunity = 0;
+	if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.initProbDetectCommunity), 1, 1, 0)) P.initProbDetectCommunity = 0;
+	if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a detected case", "%lf", (void*)&(P), 1, 1, 0)) P.relInfDetCase = 1;
 	
 	//proportion of hospital cases detected
 	if (!GetInputParameter2(dat, dat2, "Sample proportion of hospital cases detected", "%i", (void*)&(P.DoDistPropHospDetect), 1, 1, 0)) P.DoDistPropHospDetect = 0;
@@ -939,7 +940,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	}
 	else
 	{
-		if (!GetInputParameter2(dat, dat2, "Proportion of hospital cases detected", "%lf", (void*)&(P.ProbDetectHosp), 1, 1, 0)) P.ProbDetectHosp = 1;
+		if (!GetInputParameter2(dat, dat2, "Proportion of hospital cases detected", "%lf", (void*)&(P.initProbDetectHosp), 1, 1, 0)) P.initProbDetectHosp = 1;
 	}
 	if (P.DoMortality)
 	{
@@ -1235,7 +1236,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	{
 		P.MoveRestrAdminUnitDivisor = 1; P.MoveRestrByAdminUnit = 0;
 	}
-
+	if (!GetInputParameter2(dat, dat2, "Output detection route file", "%i", (void*)&(P.DoDetectionRouteOutput), 1, 1, 0)) P.DoDetectionRouteOutput = 0;
 	if (!GetInputParameter2(dat, dat2, "Include delay to case detection", "%i", (void*)&(P.DoDetectDelay), 1, 1, 0)) P.DoDetectDelay = 0;
 	if (!GetInputParameter2(dat, dat2, "Do clustered case detection by household", "%i", (void*)&(P.DoClusterCaseDetection), 1, 1, 0)) P.DoClusterCaseDetection = 0;
 	if (P.DoDetectDelay)
@@ -1575,6 +1576,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (P.DoReactETUBeds)
 		{
 			if (!GetInputParameter2(dat, dat2, "Increase in maximum number of ETU beds after calibration point", "%i", (void*)&(P.IncMaxETUBeds), 1, 1, 0)) P.IncMaxETUBeds = 0;
+			if (!GetInputParameter2(dat, dat2, "Time between increases in maximum number of ETU beds after calibration point", "%i", (void*)&(P.TimeNextIncMaxETUBeds), 1, 1, 0)) P.TimeNextIncMaxETUBeds = 30;
 		}
 		if (!GetInputParameter2(dat, dat2, "Relative proportion of care seeking due to hh intervention after calibration point", "%lf", (void*)&P.relPropSeekCarePostCalIntervention, 1, 1, 0)) P.relPropSeekCarePostCalIntervention = 1;
 		if (!GetInputParameter2(dat, dat2, "Relative reduction in time to hospitalisation due to hh intervention after calibration point", "%lf", (void*)&P.relRedTimeToCarePostCalIntervention, 1, 1, 0)) P.relRedTimeToCarePostCalIntervention = 1;
@@ -1582,6 +1584,8 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Relative proportion of contacts traced after calibration point", "%lf", (void*)&(P.relPropContactsTracedPostCal), 1, 1, 0))  P.relPropContactsTracedPostCal = 1;
 		if (!GetInputParameter2(dat, dat2, "Relative proportion of contacts lost to follow up after calibration point", "%lf", (void*)&(P.relPropContactsLostPostCal), 1, 1, 0)) P.relPropContactsLostPostCal = 1;
 		if (!GetInputParameter2(dat, dat2, "Relative proportion of undetected community cases detected at death after calibration point", "%lf", (void*)&(P.relPropCommDeathDetPostCal), 1, 1, 0)) P.relPropCommDeathDetPostCal = 1;
+		if (!GetInputParameter2(dat, dat2, "Relative proportion of hospital cases detected after calibration point", "%lf", (void*)&(P.relPropHospDetPostCal), 1, 1, 0)) P.relPropHospDetPostCal = 1;
+		if (!GetInputParameter2(dat, dat2, "Relative proportion of community cases detected after calibration point", "%lf", (void*)&(P.newPropCommDetectionPostCal), 1, 1, 0)) P.newPropCommDetectionPostCal = 1;
 
 		if (!GetInputParameter2(dat, dat2, "Community engagement trigger incidence per cell", " % lf", (void*)&(P.CommEngCellIncThresh), 1, 1, 0)) P.CommEngCellIncThresh = 1;
 		if (!GetInputParameter2(dat, dat2, "Community engagement radius", "%lf", (void*)&(P.CommRadius), 1, 1, 0)) P.CommRadius = 0;
