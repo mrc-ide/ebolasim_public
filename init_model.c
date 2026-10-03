@@ -44,6 +44,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	for (i = 0; i < NUM_AGE_GROUPS; i++) State.cumCa[i] = State.cumIa[i] = State.cumDa[i] = State.cumDCa[i] = State.cumETUa[i] = State.cumHa[i] = State.cumVa[i] = 0; //adding det case, hosp, vacc by age: ggilani 22/02/22
 	for (i = 0; i < P.EvolResistNumTypes; i++) State.cumC_resist[i] = State.cumI_resist[i] = State.cumT_resist[i] = 0;
 	for (i = 0; i < 2; i++) State.cumC_keyworker[i] = State.cumI_keyworker[i] = State.cumT_keyworker[i] = 0;
+	for (i = 0; i < 4; i++) State.cumDet_route[i] = 0; //added this to track detection route
 	for (i = 0; i < NUM_PLACE_TYPES; i++) State.NumPlacesClosed[i] = 0;
 	for (i = 0; i < INFECT_TYPE_MASK; i++) State.cumItype[i] = 0;
 	//initialise cumulative case counts per country to zero: ggilani 12/11/14
@@ -96,13 +97,14 @@ void InitModel(int run) //passing run number so we can save run number in the in
 		for (i = 0; i < NUM_AGE_GROUPS; i++) StateT[j].cumCa[i] = StateT[j].cumIa[i] = StateT[j].cumDa[i] = StateT[j].cumDCa[i] = StateT[j].cumETUa[i] = StateT[j].cumHa[i] = StateT[j].cumVa[i] = 0; //adding det cases, hosp, vacc by age: ggilani 22/02/22
 		for (i = 0; i < P.EvolResistNumTypes; i++) StateT[j].cumC_resist[i] = StateT[j].cumI_resist[i] = StateT[j].cumT_resist[i] = 0;
 		for (i = 0; i < 2; i++) StateT[j].cumC_keyworker[i] = StateT[j].cumI_keyworker[i] = StateT[j].cumT_keyworker[i] = 0;
+		for (i = 0; i < 4; i++) StateT[j].cumDet_route[i] = 0; //added this to track detection route
 		for (i = 0; i < NUM_PLACE_TYPES; i++) StateT[j].NumPlacesClosed[i] = 0;
 		for (i = 0; i < INFECT_TYPE_MASK; i++) StateT[j].cumItype[i] = 0;
 		//initialise cumulative case counts per country per thread to zero: ggilani 12/11/14
 		for (i = 0; i < MAX_COUNTRIES; i++) StateT[j].cumC_country[i] = 0;
 		if (P.DoAdUnits)
 			for (i = 0; i <= P.NumAdunits; i++)
-				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumT_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].ETU_adunit[i] = StateT[j].disETU_adunit[i] = StateT[j].H_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] = StateT[j].cumDD_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumCC_adunit[i] = StateT[j].nct_queue[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
+				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumT_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].ETU_adunit[i] = StateT[j].disETU_adunit[i] = StateT[j].H_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] = StateT[j].cumDD_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumVG_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumCC_adunit[i] = StateT[j].nct_queue[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
 	}
 	nim = 0;
 
@@ -336,6 +338,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	//reset stop times
 	P.StopDay = P.NumSamples;
 	P.ChangeDay = P.NumSamples;
+	P.ChangeDayBeds = P.NumSamples;
 	P.StopTimeSet = 0;
 	P.UpdateIntervention = 0;
 	P.MaxNumETUBeds = P.InitMaxNumETUBeds;
@@ -344,6 +347,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.propContactLost = P.propContactLostInit;
 	P.QueueIncVaccDose = 0;
 	P.TimeVaccIncDosePerDay = 0;
+	P.ProbDetectCommunity = 0;// P.initProbDetectCommunity;
 
 	//update distribution parameters if necessary
 	if (P.DoDistSeekCare)
@@ -357,6 +361,10 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	if (P.DoDistPropHospDetect)
 	{
 		P.ProbDetectHosp = P.PropHospDetectDist[run];
+	}
+	else
+	{
+		P.ProbDetectHosp = P.initProbDetectHosp;
 	}
 	if (P.DoDistCommDeath)
 	{

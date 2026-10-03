@@ -333,7 +333,7 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 		//if (P.OutbreakDetected)
 		//{
 		if (Mcells[a->mcell].treat_trig < USHRT_MAX - 1) Mcells[a->mcell].treat_trig++;
-		if ((!P.OnlyDoGeoVaccWhenNoRing) || (Hosts[ai].vacc_accept > P.ProbEstablishRing))
+		if ((t >= P.VaccTimeStart) && (!P.OnlyDoGeoVaccWhenNoRing || (P.OnlyDoGeoVaccWhenNoRing && (Hosts[ai].vacc_accept > P.ProbEstablishRing))))
 		{
 			if (Mcells[a->mcell].vacc_trig < USHRT_MAX - 1) Mcells[a->mcell].vacc_trig++;
 		}
@@ -537,6 +537,7 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 	}
 	StateT[tn].cumDCa[age]++; //added detected case by age: ggilani 22/02/22
 	Hosts[ai].dayDetected = (int)t;
+	StateT[tn].cumDet_route[Hosts[ai].detected - 1]++; //added this to track detection route
 	if (Hosts[ai].contactTraced)
 	{
 		StateT[tn].cumCC++;
@@ -605,7 +606,8 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 
 
 	//Add my ring vaccination code here similar to DoDetectedCase code - ggilani 15/02/17
-	if ((Hosts[ai].detected) && (Hosts[ai].vacc_accept < P.ProbEstablishRing) && ((P.DoRingVaccination && (t >= P.VaccTimeStart)) || (P.DoContactTracing && (t >= P.ContactTracingTimeStart))))
+	//if ((Hosts[ai].detected) && (Hosts[ai].vacc_accept < P.ProbEstablishRing) && ((P.DoRingVaccination && (t >= P.VaccTimeStart)) || (P.DoContactTracing && (t >= P.ContactTracingTimeStart))))
+	if ((Hosts[ai].detected) && ((P.DoRingVaccination && (t >= P.VaccTimeStart)) || (P.DoContactTracing && (t >= P.ContactTracingTimeStart))))
 	{
 		nActiveCases = State.cumDC_adunit[Mcells[Hosts[ai].mcell].adunit];// -(State.cumDD_adunit[Mcells[Hosts[ai].mcell].adunit] + State.cumDR_adunit[Mcells[Hosts[ai].mcell].adunit]);
 		//first check to see if we've reached the threshold to start contact tracing in the admin unit of the initial case
@@ -616,7 +618,8 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 			AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceStartDay = (int)t;
 		}
 
-		if (((t >= P.VaccTimeStart) && (State.cumV < P.VaccMaxCourses)) || AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceThresholdCrossed == 1) //modified this to include criteria for having to be past contact tracing threshold
+		//if (((t >= P.VaccTimeStart) && (State.cumV < P.VaccMaxCourses)) || AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceThresholdCrossed == 1) //modified this to include criteria for having to be past contact tracing threshold
+		if (((t >= P.VaccTimeStart) && (State.cumV < P.VaccMaxCourses)) || AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceThresholdCrossed == 1)
 		{
 
 			if (P.DoContactTracing && (AdUnits[Mcells[Hosts[ai].mcell].adunit].contactTraceThresholdCrossed == 1))
@@ -669,7 +672,7 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 				}
 			}
 
-			if ((State.cumV < P.VaccMaxCourses) && (t >= P.VaccTimeStart))
+			if ((State.cumV < P.VaccMaxCourses) && (t >= P.VaccTimeStart) && (Hosts[ai].vacc_accept < P.ProbEstablishRing))
 			{
 				//set current ring to 1
 				currentRing = 1;
@@ -1100,16 +1103,16 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 				}
 
 			}
-			else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
+			if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
 			{
 				//see if a community case who doesn't go to hospital is going to be detected, because they won't be detected in the hospital sweep
-				Hosts[ai].detected = 1;
+				Hosts[ai].detected = 1; //1 for community detection
 			}
 		}
 		else if (Hosts[ai].rep_rate < P.ProbDetectCommunity)
 		{
 			//see if a community case who doesn't go to hospital is going to be detected, because they won't be detected in the hospital sweep
-			Hosts[ai].detected = 1;
+			Hosts[ai].detected = 1; //1 for community detection
 		}
 
 		// if host is being detected here (in the community), set detection time

@@ -45,11 +45,7 @@ void RunModel(int run) //added run number as parameter
 		{
 			UpdateContactTracing(t);
 		}
-		//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
-		if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
-		{
-			UpdateSDB(t);
-		}
+		
 		//update vaccination parameters at the beginning of every time step
 		if (((P.DoRingVaccination) && (t > P.VaccTimeStart)) || ((P.DoGeoVaccination) && (t > P.VaccTimeStart)))
 		{
@@ -86,6 +82,7 @@ void RunModel(int run) //added run number as parameter
 			if (P.DoReactETUBeds)
 			{
 				P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
+				P.ChangeDayBeds += P.TimeNextIncMaxETUBeds;
 			}
 			if (P.relPropSafeFuneralPostCal)
 			{
@@ -103,6 +100,14 @@ void RunModel(int run) //added run number as parameter
 			{
 				P.PropUndetectedCommunityCasesDetectedAtDeath *= P.relPropCommDeathDetPostCal;
 			}
+			if (P.newPropCommDetectionPostCal)
+			{
+				P.ProbDetectCommunity = P.initProbDetectCommunity*P.newPropCommDetectionPostCal;
+			}
+			if (P.relPropHospDetPostCal)
+			{
+				P.ProbDetectHosp *= P.relPropHospDetPostCal;
+			}
 			//Don't think I need these. The intervention will be done on the household level, so can use UpdateIntervention == 1 as condition for starting, which already resets each run. Then set household to receive intervention yes or no (needs to reset in InitModel). if yes, use it to set individual level of care/healthcare seeking time
 			/*if (P.RelDelayHospPostCal)
 			{
@@ -114,6 +119,13 @@ void RunModel(int run) //added run number as parameter
 			}*/
 			P.UpdateIntervention = 1;
 		}
+		//add more beds at subsequent times
+		if(P.DoReactETUBeds && P.UpdateIntervention && (ns == P.ChangeDayBeds))
+		{
+ 			P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
+			P.ChangeDayBeds += P.TimeNextIncMaxETUBeds;
+		}
+
 		fprintf(stderr, "\r    t=%lg   %i    %i|%i    %i     %i   %i (%lg %lg %lg)   %lg    ", t, State.S, State.L, State.I, State.R, State.D, State.cumD, State.cumT, State.cumV, State.cumVG, sqrt(State.maxRad2) / 1000); //added State.cumVG
 		for (j = 0; ((j < P.UpdatesPerSample) && (!InterruptRun) && (continueEvents)); j++)
 		{
@@ -258,6 +270,11 @@ void RunModel(int run) //added run number as parameter
 				UpdateProbs(0);
 				DoInitUpdateProbs = 1;
 			}
+		}
+		//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
+		if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
+		{
+			UpdateSDB(t);
 		}
 
 	}
@@ -660,8 +677,20 @@ void HospitalSweepAdunits(double t)
 								//actual time they go into ETU
 								a-> hospital_time = ts;
 								//all cases in ETUs are detected
-								a-> detected = 1;
-								a-> detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a -> recovery_time - 1));
+								
+								if (a->detect_time)
+								{
+									if (a->hospital_time <= a->detect_time)
+									{
+										a->detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a->recovery_time - 1));
+										a->detected = 2; //2 for etu
+									}
+								}
+								else
+								{
+									a->detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a->recovery_time - 1));
+									a->detected = 2; //2 for etu
+								}
 								//set the admin unit identifier in which they are hospitalised
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -694,8 +723,22 @@ void HospitalSweepAdunits(double t)
 								a-> etu = a -> recovery_time;
 								a-> hospital_time = ts;
 								//all cases in ETUs are detected
-								a-> detected = 1;
-								a-> detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a-> recovery_time - 1));
+								
+								if (a->detect_time)
+								{
+									//if detection time in etu is less than detection time in community, detect in etu first
+									if (a->hospital_time <= a->detect_time)
+									{
+										a->detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a->recovery_time - 1));
+										a->detected = 2; //2 for etu
+									}
+									
+								}
+								else
+								{
+									a->detect_time = min(a->hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeETU), (a->recovery_time - 1));
+									a->detected = 2; //2 for etu
+								}
 								//Hosts[AdUnits[i].h_queue[j]].hospitalised=Hosts[AdUnits[i].h_queue[j]].recovery_time;
 								AdUnits[i].currentETUBeds++;
 								StateT[tn].ETU_adunit[i]++;
@@ -760,8 +803,26 @@ void HospitalSweepAdunits(double t)
 							// patients in regular hospitals detected with hospital detection probability
 							if (ranf_mt(tn) < P.ProbDetectHosp)
 							{
-								Hosts[k].detected = 1;
-								Hosts[k].detect_time = ts + min((unsigned short int) (P.TimeStepsPerDay * P.DetectTimeHosp), Hosts[k].recovery_time);
+								
+								if (Hosts[k].detect_time)
+								{
+									// if their detection time via hospital would be sooner than their detection time in the community, make their detection time sooner and switch the detected flag to 3 for hospital detection
+									if (Hosts[k].hospital_time <= Hosts[k].detect_time)
+									{
+										Hosts[k].detect_time = min(Hosts[k].hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeHosp), (Hosts[k].recovery_time - 1));
+										Hosts[k].detected = 3; //for hospital detection
+									}	
+								}
+								else
+								{
+									//aren't marked for community detection but will be detected in hospital
+									Hosts[k].detect_time = min(Hosts[k].hospital_time + (unsigned short int) (P.TimeStepsPerDay * P.DetectTimeHosp), (Hosts[k].recovery_time - 1));
+									Hosts[k].detected = 3; //for hospital
+								}
+								
+							}
+							else {
+								Hosts[k].detected = 0;
 							}
 							age = HOST_AGE_GROUP(AdUnits[i].h_queue[j]);
 							//StateT[tn].H_adunit[i]++;
@@ -1264,23 +1325,23 @@ void IncubRecoverySweep(double t, int run)
 		}
 	}
 	
-	//if doing funeral transmission, first find the number of safe burials per day per adunit so far
-	if (P.DoFuneralTransmission && (P.DoAdUnits))
-	{
-		//set current value per admin unit to zero
-		for (i = 0; i < P.NumAdunits; i++)
-		{
-			AdUnits[i].currentSDB = 0;
-		}
-		//now sum over threads to find no of safe burials that have been done so far in this recording interval
-		for (i = 0; i < P.NumAdunits; i++)
-		{
-			for (j = 0; j < P.NumThreads; j++)
-			{
-				AdUnits[i].currentSDB += StateT[j].cumSDB_adunit[i];
-			}
-		}
-	}
+	////if doing funeral transmission, first find the number of safe burials per day per adunit so far
+	//if (P.DoFuneralTransmission && (P.DoAdUnits))
+	//{
+	//	//set current value per admin unit to zero
+	//	for (i = 0; i < P.NumAdunits; i++)
+	//	{
+	//		AdUnits[i].currentSDB = 0;
+	//	}
+	//	//now sum over threads to find no of safe burials that have been done so far in this recording interval
+	//	for (i = 0; i < P.NumAdunits; i++)
+	//	{
+	//		for (j = 0; j < P.NumThreads; j++)
+	//		{
+	//			AdUnits[i].currentSDB += StateT[j].cumSDB_adunit[i];
+	//		}
+	//	}
+	//}
 
 #pragma omp parallel for private(j,k,l,b,c,tn,tc,ci,si,day) schedule(static,1)
 	for (tn = 0; tn < P.NumThreads; tn++)
@@ -1339,6 +1400,8 @@ void IncubRecoverySweep(double t, int run)
 						StateT[tn].cumD++;
 						StateT[tn].cumDa[HOST_AGE_GROUP(ci)]++;
 						if (P.DoAdUnits) StateT[tn].cumD_adunit[Mcells[si->mcell].adunit]++;
+						StateT[tn].cumD_keyworker[si->keyworker]++;
+
 
 						// set recovery time to current recovery time plus length of funeral transmission duration
 						si->recovery_time += (unsigned short int)(P.FuneralTransmissionDuration * P.TimeStepsPerDay);
@@ -1349,13 +1412,18 @@ void IncubRecoverySweep(double t, int run)
 							//if in hospital, they are definitely detected when they die
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
-							if ((t >= P.FuneralControlTimeStart) && (AdUnits[i].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if someone has died in hospital, we assumed that they will have a safe burial
 								si->infectiousMult *= P.RelInfSafeFuneral;
 								//if in hospital, they definitely have a safe burial
 								StateT[tn].cumSDB++;
-								if (P.DoAdUnits) StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+								if (P.DoAdUnits)
+								{
+									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+#pragma omp atomic
+									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
+								}
 								si->safeBurial = 1;
 							}
 						}
@@ -1365,19 +1433,24 @@ void IncubRecoverySweep(double t, int run)
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[i].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								si->infectiousMult *= P.RelInfSafeFuneral;
 								StateT[tn].cumSDB++;
-								if (P.DoAdUnits) StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+								if (P.DoAdUnits)
+								{
+									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+#pragma omp atomic
+									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
+								}
 								si->safeBurial = 1;
 							}
 						}
 						//add this to allow undetected cases in the community to be detected at death and have a safe funeral
 						else if ((si->detected == 0) && (ranf_mt(tn) < P.PropUndetectedCommunityCasesDetectedAtDeath))
 						{
-							si->detected = 1; //change status to detected
+							si->detected = 4; //change status to detected - 4 for detected at death
 							si->detect_time = ts + (unsigned short int) (P.DelayCommunityCasesDetectedAtDeath*P.TimeStepsPerDay); //select detected time to date of death
 							StateT[tn].cumDD++; //increment detected deaths overall... 
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
@@ -1386,12 +1459,17 @@ void IncubRecoverySweep(double t, int run)
 							if (P.DoAdUnits) StateT[tn].cumDC_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
 
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[i].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								si->infectiousMult *= P.RelInfSafeFuneral;
 								StateT[tn].cumSDB++;
-								if (P.DoAdUnits) StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+								if (P.DoAdUnits)
+								{
+									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+#pragma omp atomic
+									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
+								}
 								si->safeBurial = 1;
 							}
 						}

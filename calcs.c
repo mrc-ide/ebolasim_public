@@ -71,7 +71,9 @@ double CalcPersonInf(int j, unsigned short int ts)
 		* P.EvolResistRelInf[Hosts[j].resist]
 		* P.infectiousness[ts - Hosts[j].latent_time - 1]
 		* (Hosts[j].etu ? P.RelativeInfectiousnessETU : 1.0)
-		* ((!Hosts[j].etu && Hosts[j].contactTraced) ? P.RelativeInfectiousnessContactTraced : 1.0);
+		* ((!Hosts[j].etu && (Hosts[j].hospitalised) && Hosts[j].detected) ? P.relInfDetCase : 1.0)
+		* ((!Hosts[j].etu && (!Hosts[j].hospitalised) && (abs(Hosts[j].inf) != 6) && (Hosts[j].detected)) ? P.relInfDetCase : 1.0)
+		* ((!Hosts[j].etu && (!Hosts[j].hospitalised) && (abs(Hosts[j].inf) != 6) && (!Hosts[j].detected) && Hosts[j].contactTraced) ? P.RelativeInfectiousnessContactTraced : 1.0);
 }
 
 double CalcHouseSusc(int ai, unsigned short int ts, int infector, int tn)
@@ -110,7 +112,8 @@ double CalcPersonSusc(int ai, unsigned short int ts, int infector, int tn)
 		* P.AgeSusceptibility[HOST_AGE_GROUP(ai)] * Hosts[ai].susc
 		* (HOST_TREATED(ai) ? P.EvolResistRelProphSusc[Hosts[infector].resist] : 1.0)
 		* suscdrop * CalcPrevalenceDepTransmission(ai)
-		* (((Hosts[ai].hcw || Hosts[ai].flw) && P.OutbreakDetected) ? P.RelSuscPPE : 1.0);
+		* (((Hosts[ai].hcw || Hosts[ai].flw) && P.OutbreakDetected) ? P.RelSuscPPE : 1.0)
+		* (((Hosts[ai].hcw || Hosts[ai].flw) && P.UpdateIntervention) ? P.RelSuscPPE : 1.0);
 }
 
 

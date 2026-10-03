@@ -301,6 +301,7 @@ void UpdateHospitals(double t)
 			State.NumBeds -= AdUnits[i].totalETUBeds;
 			AdUnits[i].totalETUBeds = 0;
 			State.NumBeds_adunits[i] = AdUnits[i].totalETUBeds;
+			AdUnits[i].ETUbedsActive = 0;
 		}
 	}
 
