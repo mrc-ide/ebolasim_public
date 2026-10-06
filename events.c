@@ -338,7 +338,10 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 			if (Mcells[a->mcell].vacc_trig < USHRT_MAX - 1) Mcells[a->mcell].vacc_trig++;
 		}
 		if (Mcells[a->mcell].move_trig < USHRT_MAX - 1) Mcells[a->mcell].move_trig++;
-		if (Mcells[a->mcell].ce_trig < USHRT_MAX - 1) Mcells[a->mcell].ce_trig++;
+		if (P.UpdateIntervention)
+		{
+			if (Mcells[a->mcell].ce_trig < USHRT_MAX - 1) Mcells[a->mcell].ce_trig++;
+		}
 		if (Mcells[a->mcell].socdist_trig < USHRT_MAX - 1) Mcells[a->mcell].socdist_trig++;
 		if (Mcells[a->mcell].keyworkerproph_trig < USHRT_MAX - 1) Mcells[a->mcell].keyworkerproph_trig++;
 		//}

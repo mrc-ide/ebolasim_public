@@ -8,7 +8,7 @@
 #include "binio.h"
 
 
-void RecordSample(double t, int n)
+void RecordSample(double t, int n, int run)
 {
 	int i, j, k, S, L, I, R, D, cumC, cumTC, cumI, cumR, cumD, cumDC, cumDD, cumSDB, cumFC, cumFI; //added cumulative funeral infections: ggilani 24/10/14
 	int cumETU; //add number of ETU cases, cumulative ETU cases: ggilani 28/10/14
@@ -249,7 +249,7 @@ void RecordSample(double t, int n)
 	if (P.DoAdUnits)
 		for (i = 0; i <= P.NumAdunits; i++)
 		{
-			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].capETU_adunit[i] = TimeSeries[n].ETU_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].disETU_adunit[i] = TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = 0;//  TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i]  = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
+			TimeSeries[n].incI_adunit[i] = TimeSeries[n].incC_adunit[i] = TimeSeries[n].capETU_adunit[i] = TimeSeries[n].ETU_adunit[i] = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incSDB_adunit[i] = TimeSeries[n].disETU_adunit[i] = TimeSeries[n].incDC_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incV_adunit[i] = TimeSeries[n].incVG_adunit[i] = 0;//  TimeSeries[n].incD_adunit[i] = TimeSeries[n].incDD_adunit[i] = TimeSeries[n].incDR_adunit[i] = TimeSeries[n].incSDB_adunit[i]  = TimeSeries[n].incETU_adunit[i] = TimeSeries[n].incH_adunit[i] = TimeSeries[n].cumT_adunit[i] = TimeSeries[n].incCT_adunit[i] = TimeSeries[n].incCC_adunit[i] = TimeSeries[n].ETU_adunit[i] = 0; //added detected cases: ggilani 03/02/15
 			AdUnits[i].currentSDB = 0;
 			for (j = 0; j < P.NumThreads; j++)
 			{
@@ -335,6 +335,9 @@ void RecordSample(double t, int n)
 		if (P.OutbreakDetected == 0)
 		{
 			P.OutbreakDetected = 1; //mark outbreak as detected
+			//added day outbreak detected
+			P.DayOutbreakDetected = (int)t;
+			P.OutbreakDetectionDay[run] = P.DayOutbreakDetected;
 			P.PropHospSeek *= P.RelChangeHospSeekPostOutbreak;
 			//P.ProbDetectHosp *= P.relPropHospDetPostCal;
 			//P.ProbDetectCommunity = P.initProbDetectCommunity;
@@ -356,6 +359,8 @@ void RecordSample(double t, int n)
 				if ((P.VaccTimeStart >= 1e10) & (P.UpdateIntervention == 1))
 				{
 					P.VaccTimeStart = t + P.VaccTimeStartBase - P.NumDaysPostCalChange;
+					P.ProbEstablishRing *= P.ProbEstablishRingScale;
+					P.VaccProp *= P.VaccPropChange;
 				}
 				if ((P.VaccNewCoursesStartTime >= 1e10) & (P.UpdateIntervention == 1))
 				{
@@ -1777,14 +1782,14 @@ void SaveResults(void)
 		fclose(dat);
 	}
 
-	if (P.ChangeDay != P.NumSamples)
-	{
-		sprintf(outname, "%s.calibration_time.csv", OutFile);
-		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		fprintf(dat, "Calibration day\n");
-		fprintf(dat, "%i\n", (P.ChangeDay - P.NumDaysPostCalChange));
-		fclose(dat);
-	}
+	//if (P.ChangeDay != P.NumSamples)
+	//{
+	//	sprintf(outname, "%s.calibration_time.csv", OutFile);
+	//	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+	//	fprintf(dat, "Calibration day\n");
+	//	fprintf(dat, "%i\n", (P.ChangeDay - P.NumDaysPostCalChange));
+	//	fclose(dat);
+	//}
 
 	if ((P.DoVaccOutput) & (P.OutbreakDetected))
 	{
@@ -2355,72 +2360,90 @@ void SaveParamDists(void)
 	char outname[1024];
 	int i;
 
+	sprintf(outname, "%s.paramdists.csv", OutFileBase);
+	if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
+
+	//headers
+	fprintf(dat, "Run");
+	if (P.DoFixedSeeds)
+	{
+		fprintf(dat, ",Seed1,Seed2");
+	}
 	if (P.DoDistSeekCare)
 	{
-		sprintf(outname, "%s.careseeking.csv", OutFileBase);
-		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		for (i = 0; i < P.NR; i++)
-		{
-			fprintf(dat, "%i,%lf\n",i, P.PropSeekCareDist[i]);
-		}
-		fclose(dat);
+		fprintf(dat, ",SeekCare");
 	}
-
 	if (P.DoDistSeekCarePostDec)
 	{
-		sprintf(outname, "%s.rel_careseeking.csv", OutFileBase);
-		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		for (i = 0; i < P.NR; i++)
-		{
-			fprintf(dat, "%i,%lf\n", i, P.PropSeekCarePostDecDist[i]);
-		}
-		fclose(dat);
+		fprintf(dat, ",ChangeSeekCare");
 	}
-
 	if (P.DoDistPropHospDetect)
 	{
-		sprintf(outname, "%s.hospdetect.csv", OutFileBase);
-		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		for (i = 0; i < P.NR; i++)
-		{
-			fprintf(dat, "%i,%lf\n", i, P.PropHospDetectDist[i]);
-		}
-		fclose(dat);
+		fprintf(dat, ",HospDet");
 	}
-
 	if (P.DoDistCommDeath)
 	{
-		sprintf(outname, "%s.commdeath.csv", OutFileBase);
-		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		for (i = 0; i < P.NR; i++)
-		{
-			fprintf(dat, "%i,%lf\n", i, P.PropCommDeathDist[i]);
-		}
-		fclose(dat);
+		fprintf(dat, ",CommDeathDet");
 	}
-
 	if (P.DoDistCommCFR)
 	{
-		sprintf(outname, "%s.relcommcfr.csv", OutFileBase);
-		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		for (i = 0; i < P.NR; i++)
-		{
-			fprintf(dat, "%i,%lf\n", i, P.RelCommCFRDist[i]);
-		}
-		fclose(dat);
+		fprintf(dat, ",RelCommCFR");
 	}
-
 	if (P.DoDistVaccSusc)
 	{
-		sprintf(outname, "%s.vacc_eff.csv", OutFileBase);
-		if (!(dat = fopen(outname, "w"))) ERR_CRITICAL("Unable to open output file\n");
-		for (i = 0; i < P.NR; i++)
-		{
-			fprintf(dat, "%i,%lf\n", i, (1-P.RelVaccSuscDist[i]));
-		}
-		fclose(dat);
+		fprintf(dat, ",VaccEff");
 	}
-	
+	if (P.DoStopSimDC)
+	{
+		fprintf(dat, ",OutbreakDetectionDay,IntChangeDay");
+	}
+	fprintf(dat, "\n");
+
+	//data
+	for (i = 0; i < P.NR; i++)
+	{
+		fprintf(dat, "%i", i);
+		if (P.DoFixedSeeds)
+		{
+			fprintf(dat, ",%d,%d", P.FixedSeeds[i][1], P.FixedSeeds[i][2]);
+		}
+		if (P.DoDistSeekCare)
+		{
+			fprintf(dat, ",%lf", P.PropSeekCareDist[i]);
+		}
+		if (P.DoDistSeekCare)
+		{
+			fprintf(dat, ",%lf", P.PropSeekCareDist[i]);
+		}
+		if (P.DoDistSeekCarePostDec)
+		{
+			fprintf(dat, ",%lf", P.PropSeekCarePostDecDist[i]);
+		}
+		if (P.DoDistPropHospDetect)
+		{
+			fprintf(dat, ",%lf", P.PropHospDetectDist[i]);
+		}
+		if (P.DoDistCommDeath)
+		{
+			fprintf(dat, ",%lf", P.PropCommDeathDist[i]);
+		}
+		if (P.DoDistCommCFR)
+		{
+			fprintf(dat, ",%lf", P.RelCommCFRDist[i]);
+		}
+		if (P.DoDistVaccSusc)
+		{
+			fprintf(dat, ",%lf", (1 - P.RelVaccSuscDist[i]));
+		}
+		if (P.DoStopSimDC)
+		{
+			fprintf(dat, ",%i", P.OutbreakDetectionDay[i]);
+			fprintf(dat, ",%i", P.ChangeTimes[i]);
+		}
+		fprintf(dat, "\n");
+	}
+	fclose(dat);
+
 }
 
 

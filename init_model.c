@@ -29,6 +29,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 		}
 	}
 
+
 	ns = 0;
 	State.S = P.N;
 	State.L = State.I = State.R = 0;
@@ -52,8 +53,10 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	if (P.DoAdUnits)
 		for (i = 0; i <= P.NumAdunits; i++)
 		{
-			State.cumI_adunit[i] = State.cumC_adunit[i] = State.cumT_adunit[i] = State.cumETU_adunit[i] = State.cumH_adunit[i] = State.cumDC_adunit[i] = State.cumDD_adunit[i] = State.cumSDB_adunit[i] = State.cumDR_adunit[i] = State.cumCT_adunit[i] = State.cumV_adunit[i] = State.cumVG_adunit[i] = State.cumC_adunit[i] = State.cumCC_adunit[i] = 0; //added hospitalisation, added detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
-			State.ETU_adunit[i] = State.H_adunit[i] = State.NumBeds_adunits[i] = 0;
+			State.cumI_adunit[i] = State.cumC_adunit[i] = State.cumT_adunit[i] = State.cumETU_adunit[i] = State.cumH_adunit[i] = State.cumD_adunit[i] = State.cumDC_adunit[i] 
+				= State.cumDD_adunit[i] = State.cumSDB_adunit[i] = State.cumDR_adunit[i] 
+				= State.cumCT_adunit[i] = State.cumV_adunit[i] = State.cumVG_adunit[i] = State.cumC_adunit[i] = State.cumCC_adunit[i] = 0; //added hospitalisation, added detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
+			State.ETU_adunit[i] = State.H_adunit[i] = State.NumBeds_adunits[i] = State.disETU_adunit[i] = State.CT_adunit[i] = State.CC_adunit[i] = State.capETU_adunit[i] = 0;
 			AdUnits[i].place_close_trig = 0;
 			AdUnits[i].revacc = 0;
 			AdUnits[i].currentETUBeds = 0; //reset occupied beds to zero;
@@ -104,7 +107,10 @@ void InitModel(int run) //passing run number so we can save run number in the in
 		for (i = 0; i < MAX_COUNTRIES; i++) StateT[j].cumC_country[i] = 0;
 		if (P.DoAdUnits)
 			for (i = 0; i <= P.NumAdunits; i++)
-				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumT_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].ETU_adunit[i] = StateT[j].disETU_adunit[i] = StateT[j].H_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] = StateT[j].cumDD_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumVG_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumCC_adunit[i] = StateT[j].nct_queue[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
+				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumT_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].ETU_adunit[i] 
+				= StateT[j].disETU_adunit[i] = StateT[j].H_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] 
+				= StateT[j].cumDD_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumVG_adunit[i] 
+				= StateT[j].cumCC_adunit[i] = StateT[j].nct_queue[i] = StateT[j].CT_adunit[i] = StateT[j].CC_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].capETU_adunit[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
 	}
 	nim = 0;
 
@@ -173,7 +179,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 					Hosts[k].infect_type = 0;
 					Hosts[k].infectiousMult = 1; //reset to 1 - this is changed when funeral transmission temporarily increases infectiousness
 					Hosts[k].safeBurial = 0; 
-					if (Households[Hosts[k].hh].ce != 0) Households[Hosts[k].hh].ce = 0; //set intervention of household to zero for each run - ggilani 08/09/26
+					Households[Hosts[k].hh].ce = 0; //set intervention of household to zero for each run - ggilani 08/09/26
 
 				}
 				// Next loop needs to count down for DoImmune host list reordering to work
@@ -348,6 +354,10 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.QueueIncVaccDose = 0;
 	P.TimeVaccIncDosePerDay = 0;
 	P.ProbDetectCommunity = 0;// P.initProbDetectCommunity;
+	P.DayOutbreakDetected = P.NumSamples;
+	P.ProbEstablishRing = P.initProbEstablishRing;
+	P.VaccProp = P.initVaccProp;
+
 
 	//update distribution parameters if necessary
 	if (P.DoDistSeekCare)

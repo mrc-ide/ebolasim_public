@@ -15,6 +15,7 @@ void RunModel(int run) //added run number as parameter
 	double ir, t, cI, lcI, t2, vaccUsed;
 	unsigned short int ts, ts_prev;
 	int continueEvents = 1;
+	int TimeDetToCalibration;
 
 	lcI = 1;
 	if (P.DoLoadSnapshot)
@@ -34,7 +35,7 @@ void RunModel(int run) //added run number as parameter
 	for (ns = 1; ((ns < P.NumSamples) && (ns <= P.StopDay) && (!InterruptRun) && (continueEvents)); ns++) //&&(continueEvents) <-removed this
 	{
 		
-		RecordSample(t, ns - 1);
+		RecordSample(t, ns - 1, run);
 		//update hospitalisation parameters at the beginning of every time step? ggilani - 11/03/2017
 		if ((P.DoHospitalisation) && (t >= P.ETUTimeStart))
 		{
@@ -72,9 +73,29 @@ void RunModel(int run) //added run number as parameter
 		{
 			if (State.cumDC > P.MaxDetCaseStopSim)
 			{
-				P.StopDay = ns + P.NumDaysProject;
-				P.ChangeDay = ns + P.NumDaysPostCalChange;
-				P.StopTimeSet = 1;
+				if (P.CheckTimeDetToCalibration)
+				{
+					TimeDetToCalibration = (int)t - P.DayOutbreakDetected;
+					if ((TimeDetToCalibration >= (P.TargetTimeDetToCalib - P.TolTimeDetToCalib)) && (TimeDetToCalibration < (P.TargetTimeDetToCalib + P.TolTimeDetToCalib)))
+					{
+						P.StopDay = ns + P.NumDaysProject;
+						P.ChangeDay = ns + P.NumDaysPostCalChange;
+						P.ChangeTimes[run] = P.ChangeDay;
+						P.StopTimeSet = 1;
+					}
+					else
+					{
+						P.StopDay = ns + 1;
+						P.StopTimeSet = 1;
+					}
+				}
+				else
+				{
+					P.StopDay = ns + P.NumDaysProject;
+					P.ChangeDay = ns + P.NumDaysPostCalChange;
+					P.ChangeTimes[run] = P.ChangeDay;
+					P.StopTimeSet = 1;
+				}
 			}
 		}
 		if (P.DoStopSimDC && P.StopTimeSet && (ns == P.ChangeDay) && !P.UpdateIntervention)
@@ -84,27 +105,27 @@ void RunModel(int run) //added run number as parameter
 				P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
 				P.ChangeDayBeds += P.TimeNextIncMaxETUBeds;
 			}
-			if (P.relPropSafeFuneralPostCal)
+			if (P.relPropSafeFuneralPostCal)//
 			{
 				P.ProportionSafeFuneral *= P.relPropSafeFuneralPostCal;
 			}
-			if (P.relPropContactsLostPostCal)
+			if (P.relPropContactsLostPostCal)//
 			{
 				P.propContactLost *= P.relPropContactsLostPostCal;
 			}
-			if (P.relPropContactsTracedPostCal)
+			if (P.relPropContactsTracedPostCal)//
 			{
 				P.propContactTraced *= P.relPropContactsTracedPostCal;
 			}
-			if (P.relPropCommDeathDetPostCal)
+			if (P.relPropCommDeathDetPostCal)//
 			{
 				P.PropUndetectedCommunityCasesDetectedAtDeath *= P.relPropCommDeathDetPostCal;
 			}
-			if (P.newPropCommDetectionPostCal)
+			if (P.newPropCommDetectionPostCal)//
 			{
 				P.ProbDetectCommunity = P.initProbDetectCommunity*P.newPropCommDetectionPostCal;
 			}
-			if (P.relPropHospDetPostCal)
+			if (P.relPropHospDetPostCal)//
 			{
 				P.ProbDetectHosp *= P.relPropHospDetPostCal;
 			}
@@ -124,6 +145,11 @@ void RunModel(int run) //added run number as parameter
 		{
  			P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
 			P.ChangeDayBeds += P.TimeNextIncMaxETUBeds;
+		}
+		if ((P.DoRingVaccination || P.DoGeoVaccination) && P.UpdateIntervention && (ns == (int) P.VaccTimeStart))
+		{
+			P.ProbEstablishRing *= P.ProbEstablishRingScale;
+			P.VaccProp *= P.VaccPropChange;
 		}
 
 		fprintf(stderr, "\r    t=%lg   %i    %i|%i    %i     %i   %i (%lg %lg %lg)   %lg    ", t, State.S, State.L, State.I, State.R, State.D, State.cumD, State.cumT, State.cumV, State.cumVG, sqrt(State.maxRad2) / 1000); //added State.cumVG
@@ -278,7 +304,7 @@ void RunModel(int run) //added run number as parameter
 		}
 
 	}
-	RecordSample(t, P.NumSamples - 1);
+	RecordSample(t, P.NumSamples - 1, run);
 	fprintf(stderr, "\nEnd of run\n");
 	t2 = t + P.SampleTime;
 	while (fs)
@@ -1455,7 +1481,7 @@ void IncubRecoverySweep(double t, int run)
 							StateT[tn].cumDD++; //increment detected deaths overall... 
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
 							// also add this as a detected case retrospectively to count towards detection
-							StateT[tn].cumDC++;
+							//StateT[tn].cumDC++;
 							if (P.DoAdUnits) StateT[tn].cumDC_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
 
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
@@ -2438,7 +2464,7 @@ int TreatSweep(double t)
 									if (f4)
 									{
 										f = f2 = 1;
-										if ((Mcells[k].n > 0) && (Mcells[k].treat == 0) && ((!P.RestrictTreatToTarget) || (Mcells[k].country == P.TargetCountry)))
+										if ((Mcells[k].n > 0) && (Mcells[k].comm_eng == 0) && ((!P.RestrictTreatToTarget) || (Mcells[k].country == P.TargetCountry)))
 										{
 											Mcells[k].ce_start_time = tsce;
 											Mcells[k].comm_eng = 1;
