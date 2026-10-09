@@ -424,7 +424,7 @@ void UpdateContactTracing(double t)
  *
  * Author: ggilani, 11/03/2017
  */
-void UpdateSDB(double t)
+void UpdateSDB(double t, int n)
 {
 	int i, j, totalSDB_allAdUnits, nCases;
 	double capacityFlag;
@@ -456,7 +456,7 @@ void UpdateSDB(double t)
 				}
 				else if ((AdUnits[i].SDBActive) && (AdUnits[i].nextTimeToSDB < t))
 				{
-					capacityFlag = (double)(AdUnits[i].currentSDB) / (double)(AdUnits[i].maxSDB);
+					capacityFlag = TimeSeries[n].incSDB_adunit[i] / (double)(AdUnits[i].maxSDB); // check previous day's number of SDBs against max capacity
 					//if this has changed (more specifically, if it has got bigger because we've crossed the threshold for adding burials again)
 					if (capacityFlag > P.CapacityToMoreSDB) //we also can't add more burials until we've added the last set
 					{

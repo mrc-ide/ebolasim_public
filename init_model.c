@@ -57,6 +57,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 				= State.cumDD_adunit[i] = State.cumSDB_adunit[i] = State.cumDR_adunit[i] 
 				= State.cumCT_adunit[i] = State.cumV_adunit[i] = State.cumVG_adunit[i] = State.cumC_adunit[i] = State.cumCC_adunit[i] = 0; //added hospitalisation, added detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
 			State.ETU_adunit[i] = State.H_adunit[i] = State.NumBeds_adunits[i] = State.disETU_adunit[i] = State.CT_adunit[i] = State.CC_adunit[i] = State.capETU_adunit[i] = 0;
+			State.nct_queue[i] = State.nh_queue[i] = State.nhd_queue[i] = State.nsdb_queue[i] = 0;
 			AdUnits[i].place_close_trig = 0;
 			AdUnits[i].revacc = 0;
 			AdUnits[i].currentETUBeds = 0; //reset occupied beds to zero;
@@ -96,7 +97,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 		StateT[j].cumI = StateT[j].cumR = StateT[j].cumC = StateT[j].cumFC = StateT[j].cumFI = StateT[j].cumETU = StateT[j].cumH = StateT[j].cumCT = StateT[j].cumCC = StateT[j].cumTC = StateT[j].cumD = StateT[j].cumDC = StateT[j].cumDD = StateT[j].cumSDB = 0; //added setting funeral infections cumFI to zero: ggilani 24/10/14
 		StateT[j].cumInf_h = StateT[j].cumInf_n = StateT[j].cumInf_s = StateT[j].cumHQ = StateT[j].cumAC = StateT[j].cumACS = StateT[j].cumAH = StateT[j].cumAA = StateT[j].cumAPC = StateT[j].cumAPA = StateT[j].cumAPCS = 0;
 		StateT[j].cumT = StateT[j].cumUT = StateT[j].cumTP = StateT[j].cumV = StateT[j].sumRad2 = StateT[j].maxRad2 = StateT[j].cumV_daily = 0;
-		StateT[j].nringvacc_queue = StateT[j].nvacc_queue = StateT[j].vacc_cum = StateT[j].ngeovacc_queue = StateT[j].ringvacc_cum = StateT[j].geovacc_cum = 0; //reset ring and geo vaccination variables, 21/08/19
+		StateT[j].nringvacc_queue = StateT[j].nvacc_queue = StateT[j].vacc_cum = StateT[j].ngeovacc_queue = StateT[j].ringvacc_cum = StateT[j].geovacc_cum =  StateT[j].ringvacc_ind = StateT[j].geovacc_ind = StateT[j].vacc_ind = 0; //reset ring and geo vaccination variables, 21/08/19
 		for (i = 0; i < NUM_AGE_GROUPS; i++) StateT[j].cumCa[i] = StateT[j].cumIa[i] = StateT[j].cumDa[i] = StateT[j].cumDCa[i] = StateT[j].cumETUa[i] = StateT[j].cumHa[i] = StateT[j].cumVa[i] = 0; //adding det cases, hosp, vacc by age: ggilani 22/02/22
 		for (i = 0; i < P.EvolResistNumTypes; i++) StateT[j].cumC_resist[i] = StateT[j].cumI_resist[i] = StateT[j].cumT_resist[i] = 0;
 		for (i = 0; i < 2; i++) StateT[j].cumC_keyworker[i] = StateT[j].cumI_keyworker[i] = StateT[j].cumT_keyworker[i] = 0;
@@ -110,7 +111,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 				StateT[j].cumI_adunit[i] = StateT[j].cumC_adunit[i] = StateT[j].cumT_adunit[i] = StateT[j].cumETU_adunit[i] = StateT[j].cumH_adunit[i] = StateT[j].ETU_adunit[i] 
 				= StateT[j].disETU_adunit[i] = StateT[j].H_adunit[i] = StateT[j].cumDC_adunit[i] = StateT[j].cumD_adunit[i] 
 				= StateT[j].cumDD_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].cumDR_adunit[i] = StateT[j].cumCT_adunit[i] = StateT[j].cumV_adunit[i] = StateT[j].cumVG_adunit[i] 
-				= StateT[j].cumCC_adunit[i] = StateT[j].nct_queue[i] = StateT[j].CT_adunit[i] = StateT[j].CC_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].capETU_adunit[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
+				= StateT[j].cumCC_adunit[i] = StateT[j].nct_queue[i] = StateT[j].nh_queue[i] = StateT[j].nsdb_queue[i] = StateT[j].nhd_queue[i] = StateT[j].CT_adunit[i] = StateT[j].CC_adunit[i] = StateT[j].cumSDB_adunit[i] = StateT[j].capETU_adunit[i] = 0; //added hospitalisation, detected cases, contact tracing per adunit, cases who are contacts: ggilani 03/02/15, 15/06/17
 	}
 	nim = 0;
 
@@ -336,7 +337,6 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.NVaccRingsActive = P.NVaccRings;
 	P.CurrIndPropRingVacc = 0;
 	P.OutbreakDetected = 0;
-	P.PropHospSeek = P.PropHospSeekPreOutbreak;
 	P.VaccDosePerDay = P.BaseVaccDosePerDay;
 	P.VaccGeoDosePerDay = P.BaseVaccGeoDosePerDay;
 	P.VaccDoseFlag = 1;
@@ -353,12 +353,9 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	P.propContactLost = P.propContactLostInit;
 	P.QueueIncVaccDose = 0;
 	P.TimeVaccIncDosePerDay = 0;
-	P.ProbDetectCommunity = 0;// P.initProbDetectCommunity;
 	P.DayOutbreakDetected = P.NumSamples;
 	P.ProbEstablishRing = P.initProbEstablishRing;
 	P.VaccProp = P.initVaccProp;
-
-
 	//update distribution parameters if necessary
 	if (P.DoDistSeekCare)
 	{
@@ -376,6 +373,16 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	{
 		P.ProbDetectHosp = P.initProbDetectHosp;
 	}
+
+	if (P.DoDistPropCommDetect)
+	{
+		P.ProbDetectCommunity = P.PropCommDetectDist[run];
+	}
+	else
+	{
+		P.ProbDetectCommunity = P.initProbDetectCommunity;
+	}
+
 	if (P.DoDistCommDeath)
 	{
 		P.PropUndetectedCommunityCasesDetectedAtDeath = P.PropCommDeathDist[run];
@@ -392,7 +399,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	{
 		P.VaccSuscDrop = P.RelVaccSuscDist[run];
 	}
-
+	P.PropHospSeek = P.PropHospSeekPreOutbreak;
 
 	//vaccinate HCWs and FLWs
 	if (P.IncludeHospitalPlaceType)

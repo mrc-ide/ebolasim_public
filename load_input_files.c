@@ -579,7 +579,6 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 				}
 				if (!GetInputParameter2(dat, dat2, "Min extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMin), 1, 1, 0)) P.ExtraRecTimeETUMin = 0;
 				if (!GetInputParameter2(dat, dat2, "Max extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMax), 1, 1, 0)) P.ExtraRecTimeETUMax = 0;
-				if (!GetInputParameter2(dat, dat2, "Relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFR), 1, 1, 0)) P.RelCommCFR = 1;
 			}
 			else
 			{
@@ -928,7 +927,17 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 
 	if (!GetInputParameter2(dat, dat2, "Number of sampling intervals over which cumulative incidence measured for global trigger", "%i", (void*)&(P.TriggersSamplingInterval), 1, 1, 0)) P.TriggersSamplingInterval = 10000000;
 	
-	if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.initProbDetectCommunity), 1, 1, 0)) P.initProbDetectCommunity = 0;
+
+	if (!GetInputParameter2(dat, dat2, "Sample proportion of community cases detected", "%i", (void*)&(P.DoDistPropCommDetect), 1, 1, 0)) P.DoDistPropCommDetect = 0;
+	if (P.DoDistPropHospDetect)
+	{
+		if (!GetInputParameter2(dat, dat2, "Min proportion of community cases detected", "%lf", (void*)&(P.PropCommDetectMin), 1, 1, 0)) P.PropCommDetectMin = 0.1;
+		if (!GetInputParameter2(dat, dat2, "Max proportion of community cases detected", "%lf", (void*)&(P.PropCommDetectMax), 1, 1, 0)) P.PropCommDetectMax = 1;
+	}
+	else
+	{
+		if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.initProbDetectCommunity), 1, 1, 0)) P.initProbDetectCommunity = 0;
+	}
 	if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a detected case", "%lf", (void*)&(P), 1, 1, 0)) P.relInfDetCase = 1;
 	
 	//proportion of hospital cases detected

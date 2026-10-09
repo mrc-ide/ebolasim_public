@@ -260,7 +260,7 @@ void RecordSample(double t, int n, int run)
 				//TimeSeries[n].incDD_adunit[i] += (double)StateT[j].cumDD_adunit[i]; //added detected deaths: ggilani 03/02/15
 				//TimeSeries[n].incDR_adunit[i] += (double)StateT[j].cumDR_adunit[i]; //added detected recoveries: ggilani 03/02/15
 				TimeSeries[n].incSDB_adunit[i] += (double)StateT[j].cumSDB_adunit[i]; //added safe burials: ggilani 05/10/23
-				if ((t >= P.FuneralControlTimeStart) && (AdUnits[i].contactTraceThresholdCrossed))
+				if ((t >= P.FuneralControlTimeStart))
 				{
 					TimeSeries[n].capSDB_adunit[i] = AdUnits[i].maxSDB;
 				}
@@ -315,6 +315,7 @@ void RecordSample(double t, int n, int run)
 			TimeSeries[n].CT_adunit[i] = (double)AdUnits[i].nct;
 		}
 	}
+
 	if ((P.DoPlaces) && (t >= P.PlaceCloseTimeStart))
 	{
 		for (i = 0; i < NUM_PLACE_TYPES; i++)
@@ -359,8 +360,6 @@ void RecordSample(double t, int n, int run)
 				if ((P.VaccTimeStart >= 1e10) & (P.UpdateIntervention == 1))
 				{
 					P.VaccTimeStart = t + P.VaccTimeStartBase - P.NumDaysPostCalChange;
-					P.ProbEstablishRing *= P.ProbEstablishRingScale;
-					P.VaccProp *= P.VaccPropChange;
 				}
 				if ((P.VaccNewCoursesStartTime >= 1e10) & (P.UpdateIntervention == 1))
 				{

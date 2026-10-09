@@ -541,6 +541,14 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 	StateT[tn].cumDCa[age]++; //added detected case by age: ggilani 22/02/22
 	Hosts[ai].dayDetected = (int)t;
 	StateT[tn].cumDet_route[Hosts[ai].detected - 1]++; //added this to track detection route
+	if (Hosts[ai].detected == 4) // for death
+	{
+		StateT[tn].cumDD++;
+		if (P.DoAdUnits)
+		{
+			StateT[tn].cumDD_adunit[Mcells[a->mcell].adunit]++;
+		}
+	}
 	if (Hosts[ai].contactTraced)
 	{
 		StateT[tn].cumCC++;
@@ -1080,7 +1088,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 		
 		if (P.DoHospitalisation)
 		{
-			if ((Households[Hosts[ai].hh].ce ? Hosts[ai].hcs_accept*P.relPropSeekCarePostCalIntervention : Hosts[ai].hcs_accept) < P.PropHospSeek)
+			if (P.UpdateIntervention ? (Hosts[ai].hcs_accept <  P.PropHospSeek*P.relPropSeekCarePostCalIntervention) : (Hosts[ai].hcs_accept < P.PropHospSeek))
 			{
 
 				//this just sets hospitalisation time. detection now happens after hospitalisation
@@ -1089,7 +1097,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 					do {
 						i = (int)floor((q = ranf_mt(tn) * CDF_RES));
 						q -= ((double)i);
-						ti = -(Households[Hosts[ai].hh].ce? P.HospitalisationTime*P.relRedTimeToCarePostCalIntervention : P.HospitalisationTime) * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
+						ti = -(P.UpdateIntervention? P.HospitalisationTime*P.relRedTimeToCarePostCalIntervention : P.HospitalisationTime) * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
 						a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
 					} while (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep));
 					1;

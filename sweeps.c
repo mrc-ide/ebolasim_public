@@ -35,6 +35,7 @@ void RunModel(int run) //added run number as parameter
 	for (ns = 1; ((ns < P.NumSamples) && (ns <= P.StopDay) && (!InterruptRun) && (continueEvents)); ns++) //&&(continueEvents) <-removed this
 	{
 		
+		
 		RecordSample(t, ns - 1, run);
 		//update hospitalisation parameters at the beginning of every time step? ggilani - 11/03/2017
 		if ((P.DoHospitalisation) && (t >= P.ETUTimeStart))
@@ -46,11 +47,15 @@ void RunModel(int run) //added run number as parameter
 		{
 			UpdateContactTracing(t);
 		}
-		
+		//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
+		if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
+		{
+			UpdateSDB(t, (ns - 1));
+		}
 		//update vaccination parameters at the beginning of every time step
 		if (((P.DoRingVaccination) && (t > P.VaccTimeStart)) || ((P.DoGeoVaccination) && (t > P.VaccTimeStart)))
 		{
-			UpdateVaccination(t, ns - 1);
+			UpdateVaccination(t, (ns - 1));
 		}
 		//update vaccination parameters at the beginning of every time step
 		if (P.DoUpdateCaseDetection)//&&(t>=P.TimeToUpdateCaseDetection))
@@ -93,7 +98,7 @@ void RunModel(int run) //added run number as parameter
 				{
 					P.StopDay = ns + P.NumDaysProject;
 					P.ChangeDay = ns + P.NumDaysPostCalChange;
-					P.ChangeTimes[run] = P.ChangeDay;
+					P.ChangeTimes[run] = ns;
 					P.StopTimeSet = 1;
 				}
 			}
@@ -103,7 +108,7 @@ void RunModel(int run) //added run number as parameter
 			if (P.DoReactETUBeds)
 			{
 				P.MaxNumETUBeds = P.MaxNumETUBeds + P.IncMaxETUBeds;
-				P.ChangeDayBeds += P.TimeNextIncMaxETUBeds;
+				P.ChangeDayBeds = ns + P.TimeNextIncMaxETUBeds;
 			}
 			if (P.relPropSafeFuneralPostCal)//
 			{
@@ -123,21 +128,21 @@ void RunModel(int run) //added run number as parameter
 			}
 			if (P.newPropCommDetectionPostCal)//
 			{
-				P.ProbDetectCommunity = P.initProbDetectCommunity*P.newPropCommDetectionPostCal;
+				P.ProbDetectCommunity *=P.newPropCommDetectionPostCal;
 			}
 			if (P.relPropHospDetPostCal)//
 			{
 				P.ProbDetectHosp *= P.relPropHospDetPostCal;
 			}
-			//Don't think I need these. The intervention will be done on the household level, so can use UpdateIntervention == 1 as condition for starting, which already resets each run. Then set household to receive intervention yes or no (needs to reset in InitModel). if yes, use it to set individual level of care/healthcare seeking time
+			//Don't think I need these. The intervention will be done in DoCase, so can use UpdateIntervention == 1 as condition for starting, which already resets each run. Then use UpdateIntervention to test which value to use
 			/*if (P.RelDelayHospPostCal)
 			{
 				P.RelDelayHosp *= P.RelDelayHospPostCal;
 			}*/
-			/*if (P.PropSeekCarePostCal)
-			{
-				P.PropHospSeek *= P.PropSeekCarePostCal;
-			}*/
+			//if (P.relPropSeekCarePostCalIntervention)
+			//{
+			//	P.PropHospSeek *= P.relPropSeekCarePostCalIntervention;// P.PropSeekCarePostCal;
+			//}
 			P.UpdateIntervention = 1;
 		}
 		//add more beds at subsequent times
@@ -148,8 +153,8 @@ void RunModel(int run) //added run number as parameter
 		}
 		if ((P.DoRingVaccination || P.DoGeoVaccination) && P.UpdateIntervention && (ns == (int) P.VaccTimeStart))
 		{
-			P.ProbEstablishRing *= P.ProbEstablishRingScale;
-			P.VaccProp *= P.VaccPropChange;
+			P.ProbEstablishRing = P.ProbEstablishRingScale;
+			P.VaccProp = P.VaccPropChange;
 		}
 
 		fprintf(stderr, "\r    t=%lg   %i    %i|%i    %i     %i   %i (%lg %lg %lg)   %lg    ", t, State.S, State.L, State.I, State.R, State.D, State.cumD, State.cumT, State.cumV, State.cumVG, sqrt(State.maxRad2) / 1000); //added State.cumVG
@@ -297,11 +302,7 @@ void RunModel(int run) //added run number as parameter
 				DoInitUpdateProbs = 1;
 			}
 		}
-		//update safe burial parameters parameters at the beginning of every time step? ggilani - 11/03/2017
-		if ((P.DoFuneralTransmission) && (t >= P.FuneralControlTimeStart))
-		{
-			UpdateSDB(t);
-		}
+		
 
 	}
 	RecordSample(t, P.NumSamples - 1, run);
@@ -1438,19 +1439,21 @@ void IncubRecoverySweep(double t, int run)
 							//if in hospital, they are definitely detected when they die
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
-							if ((t >= P.FuneralControlTimeStart) && (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if (t >= P.FuneralControlTimeStart) //&& (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
-								//if someone has died in hospital, we assumed that they will have a safe burial
-								si->infectiousMult *= P.RelInfSafeFuneral;
-								//if in hospital, they definitely have a safe burial
-								StateT[tn].cumSDB++;
-								if (P.DoAdUnits)
-								{
-									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
-#pragma omp atomic
-									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
-								}
-								si->safeBurial = 1;
+								//if someone dies in ETC they have a safe burial, so add to the safe burial list
+								StateT[tn].sdb_queue[Mcells[si->mcell].adunit][StateT[tn].nsdb_queue[Mcells[si->mcell].adunit]++] = ci;
+//								//if someone has died in hospital, we assumed that they will have a safe burial
+//								si->infectiousMult *= P.RelInfSafeFuneral;
+//								//if in hospital, they definitely have a safe burial
+//								StateT[tn].cumSDB++;
+//								if (P.DoAdUnits)
+//								{
+//									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+//#pragma omp atomic
+//									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
+//								}
+//								si->safeBurial = 1;
 							}
 						}
 						else if (si->detected)
@@ -1459,18 +1462,19 @@ void IncubRecoverySweep(double t, int run)
 							StateT[tn].cumDD++;
 							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++;
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral)) //&& (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
-								si->infectiousMult *= P.RelInfSafeFuneral;
-								StateT[tn].cumSDB++;
-								if (P.DoAdUnits)
-								{
-									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
-#pragma omp atomic
-									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
-								}
-								si->safeBurial = 1;
+								StateT[tn].sdb_queue[Mcells[si->mcell].adunit][StateT[tn].nsdb_queue[Mcells[si->mcell].adunit]++] = ci;
+//								si->infectiousMult *= P.RelInfSafeFuneral;
+//								StateT[tn].cumSDB++;
+//								if (P.DoAdUnits)
+//								{
+//									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+//#pragma omp atomic
+//									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
+//								}
+//								si->safeBurial = 1;
 							}
 						}
 						//add this to allow undetected cases in the community to be detected at death and have a safe funeral
@@ -1478,25 +1482,26 @@ void IncubRecoverySweep(double t, int run)
 						{
 							si->detected = 4; //change status to detected - 4 for detected at death
 							si->detect_time = ts + (unsigned short int) (P.DelayCommunityCasesDetectedAtDeath*P.TimeStepsPerDay); //select detected time to date of death
-							StateT[tn].cumDD++; //increment detected deaths overall... 
-							if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
+							//StateT[tn].cumDD++; //increment detected deaths overall... 
+							//if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
 							// also add this as a detected case retrospectively to count towards detection
 							//StateT[tn].cumDC++;
-							if (P.DoAdUnits) StateT[tn].cumDC_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
+							//if (P.DoAdUnits) StateT[tn].cumDC_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
 
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
-							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral) && (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
+							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral)) //&& (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
-								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
-								si->infectiousMult *= P.RelInfSafeFuneral;
-								StateT[tn].cumSDB++;
-								if (P.DoAdUnits)
-								{
-									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
-#pragma omp atomic
-									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
-								}
-								si->safeBurial = 1;
+								//if safe burials in effect, they are added to the safe burial queue with probability ProportionSafeFuneral
+								StateT[tn].sdb_queue[Mcells[si->mcell].adunit][StateT[tn].nsdb_queue[Mcells[si->mcell].adunit]++] = ci;
+//								si->infectiousMult *= P.RelInfSafeFuneral;
+//								StateT[tn].cumSDB++;
+//								if (P.DoAdUnits)
+//								{
+//									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
+//#pragma omp atomic
+//									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
+//								}
+//								si->safeBurial = 1;
 							}
 						}
 
@@ -1526,6 +1531,50 @@ void IncubRecoverySweep(double t, int run)
 				if (Hosts[c->infected[k]].base_inf_level < P.EvolInfectMax)
 					Hosts[c->infected[k]].base_inf_level += P.EvolInfectStep;
 			}
+		}
+	}
+
+	//combine safe burial queue into queues per admin unit
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		for (j = 0; j < P.NumThreads; j++)
+		{
+			for (k = 0; k < StateT[j].nsdb_queue[i]; k++)
+			{
+				AdUnits[i].sdb_queue[k + AdUnits[i].nsdb_queue] = StateT[j].sdb_queue[i][k];
+			}
+			AdUnits[i].nsdb_queue += StateT[j].nsdb_queue[i];
+		}
+	}
+
+	//now do safe burials if there is capacity
+	for (tn = 0; tn < P.NumThreads; tn++)
+	{
+		for (i = tn; i < P.NumAdunits; i += P.NumThreads)
+		{
+			for (j = 0; j < AdUnits[i].nsdb_queue; j++)
+			{
+				if (AdUnits[i].currentSDB < AdUnits[i].maxSDB)
+				{
+					//get host
+					ci = AdUnits[i].sdb_queue[j];
+					Hosts[ci].infectiousMult *= P.RelInfSafeFuneral;
+					Hosts[ci].safeBurial = 1;
+					//increment
+					AdUnits[i].currentSDB++;
+					StateT[tn].cumSDB++;
+					StateT[tn].cumSDB_adunit[i]++;
+				}
+			}
+		}
+	}
+
+	for (i = 0; i < P.NumAdunits; i++)
+	{
+		AdUnits[i].nsdb_queue = 0;
+		for (j = 0; j < P.NumThreads; j++)
+		{
+			StateT[j].nsdb_queue[i] = 0;
 		}
 	}
 
@@ -2433,7 +2482,7 @@ int TreatSweep(double t)
 						for (i = 0; i < Mcells[b].n; ) // loop over households
 						{
 							l = Mcells[b].members[i];
-							if (ranf_mt(tn) < P.CE_Prop) //((!HOST_TO_BE_TREATED(l)) && ((P.TreatPropRadial == 1) || (ranf_mt(tn) < P.TreatPropRadial)))
+							if (ranf_mt(tn) < P.CE_Prop) //((!host_to_be_treated(l)) && ((p.treatpropradial == 1) || (ranf_mt(tn) < p.treatpropradial)))
 							{
 								Households[Hosts[l].hh].ce = 1;
 							}
@@ -2452,15 +2501,11 @@ int TreatSweep(double t)
 						l = f3 = 1;
 						if (ad > 0)
 						{
-							ad2 = ad / P.TreatAdminUnitDivisor; //do something here!
 							do
 							{
 								if ((minx >= 0) && (minx < P.nmcw) && (miny >= 0) && (miny < P.nmch))
 								{
-									if (P.TreatByAdminUnit)
-										f4 = (AdUnits[Mcells[k].adunit].id / P.TreatAdminUnitDivisor == ad2); // do something here
-									else
-										f4 = ((r = dist2_mm(Mcells + b, Mcells + k)) < P.TreatRadius2); // do something here
+									f4 = ((r = dist2_mm(Mcells + b, Mcells + k)) < P.CommRadius2);
 									if (f4)
 									{
 										f = f2 = 1;
@@ -2489,7 +2534,7 @@ int TreatSweep(double t)
 									if (j == 1) { f3 = f2; f2 = 0; }
 								}
 								k = ((minx + P.nmcw) % P.nmcw) * P.nmch + (miny + P.nmch) % P.nmch;
-							} while ((f3) && (maxx < P.TreatMaxCoursesPerCase)); // do something here
+							} while ((f3));
 						}
 
 					}

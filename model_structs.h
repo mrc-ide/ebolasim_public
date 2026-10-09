@@ -62,6 +62,7 @@ typedef struct POPVAR {
   int vaccdose_dist[NUM_VACCDOSE_GROUPS], vaccdosecell_dist[NUM_VACCDOSECELL_GROUPS], vaccdosering_dist[NUM_VACCDOSECELL_GROUPS], vaccdistance_dist[NUM_VACCDIST_GROUPS], vaccpop_dist[NUM_POP_GROUPS]; //added this to output dose per case and radius distribution for geo vaccination
   int *h_queue[MAX_ADUNITS],nh_queue[MAX_ADUNITS],*hd_queue[MAX_ADUNITS],nhd_queue[MAX_ADUNITS]; //queues for hospitalisation: ggilani 30/10/14
   int *ct_queue[MAX_ADUNITS],nct_queue[MAX_ADUNITS]; // queues for contact tracing: ggilani 12/06/17
+  int* sdb_queue[MAX_ADUNITS], nsdb_queue[MAX_ADUNITS]; // queues for safe and dignified burials: ggilani 08/10/26
   int *vacc_queue, *ringvacc_queue, *ring_queue, *geovacc_queue, nvacc_queue,nringvacc_queue, ngeovacc_queue, ringvacc_cum, ringvacc_ind, geovacc_cum, geovacc_ind, vacc_ind, vacc_cum, *ringvacclist, *ringlist; //queues for vaccine: ggilani 20/08/19
   double *origin_dest[MAX_ADUNITS]; //added intermediate storage for calculation of origin-destination matrix: ggilani 02/02/15
   int dum[CACHE_LINE_SIZE];
@@ -206,7 +207,7 @@ typedef struct ADMINUNIT {
   double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB, lastCaseDay; //admin unit level funeral controls: ggilani 10/11/14
   int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDB,currentSDB, SDBActive; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
-  int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
+  int *ct_queue,nct_queue,*ct,nct,*sdb_queue,nsdb_queue; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
   double *origin_dest; //storage for origin-destination matrix between admin units: ggilani 28/01/15, 
   double **place_net; //storage for place networks: gnedjati 25/06/26
   double place_dist[NUM_PLACE_TYPES], min_place_dist[NUM_PLACE_TYPES], max_place_dist[NUM_PLACE_TYPES];
@@ -407,10 +408,10 @@ typedef struct PARAM {
   double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
   double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact, ExtraRecTimeETUMin, ExtraRecTimeETUMax; // detection delays for contact, etu, hospital, community
   double PropUndetectedCommunityCasesDetectedAtDeath, relPropCommDeathDetPostCal, PropUndetectedCommunityCasesDetectedAtDeathInit, DelayCommunityCasesDetectedAtDeath, PropCommDeathDetPostCal; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
-  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR, DoDistVaccSusc;
-  double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax, VaccSuscMin, VaccSuscMax;
+  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR, DoDistVaccSusc, DoDistPropCommDetect;
+  double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax, VaccSuscMin, VaccSuscMax, PropCommDetectMin, PropCommDetectMax;
   double relPropSeekCarePostCalIntervention, relRedTimeToCarePostCalIntervention; 
-  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS], RelVaccSuscDist[MAX_FIXED_SEEDS];
+  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS], RelVaccSuscDist[MAX_FIXED_SEEDS], PropCommDetectDist[MAX_FIXED_SEEDS];
   int ChangeTimes[MAX_FIXED_SEEDS], OutbreakDetectionDay[MAX_FIXED_SEEDS];
   double CommEngCellIncThresh, CommRadius, CommRadius2, CE_Prop, TimeToCommunityIntervention;
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput, DoDetectionRouteOutput; //added intervention capacities separate to adunit file file
