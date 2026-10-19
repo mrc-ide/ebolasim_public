@@ -1449,9 +1449,17 @@ void SetupPopulation(char *DensityFile,char *SchoolFile, char *RegDemogFile)
 		{
 			if(!(AdUnits[i].ct_queue=(int *) malloc(P.InfQueuePeakLength*sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
 			if(!(AdUnits[i].ct=(int *) malloc(P.InfQueuePeakLength*sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
+			if (P.DoFuneralTransmission)
+			{
+				if (!(AdUnits[i].sdb_queue = (int*)malloc(P.InfQueuePeakLength * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
+			}
 			for(j=0;j<P.NumThreads;j++)
 			{
 				if(!(StateT[j].ct_queue[i]=(int *) malloc(P.InfQueuePeakLength*sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
+				if (P.DoFuneralTransmission)
+				{
+					if (!(StateT[j].sdb_queue[i] = (int*)malloc(P.InfQueuePeakLength * sizeof(int)))) ERR_CRITICAL("Unable to allocate state storage\n");
+				}
 			}
 		}
 	}

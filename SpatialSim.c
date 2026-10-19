@@ -394,8 +394,8 @@ int main(int argc,char *argv[])
 
 		for (i = 0; (i < P.NR); i++)
 		{
-			P.FixedSeeds[i][0]	= (int)(ranf() * 1e8);
-			P.FixedSeeds[i][1]	= (int)(ranf() * 1e8);
+			P.FixedSeeds[i][0]	= (long int)(ranf() * 1e8);
+			P.FixedSeeds[i][1]	= (long int)(ranf() * 1e8);
 		}
 	}
 	//sample from distributions for care seeking parameters if necessary
@@ -422,7 +422,15 @@ int main(int argc,char *argv[])
 			P.PropHospDetectDist[i] = ranf() * (P.PropHospDetectMax - P.PropHospDetectMin) + P.PropHospDetectMin;
 		}
 	}
-	//sample from distributions for hospital detection if necessary
+	// sample from distributions for hospital detection if necessary
+		if (P.DoDistPropCommDetect)
+		{
+			for (i = 0; (i < P.NR); i++)
+			{
+				P.PropCommDetectDist[i] = ranf() * (P.PropCommDetectMax - P.PropCommDetectMin) + P.PropCommDetectMin;
+			}
+		}
+	//sample from distributions for community death detection if necessary
 	if (P.DoDistCommDeath)
 	{
 		for (i = 0; (i < P.NR); i++)
@@ -430,7 +438,7 @@ int main(int argc,char *argv[])
 			P.PropCommDeathDist[i] = ranf() * (P.PropCommDeathMax - P.PropCommDeathMin) + P.PropCommDeathMin;
 		}
 	}
-	//sample from distributions for hospital detection if necessary
+	//sample from distributions for relative CFR in community if necessary
 	if (P.DoDistCommCFR)
 	{
 		for (i = 0; (i < P.NR); i++)
@@ -447,11 +455,19 @@ int main(int argc,char *argv[])
 			P.RelVaccSuscDist[i] = ranf() * (P.VaccSuscMax - P.VaccSuscMin) + P.VaccSuscMin;
 		}
 	}
-	//write out distribution files if necessary
-	if (P.DoDistSeekCare || P.DoDistSeekCarePostDec || P.DoDistPropHospDetect || P.DoDistCommDeath || P.DoDistCommCFR || P.DoDistVaccSusc) //don't really need if statement
+	if (P.DoStopSimDC)
 	{
-		SaveParamDists();
+		for (i = 0; (i < P.NR); i++)
+		{
+			P.ChangeTimes[i] = -1;
+			P.OutbreakDetectionDay[i] = -1;
+		}
 	}
+	////write out distribution files if necessary
+	//if (P.DoDistSeekCare || P.DoDistSeekCarePostDec || P.DoDistPropHospDetect || P.DoDistCommDeath || P.DoDistCommCFR || P.DoDistVaccSusc) //don't really need if statement
+	//{
+	//	SaveParamDists();
+	//}
 
 
 	if(!P.ResetSeeds)
@@ -494,7 +510,7 @@ int main(int argc,char *argv[])
 				}
 			}
 			//save these seeds to file
-			SaveRandomSeeds();
+			//SaveRandomSeeds();
 			//reset seeds
 			setall(P.newseed1,P.newseed2);
 			//fprintf(stderr, "%i, %i\n", P.newseed1,P.newseed2);
@@ -502,6 +518,7 @@ int main(int argc,char *argv[])
 		}
 
 		InitModel(i); //passing run number into RunModel so we can save run number in the infection event log: ggilani - 15/10/2014
+		
 		//fprintf(stderr, "%f\n", ranf());
 		//fprintf(stderr, "%f\n", ranf_mt(5));
 		if(P.DoLoadSnapshot) LoadSnapshot();
@@ -543,6 +560,10 @@ int main(int argc,char *argv[])
 	{
 		SaveEvents();
 	}
+
+	//write out sampled values and seeds if necessary
+	SaveParamDists();
+	
 	if (P.DoSummaryOutput) //added flag here to choose whether to save summary results or not: ggilani 29/03/22
 	{
 		sprintf(OutFile, "%s.avNE", OutFileBase);

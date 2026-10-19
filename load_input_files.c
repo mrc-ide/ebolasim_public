@@ -579,7 +579,6 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 				}
 				if (!GetInputParameter2(dat, dat2, "Min extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMin), 1, 1, 0)) P.ExtraRecTimeETUMin = 0;
 				if (!GetInputParameter2(dat, dat2, "Max extra recovery days for ETU case who doesn't die", "%lf", (void*)&(P.ExtraRecTimeETUMax), 1, 1, 0)) P.ExtraRecTimeETUMax = 0;
-				if (!GetInputParameter2(dat, dat2, "Relative proportion of cases dying in the community", "%lf", (void*)&(P.RelCommCFR), 1, 1, 0)) P.RelCommCFR = 1;
 			}
 			else
 			{
@@ -928,7 +927,17 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 
 	if (!GetInputParameter2(dat, dat2, "Number of sampling intervals over which cumulative incidence measured for global trigger", "%i", (void*)&(P.TriggersSamplingInterval), 1, 1, 0)) P.TriggersSamplingInterval = 10000000;
 	
-	if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.initProbDetectCommunity), 1, 1, 0)) P.initProbDetectCommunity = 0;
+
+	if (!GetInputParameter2(dat, dat2, "Sample proportion of community cases detected", "%i", (void*)&(P.DoDistPropCommDetect), 1, 1, 0)) P.DoDistPropCommDetect = 0;
+	if (P.DoDistPropCommDetect)
+	{
+		if (!GetInputParameter2(dat, dat2, "Min proportion of community cases detected", "%lf", (void*)&(P.PropCommDetectMin), 1, 1, 0)) P.PropCommDetectMin = 0.1;
+		if (!GetInputParameter2(dat, dat2, "Max proportion of community cases detected", "%lf", (void*)&(P.PropCommDetectMax), 1, 1, 0)) P.PropCommDetectMax = 1;
+	}
+	else
+	{
+		if (!GetInputParameter2(dat, dat2, "Proportion of community cases detected", "%lf", (void*)&(P.initProbDetectCommunity), 1, 1, 0)) P.initProbDetectCommunity = 0;
+	}
 	if (!GetInputParameter2(dat, dat2, "Relative infectiousness of a detected case", "%lf", (void*)&(P), 1, 1, 0)) P.relInfDetCase = 1;
 	
 	//proportion of hospital cases detected
@@ -1159,7 +1168,8 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	if (!GetInputParameter2(dat, dat2, "Days with no cases after which capacity is removed", "%lf", (void*)&(P.DaysToRemoveCapacity), 1, 1, 0)) P.DaysToRemoveCapacity = USHRT_MAX / P.TimeStepsPerDay;
 
 	if (!GetInputParameter2(dat, dat2, "Vaccination start time", "%lf", (void*)&(P.VaccTimeStartBase), 1, 1, 0)) P.VaccTimeStartBase = USHRT_MAX / P.TimeStepsPerDay;
-	if (!GetInputParameter2(dat, dat2, "Proportion of population vaccinated", "%lf", (void*)&(P.VaccProp), 1, 1, 0)) P.VaccProp = 0;
+	P.initVaccProp = 1;
+	if (!GetInputParameter2(dat, dat2, "Proportion of population vaccinated", "%lf", (void*)&(P.VaccPropChange), 1, 1, 0)) P.VaccPropChange = 0;
 	if (!GetInputParameter2(dat, dat2, "Time taken to reach max vaccination coverage (in years)", "%lf", (void*)&(P.VaccCoverageIncreasePeriod), 1, 1, 0)) P.VaccCoverageIncreasePeriod = 0;
 	P.VaccCoverageIncreasePeriod *= DAYS_PER_YEAR;
 	if (!GetInputParameter2(dat, dat2, "Do geographic vaccination", "%i", (void*)&(P.DoGeoVaccination), 1, 1, 0)) P.DoGeoVaccination = 0;
@@ -1404,7 +1414,8 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		{
 			P.NVaccRings = P.NVaccRings * P.VaccRingScale;
 		}
-		if (!GetInputParameter2(dat, dat2, "Probability of establishing vaccination ring/contact tracing", "%lf", (void*)&(P.ProbEstablishRing), 1, 1, 0)) P.ProbEstablishRing = 1;
+		P.initProbEstablishRing = 1;
+		if (!GetInputParameter2(dat, dat2, "Probability of establishing vaccination ring/contact tracing", "%lf", (void*)&(P.ProbEstablishRingScale), 1, 1, 0)) P.ProbEstablishRingScale = 1;
 	}
 
 	//Capital City effect
@@ -1573,6 +1584,13 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 		if (!GetInputParameter2(dat, dat2, "Number of detected cases to reach", "%i", (void*)&(P.MaxDetCaseStopSim), 1, 1, 0)) P.MaxDetCaseStopSim = 1e9;
 		if (!GetInputParameter2(dat, dat2, "Number of days to project on by", "%i", (void*)&(P.NumDaysProject), 1, 1, 0)) P.NumDaysProject = 0;
 		if (!GetInputParameter2(dat, dat2, "Post calibration delay to intervention change", "%i", (void*)&(P.NumDaysPostCalChange), 1, 1, 0)) P.NumDaysPostCalChange = 0;
+
+		if (!GetInputParameter2(dat, dat2, "Check time between detection and calibration", "%i", (void*)&(P.CheckTimeDetToCalibration), 1, 1, 0)) P.CheckTimeDetToCalibration = 0;
+		if (P.CheckTimeDetToCalibration)
+		{
+			GetInputParameter(dat, dat2, "Target days between detection and calibration", "%i", (void*)(&P.TargetTimeDetToCalib), 1, 1, 0);
+			if (!GetInputParameter2(dat, dat2, "Tolerance days between detection and calibration", "%i", (void*)&(P.TolTimeDetToCalib), 1, 1, 0)) P.TolTimeDetToCalib = 7;
+		}
 		if (P.DoReactETUBeds)
 		{
 			if (!GetInputParameter2(dat, dat2, "Increase in maximum number of ETU beds after calibration point", "%i", (void*)&(P.IncMaxETUBeds), 1, 1, 0)) P.IncMaxETUBeds = 0;

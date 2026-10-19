@@ -147,7 +147,7 @@
 #define RAD_TEMP_MEM_SCALE 1
 
 //added for fixing seeds for janetta - 08/03/2023
-#define MAX_FIXED_SEEDS 1000
+#define MAX_FIXED_SEEDS 2100
 
 /*
   #define NO_TREAT_PROPH_CASES

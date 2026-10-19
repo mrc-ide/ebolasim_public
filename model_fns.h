@@ -36,7 +36,7 @@ void ContactTracingSweep(double); // added function to update contact tracing nu
 void VaccSweep(double); //added function to process ring vaccination queue: ggilani - 21/08/19
 void UpdateHospitals(double); //added function to update hospital parameters on each time step: ggilani - 11/03/2017
 void UpdateContactTracing(double); //added function to update contact tracing capacity
-void UpdateSDB(double); //added function to update safe burial capacity
+void UpdateSDB(double, int); //added function to update safe burial capacity
 void UpdateVaccination(double, int); //added function to update vaccination parameters at each time step: ggilani - 29/05/2019
 void UpdateCaseDetection(double); //added function to update vaccination parameters at each time step: ggilani - 29/05/2019
 void SaveAgeDistrib(void);
@@ -53,7 +53,7 @@ void LoadSnapshot(void);
 void SaveSnapshot(void);
 void UpdateProbs(int);
 void RecordInfTypes(void);
-void RecordSample(double, int);
+void RecordSample(double, int, int);
 //adding function to record an event: ggilani - 10/10/2014
 void RecordEvent(int, int, int); //added int as argument to InfectSweep to record run number: ggilani - 15/10/14, removed event type: ggilani 28/07/26
 void DoInfect(int, double, int, int); //added int as argument to InfectSweep to record run number: ggilani - 15/10/14

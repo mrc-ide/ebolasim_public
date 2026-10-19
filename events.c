@@ -338,7 +338,10 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 			if (Mcells[a->mcell].vacc_trig < USHRT_MAX - 1) Mcells[a->mcell].vacc_trig++;
 		}
 		if (Mcells[a->mcell].move_trig < USHRT_MAX - 1) Mcells[a->mcell].move_trig++;
-		if (Mcells[a->mcell].ce_trig < USHRT_MAX - 1) Mcells[a->mcell].ce_trig++;
+		if (P.UpdateIntervention)
+		{
+			if (Mcells[a->mcell].ce_trig < USHRT_MAX - 1) Mcells[a->mcell].ce_trig++;
+		}
 		if (Mcells[a->mcell].socdist_trig < USHRT_MAX - 1) Mcells[a->mcell].socdist_trig++;
 		if (Mcells[a->mcell].keyworkerproph_trig < USHRT_MAX - 1) Mcells[a->mcell].keyworkerproph_trig++;
 		//}
@@ -538,6 +541,14 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 	StateT[tn].cumDCa[age]++; //added detected case by age: ggilani 22/02/22
 	Hosts[ai].dayDetected = (int)t;
 	StateT[tn].cumDet_route[Hosts[ai].detected - 1]++; //added this to track detection route
+	if (Hosts[ai].detected == 4) // for death
+	{
+		StateT[tn].cumDD++;
+		if (P.DoAdUnits)
+		{
+			StateT[tn].cumDD_adunit[Mcells[a->mcell].adunit]++;
+		}
+	}
 	if (Hosts[ai].contactTraced)
 	{
 		StateT[tn].cumCC++;
@@ -664,7 +675,7 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 				{
 					//if (Hosts[StateT[tn].ringvacclist[i]].vaccRing == 1) //only contact tracing immediate contacts in the first ring
 					//{
-					if ((P.propContactTraced == 0) || (ranf_mt(tn) < P.propContactTraced))
+					if (ranf_mt(tn) < P.propContactTraced)
 					{
 						StateT[tn].ct_queue[Mcells[Hosts[StateT[tn].ringvacclist[i]].mcell].adunit][StateT[tn].nct_queue[Mcells[Hosts[StateT[tn].ringvacclist[i]].mcell].adunit]++] = StateT[tn].ringvacclist[i];
 					}
@@ -1077,7 +1088,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 		
 		if (P.DoHospitalisation)
 		{
-			if ((Households[Hosts[ai].hh].ce ? Hosts[ai].hcs_accept*P.relPropSeekCarePostCalIntervention : Hosts[ai].hcs_accept) < P.PropHospSeek)
+			if (P.UpdateIntervention ? (Hosts[ai].hcs_accept <  P.PropHospSeek*P.relPropSeekCarePostCalIntervention) : (Hosts[ai].hcs_accept < P.PropHospSeek))
 			{
 
 				//this just sets hospitalisation time. detection now happens after hospitalisation
@@ -1086,7 +1097,7 @@ void DoCase(int ai, double t, unsigned short int ts, int tn)
 					do {
 						i = (int)floor((q = ranf_mt(tn) * CDF_RES));
 						q -= ((double)i);
-						ti = -(Households[Hosts[ai].hh].ce? P.HospitalisationTime*P.relRedTimeToCarePostCalIntervention : P.HospitalisationTime) * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
+						ti = -(P.UpdateIntervention? P.HospitalisationTime*P.relRedTimeToCarePostCalIntervention : P.HospitalisationTime) * log(q * P.hospital_icdf[i + 1] + (1.0 - q) * P.hospital_icdf[i]);
 						a->hospital_time = a->symptom_time + (unsigned short int) floor(0.5 + (ti * P.TimeStepsPerDay));
 					} while (((int)a->recovery_time - (int)a->hospital_time) < (int)(P.MinHospTimeBeforeOutcome / P.TimeStep));
 					1;

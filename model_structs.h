@@ -22,7 +22,6 @@ typedef struct PERSON {
   unsigned short int num_treats,resist;
   int vacc_start_time; //switched to int so we can vaccinate before the outbreak
   int revacc; //added this to check which HCWs are being revaccinated
-  int switchdeath; //debugging variable only 
 } person;  
 
 typedef struct HOUSEHOLD {
@@ -63,6 +62,7 @@ typedef struct POPVAR {
   int vaccdose_dist[NUM_VACCDOSE_GROUPS], vaccdosecell_dist[NUM_VACCDOSECELL_GROUPS], vaccdosering_dist[NUM_VACCDOSECELL_GROUPS], vaccdistance_dist[NUM_VACCDIST_GROUPS], vaccpop_dist[NUM_POP_GROUPS]; //added this to output dose per case and radius distribution for geo vaccination
   int *h_queue[MAX_ADUNITS],nh_queue[MAX_ADUNITS],*hd_queue[MAX_ADUNITS],nhd_queue[MAX_ADUNITS]; //queues for hospitalisation: ggilani 30/10/14
   int *ct_queue[MAX_ADUNITS],nct_queue[MAX_ADUNITS]; // queues for contact tracing: ggilani 12/06/17
+  int* sdb_queue[MAX_ADUNITS], nsdb_queue[MAX_ADUNITS]; // queues for safe and dignified burials: ggilani 08/10/26
   int *vacc_queue, *ringvacc_queue, *ring_queue, *geovacc_queue, nvacc_queue,nringvacc_queue, ngeovacc_queue, ringvacc_cum, ringvacc_ind, geovacc_cum, geovacc_ind, vacc_ind, vacc_cum, *ringvacclist, *ringlist; //queues for vaccine: ggilani 20/08/19
   double *origin_dest[MAX_ADUNITS]; //added intermediate storage for calculation of origin-destination matrix: ggilani 02/02/15
   int dum[CACHE_LINE_SIZE];
@@ -207,7 +207,7 @@ typedef struct ADMINUNIT {
   double timeToSafeFuneral, startFuneralControl, endFuneralControl, nextTimeToSDB, lastCaseDay; //admin unit level funeral controls: ggilani 10/11/14
   int contactTraceCapacity,contactTraceCapacityInc, contactTraceCaseThreshold,contactTraceCurrent,nextTimeToCT,maxSDB,nextSDB,currentSDB, SDBActive; //number of cases that can be successfully contact traced per admin unit: ggilani 13/11/14
   int contactTraceStartDay, contactTraceThresholdCrossed; //day on which contact tracing starts for an admin unit and whether threshold has been crossed yet or not: ggilani 23/06/15
-  int *ct_queue,nct_queue,*ct,nct; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
+  int *ct_queue,nct_queue,*ct,nct,*sdb_queue,nsdb_queue; //queues for admin unit based contact tracing: ggilani 12/06/17 - including arrays to store people who are actually being contact traced as well as those in the queue for contact tracing
   double *origin_dest; //storage for origin-destination matrix between admin units: ggilani 28/01/15, 
   double **place_net; //storage for place networks: gnedjati 25/06/26
   double place_dist[NUM_PLACE_TYPES], min_place_dist[NUM_PLACE_TYPES], max_place_dist[NUM_PLACE_TYPES];
@@ -226,7 +226,7 @@ typedef struct PARAM {
   int DoOutputPlaceDistForOneAdunit,OutputPlaceDistAdunit,OutputDensFile;
   int DoOneGen,OutputAll,BitmapMovieFrame,MaxCorrSample,DoLatent,InfQueuePeakLength,NumThreads,MaxNumThreads,DoDetectDelay;
   int bwidth,bheight,bheight2,bminx,bminy,OutputBitmap,DoSI,DoHeteroDensity,DoPeriodicBoundaries,DoImmuneBitmap,OutputBitmapDetected; //added OutputBitmapDetected - ggilani 04/08/15
-  int DoHouseholds, DoPlaces, PlaceTypeNum, Nplace[NUM_PLACE_TYPES], SmallEpidemicCases, DoPlaceGroupTreat, OutbreakDetected; //added OutbreakDetected -ggilani 13/09/23
+  int DoHouseholds, DoPlaces, PlaceTypeNum, Nplace[NUM_PLACE_TYPES], SmallEpidemicCases, DoPlaceGroupTreat, OutbreakDetected, DayOutbreakDetected; //added OutbreakDetected -ggilani 13/09/23
   int NumInitialInfections[MAX_NUM_SEED_LOCATIONS],DoRandomInitialInfectionLoc,DoAllInitialInfectioninSameLoc;
   int MinPopDensForInitialInfection,NumSeedLocations, MaxPopDensForInitialInfection,InitialInfectionsAdminUnit[MAX_NUM_SEED_LOCATIONS];
   int DoAge,DoSymptoms,LoadSaveNetwork,TargetCountry,RestrictTreatToTarget,IncThreshPop,GlobalIncThreshPop,TargetCountry2,TargetCountry3;
@@ -234,7 +234,7 @@ typedef struct PARAM {
   int DoAirports,Nairports,Air_popscale,DoSchoolFile,DoRealSymptWithdrawal,CaseAbsentChildAgeCutoff,DoEarlyCaseDiagnosis,DoInterventionFile;
   long seed1,seed2,seed3,seed4;
   int ResetSeeds,DoFixedSeeds; //added this to reset seeds for each run - ggilani 09/03/17, and added FixedSeeds to allow for us to input a set of seeds - ggilani 08/03/2023
-  int FixedSeeds[MAX_FIXED_SEEDS][2]; //added this to store fixed seeds for each run - ggilani 08/03/2023
+  long FixedSeeds[MAX_FIXED_SEEDS][2]; //added this to store fixed seeds for each run - ggilani 08/03/2023
   long newseed1,newseed2,newseed3,newseed4; //added these to allow for seeds to be reset - ggilani 09/03/17
   int KeepSameSeeds, ResetSeedsPostIntervention, ResetSeedsFlag;
   int TimeToResetSeeds;
@@ -302,13 +302,13 @@ typedef struct PARAM {
   int RevaccHCWs,DoRingVaccination, NVaccRings, NVaccRingsActive, MinVaccAge, VaccDosePerDay, VaccGeoDosePerDay, MaxVaccDosePerDay, MaxVaccGeoDosePerDay, BaseVaccDosePerDay, BaseVaccGeoDosePerDay, VaccDoseFlag, UpdateVaccDosePerDay, VaccDosesPerCasePerCell; //added this for ring vaccination - ggilani 15/02/2017
   int ResetVaccQueue; //added to reset vaccination queue daily - ggilani 19/12/23
   int DoGeoVaccination,OnlyDoGeoVaccWhenNoRing;
-  double ProbEstablishRing;
+  double initProbEstablishRing, ProbEstablishRing, ProbEstablishRingScale;
   int DoClusterVaccAccept, DoClusterHCS;
   int NPropRingVacc, CurrIndPropRingVacc; //added for updated ring vaccination code - gilani 29/05/19
   double PropRingVacc,TimeToIncVaccRing; //added this for ring vaccination - ggilani 15/02/2017
   double ChangePointPropRingVacc[MAX_CHANGE_POINTS], ListPropRingVacc[MAX_CHANGE_POINTS]; //added this for ring vaccination - ggilani 29/05/19
   int VaccRingScale, VaccCaseScale; //added to control vaccination from commandline
-  double VaccPropScale,VaccDelayScale,VaccEffTimeScale; //added to control vaccination from commandline
+  double VaccPropScale,VaccDelayScale,VaccEffTimeScale,initVaccProp,VaccPropChange; //added to control vaccination from commandline
   int LimitGeoVaccDosesPerCase,StopVaccinationPostThreshold,PopHighDensityCell; //to stop triggering vaccination in cells once vaccination acceptance threshold is reached
   double PreAlertControlPropCasesId, PostAlertControlPropCasesId,ControlPropCasesId;
   double MoveRestrRadius,MoveRestrRadius2;
@@ -344,7 +344,7 @@ typedef struct PARAM {
   int DoDistributionVaccination,DistribNetCountry,SIADoAllCountries,VaccDosesPerPhial;
   //Added DoRecordInfEvents and MaxInfEvents in order to give the user a choice as to whether to output infection events as a line list: ggilani - 10/10/14
   int DoRecordInfEvents, MaxInfEvents, RecordInfEventsPerRun;
-  int DoStopSimDC, MaxDetCaseStopSim, NumDaysProject, StopDay, ChangeDay, ChangeDayBeds, StopTimeSet, UpdateIntervention, NumDaysPostCalChange; // added this to stop simulation after a specified number of detected cases: ggilani 11/08/26
+  int DoStopSimDC, MaxDetCaseStopSim, NumDaysProject, StopDay, ChangeDay, ChangeDayBeds, StopTimeSet, UpdateIntervention, NumDaysPostCalChange, CheckTimeDetToCalibration, TargetTimeDetToCalib, TolTimeDetToCalib; // added this to stop simulation after a specified number of detected cases: ggilani 11/08/26
   double KernelPowerScale, KernelOffsetScale;
   int LimitNumInfections, MaxNumInfections;
   //Added parameters to incorporate time to death/recovery functions: ggilani - 22/10/14
@@ -408,10 +408,11 @@ typedef struct PARAM {
   double TimeToUpdateCaseDetection[MAX_CHANGE_POINTS], ListUpdateCaseDetection[MAX_CHANGE_POINTS],PreAlertDetectTime,PostAlertDetectTime,DaysToRemoveCapacity,DayExtinct;// UpdatedCaseDetectionRate;
   double DetectTime, DetectTimeHosp, DetectTimeETU, DetectTimeContact, ExtraRecTimeETUMin, ExtraRecTimeETUMax; // detection delays for contact, etu, hospital, community
   double PropUndetectedCommunityCasesDetectedAtDeath, relPropCommDeathDetPostCal, PropUndetectedCommunityCasesDetectedAtDeathInit, DelayCommunityCasesDetectedAtDeath, PropCommDeathDetPostCal; //added this to allow for a proportion of undetected community cases to be detected at death and given safe burials, and time to report: gnedjati 28/07/26
-  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR, DoDistVaccSusc;
-  double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax, VaccSuscMin, VaccSuscMax;
+  int DoDistCommDeath, DoDistPropHospDetect, DoDistSeekCare, DoDistSeekCarePostDec, DoDistCommCFR, DoDistVaccSusc, DoDistPropCommDetect;
+  double RelCommCFR, RelCommCFRMin, RelCommCFRMax, PropCommDeathMin, PropCommDeathMax, PropHospDetectMin, PropHospDetectMax, PropSeekCareMin, PropSeekCareMax, PropSeekCarePostDecMin, PropSeekCarePostDecMax, VaccSuscMin, VaccSuscMax, PropCommDetectMin, PropCommDetectMax;
   double relPropSeekCarePostCalIntervention, relRedTimeToCarePostCalIntervention; 
-  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS], RelVaccSuscDist[MAX_FIXED_SEEDS];
+  double PropCommDeathDist[MAX_FIXED_SEEDS], PropHospDetectDist[MAX_FIXED_SEEDS], PropSeekCareDist[MAX_FIXED_SEEDS], PropSeekCarePostDecDist[MAX_FIXED_SEEDS], RelCommCFRDist[MAX_FIXED_SEEDS], RelVaccSuscDist[MAX_FIXED_SEEDS], PropCommDetectDist[MAX_FIXED_SEEDS];
+  int ChangeTimes[MAX_FIXED_SEEDS], OutbreakDetectionDay[MAX_FIXED_SEEDS];
   double CommEngCellIncThresh, CommRadius, CommRadius2, CE_Prop, TimeToCommunityIntervention;
   int DoControlOutput,DoAgeOutput,DoAdunitOutput,DoInftypeOutput,DoROutput,DoHouseholdOutput,DoCountryOutput,DoSummaryOutput,DoOutputETUCapacity,DoVaccOutput,DoKeyworkerOutput,DoInterventionCapacityOutput, DoDetectionRouteOutput; //added intervention capacities separate to adunit file file
   
