@@ -929,7 +929,7 @@ void ReadParams(char* ParamFile, char* PreParamFile)
 	
 
 	if (!GetInputParameter2(dat, dat2, "Sample proportion of community cases detected", "%i", (void*)&(P.DoDistPropCommDetect), 1, 1, 0)) P.DoDistPropCommDetect = 0;
-	if (P.DoDistPropHospDetect)
+	if (P.DoDistPropCommDetect)
 	{
 		if (!GetInputParameter2(dat, dat2, "Min proportion of community cases detected", "%lf", (void*)&(P.PropCommDetectMin), 1, 1, 0)) P.PropCommDetectMin = 0.1;
 		if (!GetInputParameter2(dat, dat2, "Max proportion of community cases detected", "%lf", (void*)&(P.PropCommDetectMax), 1, 1, 0)) P.PropCommDetectMax = 1;

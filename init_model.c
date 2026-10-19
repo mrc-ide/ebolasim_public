@@ -373,15 +373,7 @@ void InitModel(int run) //passing run number so we can save run number in the in
 	{
 		P.ProbDetectHosp = P.initProbDetectHosp;
 	}
-
-	if (P.DoDistPropCommDetect)
-	{
-		P.ProbDetectCommunity = P.PropCommDetectDist[run];
-	}
-	else
-	{
-		P.ProbDetectCommunity = P.initProbDetectCommunity;
-	}
+	P.ProbDetectCommunity = 0;
 
 	if (P.DoDistCommDeath)
 	{

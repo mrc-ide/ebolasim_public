@@ -342,6 +342,14 @@ void RecordSample(double t, int n, int run)
 			P.PropHospSeek *= P.RelChangeHospSeekPostOutbreak;
 			//P.ProbDetectHosp *= P.relPropHospDetPostCal;
 			//P.ProbDetectCommunity = P.initProbDetectCommunity;
+			if (P.DoDistPropCommDetect)
+			{
+				P.ProbDetectCommunity = P.PropCommDetectDist[run];
+			}
+			else
+			{
+				P.ProbDetectCommunity = P.initProbDetectCommunity;
+			}
 		}
 		if (P.DoGlobalTriggers)
 		{
@@ -2388,13 +2396,17 @@ void SaveParamDists(void)
 	{
 		fprintf(dat, ",RelCommCFR");
 	}
+	if (P.DoDistPropCommDetect)
+	{
+		fprintf(dat, ",PropCommDet");
+	}
 	if (P.DoDistVaccSusc)
 	{
 		fprintf(dat, ",VaccEff");
 	}
 	if (P.DoStopSimDC)
 	{
-		fprintf(dat, ",OutbreakDetectionDay,IntChangeDay");
+		fprintf(dat, ",OutbreakDetectionDay,AlignmentDay");
 	}
 	fprintf(dat, "\n");
 
@@ -2429,6 +2441,10 @@ void SaveParamDists(void)
 		if (P.DoDistCommCFR)
 		{
 			fprintf(dat, ",%lf", P.RelCommCFRDist[i]);
+		}
+		if (P.DoDistPropCommDetect)
+		{
+			fprintf(dat, ",%lf", P.PropCommDetectDist[i]);
 		}
 		if (P.DoDistVaccSusc)
 		{

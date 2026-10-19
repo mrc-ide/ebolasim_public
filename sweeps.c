@@ -1331,7 +1331,7 @@ void InfectSweep(double t, int run) //added run number as argument in order to r
 void IncubRecoverySweep(double t, int run)
 {
 	int i, j, k, l, b, tn, ci, day;
-	double currInfSafeFuneral;
+	double currInfSafeFuneral,aa;
 	cell* c;
 	person* si;
 	unsigned short int ts, tc;
@@ -1433,6 +1433,10 @@ void IncubRecoverySweep(double t, int run)
 						// set recovery time to current recovery time plus length of funeral transmission duration
 						si->recovery_time += (unsigned short int)(P.FuneralTransmissionDuration * P.TimeStepsPerDay);
 						si->infectiousMult = P.RelativeInfectiousnessFuneral;
+						if (ci == 19115321)
+						{
+							fprintf(stderr, "%i\n", ci);
+						}
 
 						if ((P.DoHospitalisation) && (si->etu)) //this is regardless of whether we are considering hospitalisation by admin unit or place
 						{
@@ -1443,17 +1447,6 @@ void IncubRecoverySweep(double t, int run)
 							{
 								//if someone dies in ETC they have a safe burial, so add to the safe burial list
 								StateT[tn].sdb_queue[Mcells[si->mcell].adunit][StateT[tn].nsdb_queue[Mcells[si->mcell].adunit]++] = ci;
-//								//if someone has died in hospital, we assumed that they will have a safe burial
-//								si->infectiousMult *= P.RelInfSafeFuneral;
-//								//if in hospital, they definitely have a safe burial
-//								StateT[tn].cumSDB++;
-//								if (P.DoAdUnits)
-//								{
-//									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
-//#pragma omp atomic
-//									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
-//								}
-//								si->safeBurial = 1;
 							}
 						}
 						else if (si->detected)
@@ -1466,47 +1459,24 @@ void IncubRecoverySweep(double t, int run)
 							{
 								//if safe burials in effect, they have a safe burial with probability ProportionSafeFuneral
 								StateT[tn].sdb_queue[Mcells[si->mcell].adunit][StateT[tn].nsdb_queue[Mcells[si->mcell].adunit]++] = ci;
-//								si->infectiousMult *= P.RelInfSafeFuneral;
-//								StateT[tn].cumSDB++;
-//								if (P.DoAdUnits)
-//								{
-//									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
-//#pragma omp atomic
-//									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
-//								}
-//								si->safeBurial = 1;
 							}
 						}
+						
 						//add this to allow undetected cases in the community to be detected at death and have a safe funeral
-						else if ((si->detected == 0) && (ranf_mt(tn) < P.PropUndetectedCommunityCasesDetectedAtDeath))
+						else if ((!si->detected) && ((aa=ranf_mt(tn)) < P.PropUndetectedCommunityCasesDetectedAtDeath))
 						{
 							si->detected = 4; //change status to detected - 4 for detected at death
-							si->detect_time = ts + (unsigned short int) (P.DelayCommunityCasesDetectedAtDeath*P.TimeStepsPerDay); //select detected time to date of death
-							//StateT[tn].cumDD++; //increment detected deaths overall... 
-							//if (P.DoAdUnits) StateT[tn].cumDD_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
-							// also add this as a detected case retrospectively to count towards detection
-							//StateT[tn].cumDC++;
-							//if (P.DoAdUnits) StateT[tn].cumDC_adunit[Mcells[si->mcell].adunit]++; //... and in admin unit
-
+							si->detect_time = si->recovery_time-1; //select detected time to date of death
 							//alter host's infectiousness, taking into account relative reduction in infectiousness due to safe burial
 							if ((t >= P.FuneralControlTimeStart) && (ranf_mt(tn) <= P.ProportionSafeFuneral)) //&& (AdUnits[Mcells[si->mcell].adunit].currentSDB < AdUnits[Mcells[si->mcell].adunit].maxSDB))
 							{
 								//if safe burials in effect, they are added to the safe burial queue with probability ProportionSafeFuneral
 								StateT[tn].sdb_queue[Mcells[si->mcell].adunit][StateT[tn].nsdb_queue[Mcells[si->mcell].adunit]++] = ci;
-//								si->infectiousMult *= P.RelInfSafeFuneral;
-//								StateT[tn].cumSDB++;
-//								if (P.DoAdUnits)
-//								{
-//									StateT[tn].cumSDB_adunit[Mcells[si->mcell].adunit]++;
-//#pragma omp atomic
-//									AdUnits[Mcells[si->mcell].adunit].currentSDB++;
-//								}
-//								si->safeBurial = 1;
 							}
 						}
 
 					}
-					if ((!si->to_die) && (ts == si->recovery_time))
+ 					if ((!si->to_die) && (ts == si->recovery_time))
 						StateT[tn].inf_queue[0][StateT[tn].n_queue[0]++] = ci;
 					else if ((si->to_die) && (ts == si->recovery_time))
 					{

@@ -675,7 +675,7 @@ void DoDetectedCase(int ai, double t, unsigned short int ts, int tn)
 				{
 					//if (Hosts[StateT[tn].ringvacclist[i]].vaccRing == 1) //only contact tracing immediate contacts in the first ring
 					//{
-					if ((P.propContactTraced == 0) || (ranf_mt(tn) < P.propContactTraced))
+					if (ranf_mt(tn) < P.propContactTraced)
 					{
 						StateT[tn].ct_queue[Mcells[Hosts[StateT[tn].ringvacclist[i]].mcell].adunit][StateT[tn].nct_queue[Mcells[Hosts[StateT[tn].ringvacclist[i]].mcell].adunit]++] = StateT[tn].ringvacclist[i];
 					}
